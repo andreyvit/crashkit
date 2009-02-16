@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}{{ product.friendly_name}} Bug{% endblock %}
+{% block content %}
+<div class="container">
+  <h1><a class="back" href="..">« Back</a> {{ product.friendly_name}} <span>Bug</span></h1>
+  <table style="width: 80%">
+    <col width="230" />
+    {% if problem.exception_names_as_string %}
+      {% if problem.exception_names|length_is:1 %}
+        <tr>
+          <td>exception name</td>
+          <td>{% for name in problem.exception_names %}<div>{{ name }}</div>{% endfor %}</td>
+        </tr>
+      {% else %}
+        <tr>
+          <td>exception names</td>
+          <td>{% for name in problem.exception_names %}<div>{{ name }}</div>{% endfor %}</td>
+        </tr>
+      {% endif %}
+    {% endif %}
+    {% if problem.user_message %}
+      <tr>
+        <td>user-friendly message</td>
+        <td>{{ problem.user_message }}</td>
+      </tr>
+    {% endif %}
+    {% if problem.developer_message %}
+      <tr>
+        <td>developer-friendly message</td>
+        <td>{{ problem.developer_message }}</td>
+      </tr>
+    {% endif %}
+    <tr>
+      <td>occurred</td>
+      <td>{{ problem.occurrence_count }} times &nbsp;{% ifequal problem.first_occurrence_at.date problem.last_occurrence_at.date %}{{ problem.first_occurrence_at|naturalday:"%b %d, %Y"}} only{% else %}{{ problem.first_occurrence_at|naturalday:"%b %d, %Y"}} – {{ problem.last_occurrence_at|naturalday:"%b %d, %Y"}}{% endifequal %}</td>
+    </tr>
+  </table>
+  
+  {% if problem.stack_trace %}
+  <p>Stack trace:<br>
+    <textarea cols="60" rows="20">{{ problem.stack_trace }}</textarea></p>
+  {% else %}
+  <p>Stack trace not available.
+  {% endif %}
+  
+  {% if env_items %}
+    <h2>Environment</h2>
+    <table style="width: 80%">
+      <col width="230" />
+      {% for item in env_items %}
+        <tr class="{% cycle odd,even %}">
+          <td>{{item.0|strip_prefix:"env_"}}</td>
+          <td>{% for v in item.1%}{% if not forloop.first %}, {% endif %}{{v}}{%endfor%}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+  
+  {% if common_data_items %}
+    <h2>Common to all occurrences</h2>
+    <table style="width: 80%">
+      <col width="230" />
+      {% for item in common_data_items %}
+        <tr class="{% cycle odd,even %}">
+          <td>{{item.0|strip_prefix:"data_"}}</td>
+          <td>{% for v in item.1%}{% if not forloop.first %}, {% endif %}{{v}}{%endfor%}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+  
+  <h2>Additional information</h2>
+  
+  <div class="table-scrolling-container">
+  <table>
+    <col width="110" />
+    <col width="150" />
+    <tr class="header">
+      <th></th>
+      <th>occurred</th>
+      {% for key in data_keys %}<th valign="top">{{ key|strip_prefix:"data_"|strip_prefix:"env_" }}</th>{% endfor %}
+    </tr>
+    {% for occurrence in occurrences %}
+      <tr class="{% cycle odd,even %}">
+        <td class="oddcol"><big>{{occurrence.count}}</big> <span class="dim">{%ifequal occurrence.count 1%}case{%else%}cases{%endifequal%}</span></td>
+        <td class="date evencol">{% ifequal occurrence.first_occurrence_at|naturalday:"Nj,Y" occurrence.last_occurrence_at|naturalday:"Nj,Y" %}{{ occurrence.first_occurrence_at|naturalday:"N j, Y" }}{% else %}{{ occurrence.first_occurrence_at|naturalday:"N j, Y" }} – {{ occurrence.last_occurrence_at|naturalday:"N j, Y"}}{% endifequal %}</span></td>
+        {% for key in data_keys %}<td class="{% if forloop.counter|divisibleby:2 %}evencol{%else%}oddcol{% endif %}" title="{{ occurrence|kgetattr:key|unshortened_tooltip:8}}">{{ occurrence|kgetattr:key|shorten:8 }}</td>{% endfor %}
+      </tr>
+    {% endfor %}
+  </table>
+  </div>
+</div>
+
+{% endblock %}
