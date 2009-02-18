@@ -123,4 +123,8 @@ public class FeedbackStorage {
 		source.delete();
 	}
 
+	public void deleteClientInfo() {
+		settingsFile.delete();
+	}
+
 }

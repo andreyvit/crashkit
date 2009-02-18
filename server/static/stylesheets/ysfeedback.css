@@ -70,7 +70,15 @@ span.date { padding-left: 1ex; }
 
 .problem-box h2, .problem-box p { margin-left: 110px; }
 
-.problem-box .dropin { display: block; text-decoration: none; float: left; font-size: 4em; line-height: 1; background: green; color: white; height: 1.33em; width: 100px; text-align: center; margin-right: 20px; padding: 0.1em 0.1em; }
+.problem-box .dropin { display: block; text-decoration: none; float: left; font-size: 4em; line-height: 1; background: #777; color: white; height: 1.33em; width: 100px; text-align: center; margin-right: 20px; padding: 0.1em 0.1em; }
+
+.problem-box.minor-visual .dropin { background: #777700; }
+
+.problem-box.silent-recovery .dropin { background: #008800; }
+
+.problem-box.major-user .dropin { background: #ff0000; }
+
+.problem-box.major-background .dropin { background: #bb0000; }
 
 .problem-box .dropin .caption { display: block; font-size: 0.2em; }
 

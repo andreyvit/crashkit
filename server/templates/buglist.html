@@ -4,8 +4,8 @@
 <div class="long-container clearfix">
   <h1>{{ product.friendly_name}} <span>Bugs</span></h1>
   {% for problem in problems %}
-    <div class="problem-box clearfix">
-      <a class="dropin" href="problems/{{ problem.key.name|urlencode }}">
+    <div class="problem-box {{ problem.severity }} clearfix">
+      <a class="dropin" title="{{ problem.bug_name }}" href="problems/{{ problem.key.name|urlencode }}">
         {{problem.occurrence_count}}
         <span class="caption">{% ifequal problem.occurrence_count 1 %}occurrence{% else %}occurrences{%endifequal%}</span>
       </a>
@@ -32,9 +32,9 @@
       {% endif %}
       <p class="date">
         {% ifequal problem.first_occurrence_at.date problem.last_occurrence_at.date %}
-          Occurred only {{ problem.first_occurrence_at|naturalday:"%b %d, %Y" }}
+          Occurred {{ problem.first_occurrence_at|naturalday:"%b %d, %Y" }}
         {% else %}
-          Occurred from {{ problem.first_occurrence_at|naturalday:"%b %d, %Y" }} to {{ problem.last_occurrence_at|naturalday:"%b %d, %Y"}}
+          Occurring from {{ problem.first_occurrence_at|naturalday:"%b %d, %Y" }} till {{ problem.last_occurrence_at|naturalday:"%b %d, %Y"}}
         {% endifequal %}
       </p>
     </div>

@@ -59,13 +59,7 @@ public class FeedbackCommunicator {
 		HttpURLConnection urlConn = (HttpURLConnection) url.openConnection();
 		urlConn.setDoInput(true);
 		urlConn.setUseCaches(false);
-		int code = urlConn.getResponseCode();
-		if (code < 200 || code >= 300)
-			throw new IOException("Response indicated failure: code " + code);
-		InputStream in = urlConn.getInputStream();
-		String result = YsFileUtils.readAsString(in);
-		in.close();
-		return RequestString.decode(result);
+		return interpretResponse(urlConn);
 	}
 
 	private Map<String, String> post(URL url, String payload)
@@ -80,13 +74,36 @@ public class FeedbackCommunicator {
 		YsFileUtils.writeString(out, payload);
 		out.flush();
 		out.close();
+		return interpretResponse(urlConn);
+	}
+
+	private Map<String, String> interpretResponse(HttpURLConnection urlConn)
+			throws IOException, DesignatedCommunicationFailure {
 		int code = urlConn.getResponseCode();
-		if (code < 200 || code >= 300)
-			throw new IOException("Response indicated failure: code " + code);
-		InputStream in = urlConn.getInputStream();
-		String result = YsFileUtils.readAsString(in);
-		in.close();
-		return RequestString.decode(result);
+		if (code < 200 || code >= 300) {
+			InputStream in = urlConn.getErrorStream();
+			String response = null;
+			if (in != null) {
+				Map<String, String> data = RequestString.decode(YsFileUtils.readAsString(in));
+				in.close();
+				response = data.get("response");
+			}
+			if (response == null)
+				throw new IOException("Response indicated failure: code " + code);
+			else
+				throw new DesignatedCommunicationFailure(response);
+		} else {
+			InputStream in = urlConn.getInputStream();
+			String result = YsFileUtils.readAsString(in);
+			in.close();
+			Map<String, String> data = RequestString.decode(result);
+			String response = data.get("response");
+			if (response == null)
+				throw new IOException("Server returned code 200, but no API response");
+			if (!response.equalsIgnoreCase("ok"))
+				throw new DesignatedCommunicationFailure(response);
+			return data;
+		}
 	}
 
 	private static String determineHost(String accountName) {

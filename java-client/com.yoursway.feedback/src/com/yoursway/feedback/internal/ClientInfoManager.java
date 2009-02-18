@@ -30,4 +30,9 @@ public class ClientInfoManager {
 		return cachedInfo;
 	}
 
+	public void reset() {
+		storage.deleteClientInfo();
+		cachedInfo = null;
+	}
+
 }

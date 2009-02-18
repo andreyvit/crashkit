@@ -73,12 +73,24 @@ class Problem(db.Model):
   
   def message(self):
     if self.developer_message and self.user_message:
-      return "%s — “%s”" % (self.developer_message, self.user_message)
+      return u"%s — “%s”" % (self.developer_message, self.user_message)
     if self.developer_message:
       return self.developer_message
     if self.user_message:
       return u"“%s”" % self.user_message
     return "(No details)"
+    
+  def bug_name(self):
+    if self.severity == 'silent-recovery':
+      return 'Silently Recovered Bug'
+    elif self.severity == 'major-user':
+      return 'Major User Action Bug'
+    elif self.severity == 'major-background':
+      return 'Major Background Bug'
+    elif self.severity == 'minor-visual':
+      return 'Minor Visual Bug'
+    else:
+      return 'Bug'
   
   def exception_names_as_string(self):
     return ", ".join([ e[e.rfind('.')+1:len(e)] for e in self.exception_names])
@@ -123,7 +135,12 @@ class BaseHandler(webapp.RequestHandler):
     self.redirect(url)
     raise FinishRequest
     
-  def send_urlencoded_and_finish(self, hash = dict()):
+  def send_urlencoded_and_finish(self, **hash):
+    self.response.out.write(urllib.urlencode(hash))
+    raise FinishRequest
+    
+  def blow(self, code, **hash):
+    self.error(code)
     self.response.out.write(urllib.urlencode(hash))
     raise FinishRequest
     
@@ -170,7 +187,7 @@ class CreateProductHandler(BaseHandler):
     product.friendly_name = self.request.get('friendly_name')
     product.put()
       
-    self.send_urlencoded_and_finish(dict(created = 1, host = self.request.host))
+    self.send_urlencoded_and_finish(response = 'ok', host = self.request.host)
 
 class ObtainClientIdHandler(BaseHandler):
 
@@ -185,7 +202,7 @@ class ObtainClientIdHandler(BaseHandler):
     client.product = product
     client.cookie = random_string()
     client.put()
-    self.send_urlencoded_and_finish(dict(client_id = client.key().id(), client_cookie = client.cookie))
+    self.send_urlencoded_and_finish(response = 'ok', client_id = client.key().id(), client_cookie = client.cookie)
 
 class BugListHandler(BaseHandler):
 
@@ -246,11 +263,13 @@ class PostBugReportHandler(BaseHandler):
       self.not_found("Product not found")
       
     client = Client.get_by_id(int(client_id))
-    if client_id == None:
-      self.not_found("Client not found")
+    if client == None:
+      logging.warn('Client ID requested but not found: "%s"' % client_id)
+      self.blow(403, response = 'invalid-client-id')
       
     if self.request.get('client_cookie') != client.cookie:
-      self.access_denied("Invalid cookie")
+      logging.warn('Client ID cookie invalid: "%s" / "%s"' % (client_id, self.request.get('client_cookie')))
+      self.blow(403, response = 'invalid-client-id')
     
     problem_hash = self.request.get('problem_hash')
     first_occurrence_at = datetime.fromtimestamp(int(self.request.get('first_occurrence_at')))
@@ -313,7 +332,7 @@ class PostBugReportHandler(BaseHandler):
       
     occurrence = merge_occurrence()
       
-    self.send_urlencoded_and_finish(dict(occurrence_id = occurrence.key().id()))
+    self.send_urlencoded_and_finish(response = 'ok', occurrence_id = occurrence.key().id())
 
 url_mapping = [
   ('/', MainHandler),

@@ -5,10 +5,14 @@ import static com.yoursway.feedback.internal.Join.join;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.yoursway.feedback.Detail;
 import com.yoursway.feedback.FeedbackEngine;
@@ -49,7 +53,7 @@ public class FeedbackEngineImpl implements FeedbackEngine {
 			data.put("stack_trace", removeFirstLineOf(stackTraceOf(new RuntimeException(
 					"Fake exception to collect stack trace at call site"))));
 		data.put("problem_hash", YsDigest.sha1(RequestString.encode(data)));
-		encodeOccurrenceInfo(data, details);
+		encodeOccurrenceInfo(cause, data, details);
 		encodeEnvironmentInfo(data);
 		storage.addReport(data);
 		synchronized (this) {
@@ -76,9 +80,8 @@ public class FeedbackEngineImpl implements FeedbackEngine {
 		data.put("severity", severity.apiName);
 		if (cause != null) {
 			data.put("exception_names", join(",", exceptionNamesIn(cause)));
-			if (developerDescription == null)
-				developerDescription = cause.getMessage();
 			data.put("stack_trace", stackTraceOf(cause));
+			data.put("exception_messages", join("\n", messagesIn(cause)));
 		}
 		if (userDescription != null)
 			data.put("user_message", userDescription);
@@ -86,9 +89,40 @@ public class FeedbackEngineImpl implements FeedbackEngine {
 			data.put("developer_message", developerDescription);
 	}
 
-	private void encodeOccurrenceInfo(Map<String, String> data, Detail[] details) {
+	private static List<String> messagesIn(Throwable cause) {
+		List<String> messages = new ArrayList<String>();
+		Set<String> messageSet = new HashSet<String>();
+		for (Throwable throwable = cause; throwable != null; throwable = throwable.getCause()) {
+			String message = throwable.getMessage();
+			if (message != null) {
+				if (message.contains("\n"))
+					message = message.substring(0, message.indexOf('\n'));
+				if (message.length() > 1000)
+					message = message.substring(0, 999) + "…";
+				if (messageSet.add(message))
+					messages.add(message);
+			}
+		}
+		return messages;
+	}
+
+	private void encodeOccurrenceInfo(Throwable cause, Map<String, String> data, Detail[] details) {
+		for (Throwable throwable = cause; throwable != null; throwable = throwable.getCause()) {
+			try {
+				Method method = throwable.getClass().getMethod("feedbackDetails");
+				if (!Modifier.isStatic(method.getModifiers()) && Map.class.isAssignableFrom(method.getReturnType())) {
+					Map<String, Object> map = (Map<String, Object>) method.invoke(throwable);
+					if (map != null) {
+						for (Map.Entry<String, Object> entry : map.entrySet())
+							new Detail(entry.getKey(), entry.getValue()).addTo(this, data, "data_");
+					}
+				}
+			} catch (Throwable e) {
+			}
+		}
+		
 		for (Detail detail : details)
-			detail.addTo(data, "data_");
+			detail.addTo(this, data, "data_");
 	}
 
 	private static void copyWithPrefix(Map<String, String> target,
@@ -114,14 +148,27 @@ public class FeedbackEngineImpl implements FeedbackEngine {
 
 	private Map<String, String> collectEnvironmentInfo() {
 		Map<String, String> data = new HashMap<String, String>();
+		putSystemProperty(data, "java_version", "java.version");
 		data.put("product_name", productName);
 		data.put("product_version", productVersion);
-		data.put("os_name", System.getProperty("os.name"));
-		data.put("os_version", System.getProperty("os.version"));
-		data.put("jre_version", System.getenv("java.version"));
+		putSystemProperty(data, "os_name", "os.name");
+		putSystemProperty(data, "os_version", "os.version");
+		putSystemProperty(data, "os_arch", "os.arch");
+		putSystemProperty(data, "eclipse_build_id", "eclipse.buildId");
+		putSystemProperty(data, "eclipse_product", "eclipse.product");
+		putSystemProperty(data, "osgi_nl", "osgi.nl");
+		putSystemProperty(data, "osgi_os", "osgi.os");
+		putSystemProperty(data, "osgi_ws", "osgi.ws");
 		data.put("cpu_count", Integer.toString(Runtime.getRuntime()
 				.availableProcessors()));
 		return data;
+	}
+
+	private void putSystemProperty(Map<String, String> data, String key,
+			String property) {
+		String value = System.getProperty(property);
+		if (value != null && value.length() > 0)
+			data.put(key, value);
 	}
 
 	public void majorBackgroundProcessingIssue(Throwable optionalCause,
@@ -179,11 +226,15 @@ public class FeedbackEngineImpl implements FeedbackEngine {
 						} else {
 							lastEmptyQueueTimeOrMin = Long.MIN_VALUE;
 							try {
+								try {
 								communicator.sendReport(
 										clientInfoManager.get(), report.read());
 								System.out.println("Report sent!");
 								report.delete();
 								lastFailureTimeOrMin = Long.MIN_VALUE;
+								} catch (DesignatedCommunicationFailure e) {
+									handleDesignatedFailure(e);
+								}
 							} catch (IOException e) {
 								report.requeue();
 								System.out
@@ -209,6 +260,11 @@ public class FeedbackEngineImpl implements FeedbackEngine {
 			}
 		}
 
+	}
+
+	public void handleDesignatedFailure(DesignatedCommunicationFailure e) {
+		if (e.is("invalid-client-id"))
+			clientInfoManager.reset();
 	}
 
 }

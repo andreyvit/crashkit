@@ -2,7 +2,7 @@
 {% block title %}{{ product.friendly_name}} Bug{% endblock %}
 {% block content %}
 <div class="container">
-  <h1><a class="back" href="..">« Back</a> {{ product.friendly_name}} <span>Bug</span></h1>
+  <h1><a class="back" href="..">« Back</a> {{ product.friendly_name}} <span>{{ problem.bug_name }}</span></h1>
   <table style="width: 80%">
     <col width="230" />
     {% if problem.exception_names_as_string %}
@@ -84,7 +84,7 @@
       <tr class="{% cycle odd,even %}">
         <td class="oddcol"><big>{{occurrence.count}}</big> <span class="dim">{%ifequal occurrence.count 1%}case{%else%}cases{%endifequal%}</span></td>
         <td class="date evencol">{% ifequal occurrence.first_occurrence_at|naturalday:"Nj,Y" occurrence.last_occurrence_at|naturalday:"Nj,Y" %}{{ occurrence.first_occurrence_at|naturalday:"N j, Y" }}{% else %}{{ occurrence.first_occurrence_at|naturalday:"N j, Y" }} – {{ occurrence.last_occurrence_at|naturalday:"N j, Y"}}{% endifequal %}</span></td>
-        {% for key in data_keys %}<td class="{% if forloop.counter|divisibleby:2 %}evencol{%else%}oddcol{% endif %}" title="{{ occurrence|kgetattr:key|unshortened_tooltip:8}}">{{ occurrence|kgetattr:key|shorten:8 }}</td>{% endfor %}
+        {% for key in data_keys %}<td class="{% if forloop.counter|divisibleby:2 %}evencol{%else%}oddcol{% endif %}" title="{{ occurrence|kgetattr:key|unshortened_tooltip:15}}">{{ occurrence|kgetattr:key|shorten:15 }}</td>{% endfor %}
       </tr>
     {% endfor %}
   </table>
