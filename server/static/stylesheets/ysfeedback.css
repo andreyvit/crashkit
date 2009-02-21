@@ -27,7 +27,6 @@ body { font-family: Cambria, Georgia, serif; background: #eee; color: #111; font
 textarea { width: 75%; }
 #submit-div { text-align: right; width: 75%; }
 
-form { margin-bottom: 2em; }
 #new-post h2 { margin-top: 0.5em; }
 
 .container, .dev-message { width: 800px; margin-left: auto; margin-right: auto; }
@@ -60,17 +59,20 @@ tr.even td.evencol { background: #ededed !important; }
 .date, .dim { color: #777; }
 span.date { padding-left: 1ex; }
 
-.table-scrolling-container { overflow: scroll; padding-left: 10px; margin-left: -10px; }
+.table-scrolling-container { overflow: auto; padding-left: 10px; margin-left: -10px; }
 
 .long-container, .dev-message { width: 1000px; margin-left: auto; margin-right: auto; }
 
 .problem-box { float: left; width: 440px; margin: 1em 10px 1em 0px; line-height: 1.33; }
 
+.problem-box.singlular { float: none; width: inherit; margin: 1em 0px 0em 0px; }
+
 .problem-box h2 { margin-top: 0px; }
 
-.problem-box h2, .problem-box p { margin-left: 110px; }
+.problem-box h2, .problem-box p { margin-left: 130px; }
+.problem-box table              { margin-left: 120px; }
 
-.problem-box .dropin { display: block; text-decoration: none; float: left; font-size: 4em; line-height: 1; background: #777; color: white; height: 1.33em; width: 100px; text-align: center; margin-right: 20px; padding: 0.1em 0.1em; }
+.problem-box .dropin { display: block; text-decoration: none; float: left; font-size: 4em; line-height: 1; background: #777; color: white; height: 1.33em; width: 100px; text-align: center; padding: 0.1em 0.1em; }
 
 .problem-box.minor-visual .dropin { background: #777700; }
 
@@ -86,3 +88,49 @@ h1 .back, h1 a.back:visited { margin-left: -100px; width: 100px; float: left; fo
 
 h1 a.back { display: block; }
 h1 a.back, h1 a.back:visited { color: black; }
+
+
+/* begin css tabs */
+
+ul#tabnav { /* general settings */
+	text-align: left; /* set to left, right or center */
+	margin: 1em -10px 1em -6em; /* set margins as desired */
+	line-height: 1;
+	font: 1em Cambria, Georgia, serif;
+	border-bottom: 1px solid #6c6; /* set border COLOR as desired */
+	list-style-type: none;
+	padding: 3px 10px 3px 6em; /* THIRD number must change with respect to padding-top (X) below */
+}
+
+ul#tabnav li { /* do not change */
+	display: inline;
+}
+
+body#new-tab li.new-tab, body#all-tab li.all-tab, body#bug-tab li.bug-tab, body#tab4 li.tab4 { /* settings for selected tab */
+	border-bottom: 1px solid #eee; /* set border color to page background color */
+	background-color: #eee; /* set background color to match above border color */
+}
+
+body#new-tab li.new-tab a, body#all-tab li.all-tab a, body#bug-tab li.bug-tab a, body#tab4 li.tab4 a { /* settings for selected tab link */
+	background-color: #eee; /* set selected tab background color as desired */
+	color: #000; /* set selected tab link color as desired */
+	position: relative;
+	top: 1px;
+	padding-top: 4px; /* must change with respect to padding (X) above and below */
+}
+
+ul#tabnav li a { /* settings for all tab links */
+	padding: 3px 4px; /* set padding (tab size) as desired; FIRST number must change with respect to padding-top (X) above */
+	border: 1px solid #6c6; /* set border COLOR as desired; usually matches border color specified in #tabnav */
+	background-color: #cfc; /* set unselected tab background color as desired */
+	color: #666; /* set unselected tab link color as desired */
+	margin-right: 0px; /* set additional spacing between tabs as desired */
+	text-decoration: none;
+	border-bottom: none;
+}
+
+ul#tabnav a:hover { /* settings for hover effect */
+	background: #fff; /* set desired hover color */
+}
+
+/* end css tabs */

@@ -1,0 +1,24 @@
+[
+    {
+        "date": "2009-01-12",
+        "count": 12,
+        "userActionOrScreenNameOrBackgroundProcess": "File > Save",
+        "severity": "normal",
+        "exceptions": [
+            {
+                "name": "NullPointerException",
+                "message": "result is null",
+                "locations": [
+                    { "package": "org.eclipse.swt", "class": "SWT", "method": "error", "line": 73 },
+                    { "package": "org.eclipse.swt", "class": "Shell", "method": "setText", "line": 54 }
+                ]
+            }
+        ],
+        "data": {
+            "key": "test"
+        },
+        "env": {
+            "os_name": "Mac OS X"
+        }
+    }
+]

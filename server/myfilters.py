@@ -37,7 +37,10 @@ def unshortened_tooltip(value, l):
 @register.filter
 def naturalday(value, fmt = '%A'):
   today = datetime.date.today()
-  value = datetime.date(value.year, value.month, value.day)
+  try:
+    value = datetime.date(value.year, value.month, value.day)
+  except Exception, e:
+    return "%s" % e.__class__.__name__ 
   delta = datetime.timedelta(days=1)
   if value == today:
       return 'today'

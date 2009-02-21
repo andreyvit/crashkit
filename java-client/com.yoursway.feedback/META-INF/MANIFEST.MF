@@ -5,4 +5,5 @@ Bundle-SymbolicName: com.yoursway.feedback
 Bundle-Version: 1.0.0
 Bundle-Vendor: YourSway
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
-Export-Package: com.yoursway.feedback
+Export-Package: com.yoursway.feedback,
+ com.yoursway.feedback.exceptions

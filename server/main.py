@@ -13,97 +13,13 @@ from google.appengine.ext.webapp import template
 from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.api import memcache
+from django.utils import simplejson as json
+from models import *
+from processor import process_report
 
 template_path = os.path.join(os.path.dirname(__file__), 'templates')
 template.register_template_library('myfilters')
 
-def random_string(len = 12, chars = string.letters+string.digits):
-  return ''.join(Random().sample(chars, 12))
-  
-def flatten(l, ltypes=(list, tuple)):
-  ltype = type(l)
-  l = list(l)
-  i = 0
-  while i < len(l):
-    while isinstance(l[i], ltypes):
-      if not l[i]:
-        l.pop(i)
-        i -= 1
-        break
-      else:
-        l[i:i + 1] = l[i]
-    i += 1
-  return ltype(l)
-
-
-# models
-
-def transaction(method):
-  def decorate(*args, **kwds):
-    return db.run_in_transaction(method, *args, **kwds)
-  return decorate
-  
-class Account(db.Model):
-  host = db.StringProperty()
-  created_at = db.DateTimeProperty(auto_now_add = True)
-
-class Product(db.Model):
-  account = db.ReferenceProperty(Account, collection_name = 'products')
-  unique_name = db.StringProperty()
-  friendly_name = db.StringProperty()
-  created_at = db.DateTimeProperty(auto_now_add = True)
-
-class Client(db.Model):
-  product = db.ReferenceProperty(Product, collection_name = 'clients')
-  cookie = db.StringProperty()
-  created_at = db.DateTimeProperty(auto_now_add = True)
-  last_bug_reported_at = db.DateTimeProperty()
-  
-class Problem(db.Model):
-  product = db.ReferenceProperty(Product, collection_name = 'problems')
-  created_at = db.DateTimeProperty(auto_now_add = True)
-  severity = db.StringProperty()
-  exception_names = db.StringListProperty()
-  stack_trace = db.TextProperty()
-  user_message = db.TextProperty()
-  developer_message = db.TextProperty()
-  occurrence_count = db.IntegerProperty()
-  first_occurrence_at = db.DateTimeProperty()
-  last_occurrence_at = db.DateTimeProperty()
-  
-  def message(self):
-    if self.developer_message and self.user_message:
-      return u"%s — “%s”" % (self.developer_message, self.user_message)
-    if self.developer_message:
-      return self.developer_message
-    if self.user_message:
-      return u"“%s”" % self.user_message
-    return "(No details)"
-    
-  def bug_name(self):
-    if self.severity == 'silent-recovery':
-      return 'Silently Recovered Bug'
-    elif self.severity == 'major-user':
-      return 'Major User Action Bug'
-    elif self.severity == 'major-background':
-      return 'Major Background Bug'
-    elif self.severity == 'minor-visual':
-      return 'Minor Visual Bug'
-    else:
-      return 'Bug'
-  
-  def exception_names_as_string(self):
-    return ", ".join([ e[e.rfind('.')+1:len(e)] for e in self.exception_names])
-  
-class Occurrence(db.Expando):
-  problem = db.ReferenceProperty(Problem, collection_name = 'occurrences')
-  client = db.ReferenceProperty(Client, collection_name = 'occurrences')
-  first_occurrence_at = db.DateTimeProperty()
-  last_occurrence_at = db.DateTimeProperty()
-  count = db.IntegerProperty()
-  
-
-# controllers
 
 class FinishRequest(Exception):
   pass
@@ -139,9 +55,10 @@ class BaseHandler(webapp.RequestHandler):
     self.response.out.write(urllib.urlencode(hash))
     raise FinishRequest
     
-  def blow(self, code, **hash):
+  def blow(self, code, response, **data):
     self.error(code)
-    self.response.out.write(urllib.urlencode(hash))
+    data.update(response = response)
+    self.response.out.write(urllib.urlencode(data))
     raise FinishRequest
     
   def render_and_finish(self, *path_components):
@@ -165,7 +82,7 @@ class BaseHandler(webapp.RequestHandler):
     self.error(code)
     self.data.update(message = message)
     self.render_and_finish('errors', template)
-
+    
 
 class MainHandler(BaseHandler):
 
@@ -204,7 +121,35 @@ class ObtainClientIdHandler(BaseHandler):
     client.put()
     self.send_urlencoded_and_finish(response = 'ok', client_id = client.key().id(), client_cookie = client.cookie)
 
-class BugListHandler(BaseHandler):
+class NewBugListHandler(BaseHandler):
+
+  @prolog()
+  def get(self, product_name):
+    account = Account.get_or_insert(self.request.host, host = self.request.host)
+    product = Product.all().filter('unique_name =', product_name).filter('account =', account).get()
+    if product == None:
+      self.not_found("Product not found")
+      
+    cases = product.cases.filter('ticket =', None).order('-occurrence_count').fetch(100)
+    
+    self.data.update(tabid = 'new-tab', product_path=".", account = account, product = product, cases = cases)
+    self.render_and_finish('buglist.html')
+
+class AllBugListHandler(BaseHandler):
+
+  @prolog()
+  def get(self, product_name):
+    account = Account.get_or_insert(self.request.host, host = self.request.host)
+    product = Product.all().filter('unique_name =', product_name).filter('account =', account).get()
+    if product == None:
+      self.not_found("Product not found")
+      
+    cases = product.cases.order('-occurrence_count').fetch(100)
+    
+    self.data.update(tabid = 'all-tab', product_path=".", account = account, product = product, cases = cases)
+    self.render_and_finish('buglist.html')
+
+class RecentCaseListHandler(BaseHandler):
 
   @prolog()
   def get(self, product_name):
@@ -225,11 +170,11 @@ class BugHandler(BaseHandler):
     product = Product.all().filter('unique_name =', product_name).filter('account =', account).get()
     if product == None:
       self.not_found("Product not found")
-    problem = Problem.get_by_key_name(problem_name)
-    if problem == None or problem.product.key() != product.key():
+    case = Case.get_by_key_name(problem_name)
+    if case == None or case.product.key() != product.key():
       self.not_found("Bug report not found")
     
-    occurrences = problem.occurrences.order('-count').fetch(100)
+    occurrences = case.occurrences.order('-count').fetch(100)
     clients = Client.get([o.client.key() for o in occurrences])
 
     common_map = dict()
@@ -248,99 +193,90 @@ class BugHandler(BaseHandler):
     env_items = [(k, common_map[k]) for k in common_keys if k.startswith('env_')]
     common_data_items = [(k, common_map[k]) for k in common_keys if k.startswith('data_')]
       
-    self.data.update(account = account, product = product, problem = problem,
+    self.data.update(tabid = 'bug-tab', product_path="../..", bug_id=True,
+        account = account, product = product, case = case,
         occurrences = occurrences, env_items = env_items, common_data_items = common_data_items,
         data_keys = data_keys)
     self.render_and_finish('bug.html')
 
+class AssignTicketToBugHandler(BaseHandler):
+  
+  @prolog()
+  def post(self, product_name, bug_name):
+    account = Account.get_or_insert(self.request.host, host = self.request.host)
+    product = Product.all().filter('unique_name =', product_name).filter('account =', account).get()
+    if product == None:
+      self.not_found("Product not found")
+    case = Case.get_by_key_name(bug_name)
+    if case == None or case.product.key() != product.key():
+      self.not_found("Bug report not found")
+      
+    ticket_name = self.request.get('ticket')
+    if ticket_name == None or len(ticket_name.strip()) == 0:
+      ticket = None
+    else:
+      ticket = Ticket.get_or_insert(key_name=Ticket.key_name_for(product.key().id_or_name(), ticket_name),
+        product = product, name = ticket_name)
+      
+    def txn(case_key):
+      c = Case.get(case_key)
+      c.ticket = ticket
+      c.put()
+    db.run_in_transaction(txn, case.key())
+    
+    self.redirect_and_finish(".")
+
 class PostBugReportHandler(BaseHandler):
 
   @prolog()
-  def post(self, product_name, client_id):
+  def post(self, product_name, client_id, client_cookie):
     account = Account.get_or_insert(self.request.host, host = self.request.host)
-    product = Product.all().filter('unique_name =', product_name).filter('account =', account).get()
+    product = account.products.filter('unique_name =', product_name).get()
     if product == None:
       self.not_found("Product not found")
       
     client = Client.get_by_id(int(client_id))
     if client == None:
       logging.warn('Client ID requested but not found: "%s"' % client_id)
-      self.blow(403, response = 'invalid-client-id')
+      self.blow(403, 'invalid-client-id')
       
-    if self.request.get('client_cookie') != client.cookie:
-      logging.warn('Client ID cookie invalid: "%s" / "%s"' % (client_id, self.request.get('client_cookie')))
-      self.blow(403, response = 'invalid-client-id')
-    
-    problem_hash = self.request.get('problem_hash')
-    first_occurrence_at = datetime.fromtimestamp(int(self.request.get('first_occurrence_at')))
-    last_occurrence_at = datetime.fromtimestamp(int(self.request.get('last_occurrence_at')))
-    count = int(self.request.get('count'))
-    
-    @transaction
-    def create_or_update_problem():
-      key_name = 'prob.%s' % problem_hash
-      problem = Problem.get_by_key_name(key_name)
-      if problem == None:
-        problem = Problem(key_name = key_name)
-        problem.product = product
-        problem.severity = (self.request.get('severity') or 'unknown')
-        problem.exception_names = (self.request.get('exception_names') or '').split(',')
-        problem.stack_trace = (self.request.get('stack_trace') or None)
-        problem.user_message = (self.request.get('user_message') or None)
-        problem.developer_message = (self.request.get('developer_message') or None)
-        problem.first_occurrence_at = first_occurrence_at
-        problem.last_occurrence_at = last_occurrence_at
-        problem.occurrence_count = count
-      else:
-        problem.occurrence_count += count
-        if first_occurrence_at < problem.first_occurrence_at:
-          problem.first_occurrence_at = first_occurrence_at
-        if last_occurrence_at > problem.last_occurrence_at:
-          problem.last_occurrence_at = last_occurrence_at
-      problem.put()
-      return problem
-    problem = create_or_update_problem()
-    
-    hash = self.request.get('hash')
-    data = [(k, v) for k, v in self.request.params.iteritems() if k.startswith('data_')]
-    env = [(k, v) for k, v in self.request.params.iteritems() if k.startswith('env_')]
-
-    @transaction
-    def merge_occurrence():
-      key_name = 'occur.%s' % hash
-      occurrence = Occurrence.get_by_key_name(key_name)
-      if occurrence == None:
-        occurrence = Occurrence(key_name = key_name)
-        occurrence.first_occurrence_at = first_occurrence_at
-        occurrence.last_occurrence_at = last_occurrence_at
-        occurrence.count = count
-        occurrence.problem = problem
-        occurrence.client = client
-        
-        for k, v in data + env:
-          setattr(occurrence, k, v)
-      else:
-        if occurrence.client.key() != client.key() or occurrence.problem.key() != problem.key():
-          self.access_denied("Invalid client or problem of existing occurrence")
-        if first_occurrence_at < occurrence.first_occurrence_at:
-          occurrence.first_occurrence_at = first_occurrence_at
-        if last_occurrence_at > occurrence.last_occurrence_at:
-          occurrence.last_occurrence_at = last_occurrence_at
-        occurrence.count += count
-      occurrence.put()
-      return occurrence
+    if client_cookie != client.cookie:
+      logging.warn('Client ID cookie invalid: "%s" / "%s"' % (client_id, client_cookie))
+      self.blow(403, 'invalid-client-id')
       
-    occurrence = merge_occurrence()
+    body = (self.request.body or '').strip()
+    if len(body) == 0:
+      self.blow(400, 'json-payload-required')
+    
+    report = Report(product=product, client=client, remote_ip=self.request.remote_addr, data=self.request.body)
+    report.put()
+    
+    process_report(report)
       
-    self.send_urlencoded_and_finish(response = 'ok', occurrence_id = occurrence.key().id())
+    self.send_urlencoded_and_finish(response = 'ok', status = report.status, error = (report.error or 'none'))
+  get=post
+    
+class ProcessPendingReportsHandler(BaseHandler):
+  
+  @prolog()
+  def get(self):
+    account = Account.get_or_insert(self.request.host, host = self.request.host)
+    report = account.reports.filter('status =', 0).get()
+    if report == None:
+      self.send_urlencoded_and_finish(response = 'no-more')
+    process_report(report)
+    self.send_urlencoded_and_finish(response = 'done', report_key = report.key())
 
 url_mapping = [
   ('/', MainHandler),
   ('/create-product', CreateProductHandler),
-  ('/([a-zA-Z0-9._-]+)/', BugListHandler),
-  ('/([a-zA-Z0-9._-]+)/problems/([-a-zA-Z0-9._-]+)', BugHandler),
+  ('/process', ProcessPendingReportsHandler),
+  ('/([a-zA-Z0-9._-]+)/', NewBugListHandler),
+  ('/([a-zA-Z0-9._-]+)/all', AllBugListHandler),
+  ('/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/', BugHandler),
+  ('/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/assign-ticket', AssignTicketToBugHandler),
   ('/([a-zA-Z0-9._-]+)/obtain-client-id', ObtainClientIdHandler),
-  ('/([a-zA-Z0-9._-]+)/post-report/([0-9]+)', PostBugReportHandler),
+  ('/([a-zA-Z0-9._-]+)/post-report/([0-9]+)/([a-zA-Z0-9]+)', PostBugReportHandler),
 ]
 
 def main():

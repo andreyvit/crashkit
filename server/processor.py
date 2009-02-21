@@ -1,0 +1,124 @@
+# -*- coding: utf-8
+from datetime import date, datetime, timedelta
+import time
+import logging
+import wsgiref.handlers
+import os
+import string
+import urllib
+import sets
+import hashlib
+from random import Random
+from google.appengine.ext import db
+from google.appengine.api import memcache
+from django.utils import simplejson as json
+from models import *
+
+class ApiError(Exception):
+  pass
+  
+def process_report(report):
+  try:
+    try:
+      data = json.loads(report.data)
+      occurrences = [ReportedOccurrence(report.product, report.client, item) for item in data]
+    except ValueError, e:
+      raise ApiError, e
+    except KeyError, e:
+      raise ApiError, e
+    resulting_occurrences = []
+    for occurrence in occurrences:
+      resulting_occurrences.append(occurrence.submit().key())
+    report.occurrences = resulting_occurrences
+  except ApiError, e:
+    report.error = "%s: %s" % (e.__class__.__name__, e.message)
+    report.status = REPORT_ERROR
+    report.put()
+    return
+  report.status = REPORT_OK
+  report.put()
+
+
+# class ExceptionInfo(object):
+#   def __init__(self, name, locations):
+#     self.name = name
+#     self.locations = locations
+#     
+#   def __repr__(self):
+#     return 'ExceptionInfo(%s, %s)' % (repr(name), repr(locations))
+#   
+# class javalocation(object):
+#   def __init__(self, package, klass, method, line):
+#     self.package = package
+#     self.klass = klass
+#     self.method = method
+#     self.line = line
+#     
+#   def __repr__(self):
+#     return 'javalocation(%s, %s, %s, %s)' % (repr(self.package), repr(self.klass), repr(self.method), repr(self.line))
+
+@transaction
+def create_or_update_case(case_hash, product, severity, context, date, count, exceptions_json):
+  key_name = Case.key_name_for(product.key(), case_hash)
+  case = Case.get_by_key_name(key_name)
+  if case == None:
+    case = Case(key_name=key_name, product=product, context=context,
+      severity=severity, exceptions=exceptions_json,
+      occurrence_count=count, first_occurrence_on=date, last_occurrence_on=date)
+  else:
+    case.occurrence_count += count
+    if date < case.first_occurrence_on:
+      case.first_occurrence_on = date
+    if date > case.last_occurrence_on:
+      case.last_occurrence_on = date
+  case.put()
+  return case
+
+@transaction
+def create_or_update_occurrence(occurrence_hash, case, client, date, messages, data, env, count):
+  key_name = Occurrence.key_name_for(case.key().id_or_name(), client.key().id_or_name(), occurrence_hash)
+  occurrence = Occurrence.get_by_key_name(key_name)
+  if occurrence == None:
+    occurrence = Occurrence(key_name=key_name, case=case, client=client, date=date, count=count,
+        exception_messages=repr(messages))
+    for k, v in data.iteritems():
+      setattr(occurrence, 'data_%s' % k, v)
+    for k, v in env.iteritems():
+      setattr(occurrence, 'env_%s' % k, v)
+  else:
+    occurrence.count += count
+  occurrence.put()
+  return occurrence
+
+class ReportedOccurrence(object):
+  
+  def __init__(self, product, client, data):
+    self.product = product
+    self.client = client
+    self.date = date(*(time.strptime(data['date'], '%Y-%m-%d')[0:3]))
+    self.count = int(data['count'])
+    self.exception_messages = [e['message'] for e in data['exceptions']]
+    self.severity = (2 if data['severity'] == 'major' else 1)
+    self.context_name = (data['userActionOrScreenNameOrBackgroundProcess'] if len(data['userActionOrScreenNameOrBackgroundProcess'])>0 else 'unknown')
+    self.env = (data['env'] or {})
+    self.data = (data['data'] or {})
+    self.exceptions = [
+      dict(name=e['name'],
+        locations=[dict(package=el['package'], klass=el['class'], method=el['method'], line=int(el['line'])) for el in e['locations']])
+      for e in data['exceptions'] ]
+   
+  def submit(self):
+    context = Context.get_or_insert(Context.key_name_for(self.product.key(), self.context_name),
+        product=self.product, name=self.context_name)
+    
+    exceptions_json = repr(self.exceptions)
+    case_salt = "%s|%s|%s" % (self.severity, self.context_name, exceptions_json)
+    case_hash = hashlib.sha1(case_salt).hexdigest()
+    
+    occurrence_salt = "%s|%s|%s|%s|%s" % (case_hash, repr(self.exception_messages), repr(self.env), repr(self.data), self.date)
+    occurrence_hash = hashlib.sha1(occurrence_salt).hexdigest()
+    
+    case = create_or_update_case(case_hash, self.product, self.severity, context, self.date, self.count, exceptions_json)
+    occurrence = create_or_update_occurrence(occurrence_hash, case, self.client, self.date,
+        self.exception_messages, self.data, self.env, self.count)
+    return occurrence

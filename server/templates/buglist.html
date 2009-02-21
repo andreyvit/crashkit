@@ -1,40 +1,24 @@
 {% extends 'base.html' %}
 {% block title %}{{ product.friendly_name}} Bugs{% endblock %}
 {% block content %}
+
 <div class="long-container clearfix">
-  <h1>{{ product.friendly_name}} <span>Bugs</span></h1>
-  {% for problem in problems %}
-    <div class="problem-box {{ problem.severity }} clearfix">
-      <a class="dropin" title="{{ problem.bug_name }}" href="problems/{{ problem.key.name|urlencode }}">
-        {{problem.occurrence_count}}
-        <span class="caption">{% ifequal problem.occurrence_count 1 %}occurrence{% else %}occurrences{%endifequal%}</span>
+  {% for case in cases %}
+    <div class="problem-box {{ case.severity }} clearfix">
+      <a class="dropin" title="{{ case.bug_name }}" href="bugs/{{ case.key.name }}/">
+        {{case.occurrence_count}}
+        <span class="caption">{% ifequal case.occurrence_count 1 %}occurrence{% else %}occurrences{%endifequal%}</span>
       </a>
-      {% if problem.exception_names_as_string %}
-        <h2><a href="problems/{{ problem.key.name|urlencode }}">
-            {{ problem.exception_names_as_string }}
+        <h2><a href="bugs/{{ case.key.name }}/">
+            {{ case.exception_name }}
         </a></h2>
-        {% if problem.message %}
-          <p>{{ problem.message }}</p>
-        {% endif %}
-      {% else %}
-        {% if problem.developer_message %}
-          <h2><a href="problems/{{ problem.key.name|urlencode }}">
-              {{ problem.developer_message }}
-          </a></h2>
-          {% if problem.user_message %}
-            <p>“{{ problem.user_message }}”</p>
-          {% endif %}
-        {% else %}
-          <h2><a href="problems/{{ problem.key.name|urlencode }}">
-              {{ problem.message }}
-          </a></h2>
-        {% endif %}
-      {% endif %}
+        <p>{{ case.exception_package }}<br>
+        {{ case.exception_location }} <span class="dim">{{ case.exception_line }}</span></p>
       <p class="date">
-        {% ifequal problem.first_occurrence_at.date problem.last_occurrence_at.date %}
-          Occurred {{ problem.first_occurrence_at|naturalday:"%b %d, %Y" }}
+        {% ifequal case.first_occurrence_on case.last_occurrence_on %}
+          Occurred {{ case.first_occurrence_on|naturalday:"%b %d, %Y" }}
         {% else %}
-          Occurring from {{ problem.first_occurrence_at|naturalday:"%b %d, %Y" }} till {{ problem.last_occurrence_at|naturalday:"%b %d, %Y"}}
+          Occurring from {{ case.first_occurrence_on|naturalday:"%b %d, %Y" }} till {{ case.last_occurrence_on|naturalday:"%b %d, %Y"}}
         {% endifequal %}
       </p>
     </div>

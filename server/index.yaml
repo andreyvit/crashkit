@@ -10,14 +10,36 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
-# Used 350 times in query history.
+# Used 62 times in query history.
+- kind: Case
+  properties:
+  - name: product
+  - name: occurrence_count
+    direction: desc
+
+# Used 2 times in query history.
+- kind: Case
+  properties:
+  - name: product
+  - name: ticket
+  - name: occurrence_count
+    direction: desc
+
+# Used 173 times in query history.
+- kind: Occurrence
+  properties:
+  - name: case
+  - name: count
+    direction: desc
+
+# Used 384 times in query history.
 - kind: Occurrence
   properties:
   - name: problem
   - name: count
     direction: desc
 
-# Used 189 times in query history.
+# Used 228 times in query history.
 - kind: Problem
   properties:
   - name: product

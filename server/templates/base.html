@@ -6,8 +6,20 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<title>{% block title %}{% endblock %}</title>
 	<link rel="stylesheet" type="text/css" href="/static/stylesheets/ysfeedback.css" />
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.1/jquery.min.js"></script>
 </head>
-<body>
+<body id="{{ tabid }}">
+  <div class="long-container clearfix">
+    <h1>{{ product.friendly_name}} <span>Bugs</span></h1>
+
+    <ul id="tabnav">
+    	<li class="new-tab"><a href="{{product_path}}/">New Bugs</a></li>
+    	<li class="all-tab"><a href="{{product_path}}/all">All Bugs</a></li>
+    	{% if bug_id %}
+    	<li class="bug-tab"><a href="{{product_path}}/all">{% if case.ticket %}Assigned{%else%}Unassigned{%endif%} Bug</a></li>
+      {% endif %}
+    </ul>
+  </div>
   {% block content %}{% endblock %}
   <div id="footer">
     © 2009 — <a href="mailto:support@yoursway.com">e-mail support</a>
