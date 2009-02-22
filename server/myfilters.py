@@ -50,6 +50,38 @@ def scalenum(value):
   if value >= 100:
     return """<span class="dig3">%d</span>""" % value
   return value
+  
+def shorten_fragment(o):
+  if len(o) < 5:
+    return o
+  suffix_len = 2
+  if o.endswith('ion') or o.endswith('ing'):
+    suffix_len = 3
+  prefix, mid, suffix = o[0:2], o[2:-suffix_len], o[-suffix_len:]
+  result = prefix + re.sub('[euioa]', '', mid) + suffix
+  if len(result) == len(o) - 1 and not re.search('[euioa]', prefix):
+    return o  # removing just one letter is a bad choice
+  return result
+  
+@register.filter
+def smartshorten(s, target_len):
+    
+  def repl2(o):
+    return shorten_fragment(o.group(0))
+  
+  def repl(o):
+    o = o.group(0)
+    if re.search('[A-Z]', o):
+      return re.sub('(?:^|[A-Z])[a-z]*', repl2, o)
+    else:
+      return shorten_fragment(o)
+      
+  if len(s) <= target_len:
+    return s
+  result = re.sub('[a-zA-Z]+', repl, s)
+  if len(result) > target_len:
+    result = result[0:target_len]
+  return result
 
 @register.filter
 def naturalday(value, fmt = '%A'):
