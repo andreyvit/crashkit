@@ -15,7 +15,7 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 from django.utils import simplejson as json
 from models import *
-from processor import process_report
+from processor import process_report, process_case
 
 template_path = os.path.join(os.path.dirname(__file__), 'templates')
 template.register_template_library('myfilters')
@@ -255,6 +255,94 @@ class PostBugReportHandler(BaseHandler):
       
     self.send_urlencoded_and_finish(response = 'ok', status = report.status, error = (report.error or 'none'))
   get=post
+  
+class Temp(BaseHandler):
+  # @prolog()
+  def get(self):
+    func_name = self.request.get('func')
+    func = None
+    if func_name:
+      try:
+        func = getattr(self, func_name.replace('-', '_'))
+      except AttributeError:
+        pass
+        
+    if func:
+      batch_size, items = func(None)
+      if self.request.get('batchsize'):
+        batch_size = int(self.request.get('batchsize'))
+        
+      start_key = self.request.get('key')
+      if start_key:
+        items = items.filter('__key__ >', db.Key(start_key))
+        
+      items = items.order('__key__').fetch(batch_size)
+      for item in items:
+        func(item)
+        
+      total_processed = len(items)
+      if self.request.get('total'):
+        total_processed += int(self.request.get('total'))
+      self.response.out.write("<p>%d items this time, %d items total.<br>" % (len(items), total_processed))
+      
+      last_key = None if len(items) < batch_size else str(items[-1].key())
+      if last_key:
+        self.response.out.write("""<h2>Continue %s</h2>\n""" % func_name);
+        self.response.out.write("""<form action="/iterate" method="GET">\n""");
+        self.response.out.write("""<input type="hidden" name="func" value="%s">\n""" % func_name);
+        self.response.out.write("""<input type="hidden" name="total" value="%d">\n""" % total_processed);
+        self.response.out.write("""<input type="hidden" name="key" value="%s">\n""" % last_key);
+        self.response.out.write("""<p>Batch size: <input type="text" name="batchsize" size="5" value="%d">\n""" % batch_size);
+        self.response.out.write("""<input type="submit" value="Continue %s">\n""" % func_name);
+        self.response.out.write("""</form>\n""");
+      else:
+        self.response.out.write("""<h2>%s done</h2>\n""" % func_name);
+      
+    self.response.out.write("""<h2>Start iteration</h2>\n""");
+    self.response.out.write("""<p><a href="/iterate">Refresh list of methods</a></p>\n""");
+    self.response.out.write("""<form action="/iterate" method="GET">\n""");
+    for func in filter(lambda f: not(f.startswith('__') or f == 'get'), self.__class__.__dict__.keys()):
+      self.response.out.write("""<input type="submit" name="func" value="%s">\n""" % func.replace('_', '-'));
+    self.response.out.write("""</form>\n""");
+      
+      
+  def delete_all_cases(self, item):
+    if item == None:
+      return 40, Case.all()
+    item.delete()
+      
+  def delete_all_bugs(self, item):
+    if item == None:
+      return 40, Bug.all()
+    item.delete()
+    
+  def clear_bugs_from_cases(self, item):
+    if item == None:
+      return 20, Case.all().filter('bug !=', None)
+    item.bug = None
+    item.put()
+    
+  def assign_bugs_to_cases_without_bugs(self, item):
+    if item == None:
+      return 20, Case.all().filter('bug =', None)
+    process_case(item)
+      
+  def requeue_all_reports(self, item):
+    if item == None:
+      return 40, Report.all().filter('status =', 1)
+    item.status = 0
+    item.put()
+
+  def process_pending_reports(self, item):
+    if item == None:
+      return 40, Report.all().filter('status =', 0)
+    try:
+      process_report(item)
+    except Exception, e:
+      item.status = 2
+      item.put()
+      self.response.out.write("""<div>Error: %s %s</div>""" % (e.__class__.__name__, e.message));
+      
     
 class ProcessPendingReportsHandler(BaseHandler):
   
@@ -271,6 +359,7 @@ url_mapping = [
   ('/', MainHandler),
   ('/create-product', CreateProductHandler),
   ('/process', ProcessPendingReportsHandler),
+  ('/iterate', Temp),
   ('/([a-zA-Z0-9._-]+)/', NewBugListHandler),
   ('/([a-zA-Z0-9._-]+)/all', AllBugListHandler),
   ('/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/', BugHandler),

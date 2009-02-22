@@ -30,6 +30,9 @@ def process_report(report):
     for occurrence in occurrences:
       resulting_occurrences.append(occurrence.submit().key())
     report.occurrences = resulting_occurrences
+    cases = list(sets.Set(map(lambda o: o.case, resulting_occurrences)))
+    for case in cases:
+      process_case(case)
   except ApiError, e:
     report.error = "%s: %s" % (e.__class__.__name__, e.message)
     report.status = REPORT_ERROR
@@ -37,7 +40,39 @@ def process_report(report):
     return
   report.status = REPORT_OK
   report.put()
-
+  
+def process_case(case):
+  definitive_location = case.definitive_location()
+  dummy_index, case.exception_name, case.exception_package, case.exception_klass, case.exception_method, case.exception_line = definitive_location
+  
+  location_salt = "%s|%s|%s|%s|%d" % (case.exception_name, case.exception_package, case.exception_klass, case.exception_method, case.exception_line)
+  location_hash = hashlib.sha1(location_salt).hexdigest()
+  logging.warn("hash(%s) = %s" % (location_salt, location_hash))
+  
+  def txn():
+    key_name = Bug.key_name_for(case.product.key().id_or_name(), location_hash)
+    bug = Bug.get_by_key_name(key_name)
+    if bug == None:
+      bug = Bug(key_name=key_name, product=case.product, exception_name=case.exception_name,
+          exception_package=case.exception_package, exception_klass=case.exception_klass,
+          exception_method=case.exception_method, exception_line=case.exception_line,
+          max_severity=case.severity, occurrence_count=case.occurrence_count,
+          first_occurrence_on=case.first_occurrence_on, last_occurrence_on=case.last_occurrence_on)
+    else:
+      bug.max_severity        = max(bug.max_severity, case.severity)
+      bug.occurrence_count   += case.occurrence_count
+      bug.first_occurrence_on = min(bug.first_occurrence_on, case.first_occurrence_on)
+      bug.last_occurrence_on  = max(bug.last_occurrence_on, case.last_occurrence_on)
+    bug.put()
+    return bug
+  bug = db.run_in_transaction(txn)
+  
+  def txn(key):
+    case = Case.get(key)
+    case.bug = bug
+    dummy_index, case.exception_name, case.exception_package, case.exception_klass, case.exception_method, case.exception_line = definitive_location
+    case.put()
+  db.run_in_transaction(txn, case.key())
 
 # class ExceptionInfo(object):
 #   def __init__(self, name, locations):

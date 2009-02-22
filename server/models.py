@@ -94,11 +94,35 @@ class Context(db.Model):
   def key_name_for(product, name):
     return u'p-%s|c-%s' % (product.id_or_name(), name)
     
+class Bug(db.Model):
+  product = db.ReferenceProperty(Product, required=True, collection_name='bugs')
+  # ticket  = db.ReferenceProperty(Ticket, default=None, collection_name = "bugs")
+  # name    = db.StringProperty(required=True)
+  
+  @staticmethod
+  def key_name_for(product_id, location_hash):
+    return 'P%s-L%s' % (product_id, location_hash)
+  
+  created_at = db.DateTimeProperty(auto_now_add = True)
+
+  exception_name    = db.StringProperty(required=True)
+  exception_package = db.StringProperty(required=True)
+  exception_klass   = db.StringProperty(required=True)
+  exception_method  = db.StringProperty(required=True)
+  exception_line    = db.IntegerProperty(required=True)
+  
+  max_severity        = db.IntegerProperty(required=True)
+  occurrence_count    = db.IntegerProperty(required=True)
+  first_occurrence_on = db.DateProperty(required=True)
+  last_occurrence_on  = db.DateProperty(required=True)
+  
+    
 class Case(db.Model):
   product = db.ReferenceProperty(Product, required=True, collection_name='cases')
   context = db.ReferenceProperty(Context, required=True, collection_name='cases')
   severity = db.IntegerProperty(required=True)
   
+  bug    = db.ReferenceProperty(Bug, default=None, collection_name='cases')
   ticket = db.ReferenceProperty(Ticket, default=None, collection_name = "cases")
   
   exceptions = db.TextProperty(required=True)
