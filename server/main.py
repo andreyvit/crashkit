@@ -130,9 +130,9 @@ class NewBugListHandler(BaseHandler):
     if product == None:
       self.not_found("Product not found")
       
-    cases = product.cases.filter('ticket =', None).order('-occurrence_count').fetch(100)
+    bugs = product.bugs.filter('ticket =', None).order('-occurrence_count').fetch(100)
     
-    self.data.update(tabid = 'new-tab', product_path=".", account = account, product = product, cases = cases)
+    self.data.update(tabid = 'new-tab', product_path=".", account = account, product = product, bugs=bugs)
     self.render_and_finish('buglist.html')
 
 class AllBugListHandler(BaseHandler):
@@ -214,8 +214,8 @@ class AssignTicketToBugHandler(BaseHandler):
     product = Product.all().filter('unique_name =', product_name).filter('account =', account).get()
     if product == None:
       self.not_found("Product not found")
-    case = Case.get_by_key_name(bug_name)
-    if case == None or case.product.key() != product.key():
+    bug = Bug.get_by_key_name(bug_name)
+    if bug == None or bug.product.key() != product.key():
       self.not_found("Bug report not found")
       
     ticket_name = self.request.get('ticket')
@@ -223,13 +223,13 @@ class AssignTicketToBugHandler(BaseHandler):
       ticket = None
     else:
       ticket = Ticket.get_or_insert(key_name=Ticket.key_name_for(product.key().id_or_name(), ticket_name),
-        product = product, name = ticket_name)
+          product=product, name=ticket_name)
       
-    def txn(case_key):
-      c = Case.get(case_key)
-      c.ticket = ticket
-      c.put()
-    db.run_in_transaction(txn, case.key())
+    def txn(bug_key):
+      b = Bug.get(bug_key)
+      b.ticket = ticket
+      b.put()
+    db.run_in_transaction(txn, bug.key())
     
     self.redirect_and_finish(".")
 
@@ -312,6 +312,12 @@ class Temp(BaseHandler):
       self.response.out.write("""<input type="submit" name="func" value="%s">\n""" % func.replace('_', '-'));
     self.response.out.write("""</form>\n""");
       
+    
+  # def temp(self, item):
+  #   if item == None:
+  #     return 20, Bug.all()
+  #   item.ticket = None
+  #   item.put()
       
   def delete_all_cases(self, item):
     if item == None:

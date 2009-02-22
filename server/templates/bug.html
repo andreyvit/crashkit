@@ -5,13 +5,13 @@
   
   <div style="width: 80%; margin: 0px auto 2em auto; padding-left: 10%;">
   <div class="problem-box singlular sev{{ bug.max_severity }} clearfix">
-    <a class="dropin" title="{{ bug.bug_name }}" href="bugs/{{ bug.key.name }}">
+    <div class="dropin" title="{{ bug.bug_name }}">
       {{bug.occurrence_count}}
       <span class="caption">{% ifequal bug.occurrence_count 1 %}occurrence{% else %}occurrences{%endifequal%}</span>
-    </a>
-      <h2><a href="bugs/{{ bug.key.name }}">
+    </div>
+      <h2>
           {{ bug.exception_name|escape }}
-      </a></h2>
+      </h2>
       <p>{{ bug.exception_package|escape }}<br>
       {{ bug.exception_klass|escape }}<span class="dim">.{{ bug.exception_method|escape }} {{ bug.exception_line }}</span></p>
     <p class="date">

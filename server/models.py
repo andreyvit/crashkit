@@ -96,7 +96,7 @@ class Context(db.Model):
     
 class Bug(db.Model):
   product = db.ReferenceProperty(Product, required=True, collection_name='bugs')
-  # ticket  = db.ReferenceProperty(Ticket, default=None, collection_name = "bugs")
+  ticket  = db.ReferenceProperty(Ticket, default=None, collection_name = "bugs")
   # name    = db.StringProperty(required=True)
   
   @staticmethod
@@ -123,7 +123,6 @@ class Case(db.Model):
   severity = db.IntegerProperty(required=True)
   
   bug    = db.ReferenceProperty(Bug, default=None, collection_name='cases')
-  ticket = db.ReferenceProperty(Ticket, default=None, collection_name = "cases")
   
   exceptions = db.TextProperty(required=True)
   
