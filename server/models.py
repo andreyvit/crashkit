@@ -47,6 +47,9 @@ def transaction(method):
 class Account(db.Model):
   host = db.StringProperty()
   created_at = db.DateTimeProperty(auto_now_add = True)
+  
+  def name(self):
+    return self.host
 
 class Product(db.Model):
   account = db.ReferenceProperty(Account, collection_name = 'products')

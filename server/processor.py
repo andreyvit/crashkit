@@ -28,8 +28,8 @@ def process_report(report):
       raise ApiError, e
     resulting_occurrences = []
     for occurrence in occurrences:
-      resulting_occurrences.append(occurrence.submit().key())
-    report.occurrences = resulting_occurrences
+      resulting_occurrences.append(occurrence.submit())
+    report.occurrences = map(lambda o: o.key(), resulting_occurrences)
     cases = list(sets.Set(map(lambda o: o.case, resulting_occurrences)))
     for case in cases:
       process_case(case)

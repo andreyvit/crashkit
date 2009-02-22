@@ -65,6 +65,16 @@ public class Main {
 		FEEDBACK.major(new HellsBrokeLoose());
 	    }
 	});
+	
+	final Button button4 = new Button(shell, SWT.PUSH);
+	button4.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
+		false));
+	button4.setText("Heyloo");
+	button4.addSelectionListener(new SelectionAdapter() {
+	    public void widgetSelected(SelectionEvent e) {
+		FEEDBACK.major(new IllegalArgumentException());
+	    }
+	});
 
 	shell.pack();
 	shell.open();

@@ -88,7 +88,16 @@ class MainHandler(BaseHandler):
 
   @prolog()
   def get(self):
-    self.response.out.write('Hello world!')
+    account = Account.get_or_insert(self.request.host, host = self.request.host)
+    products = account.products.order('unique_name').fetch(100)
+    for product in products:
+      new_bugs = product.bugs.filter('ticket =', None).order('-occurrence_count').fetch(7)
+      product.more_new_bugs = (len(new_bugs) == 7)
+      product.new_bugs = new_bugs[0:6]
+      product.new_bug_count = len(product.new_bugs)
+    
+    self.data.update(tabid='home-tab', account=account, products=products)
+    self.render_and_finish('home.html')
 
 class CreateProductHandler(BaseHandler):
 
