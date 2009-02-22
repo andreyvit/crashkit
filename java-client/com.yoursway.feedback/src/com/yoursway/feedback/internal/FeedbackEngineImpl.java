@@ -190,7 +190,7 @@ public class FeedbackEngineImpl implements FeedbackEngine {
             Object master = FeedbackEngineImpl.this;
             while (true) {
                 long now = System.currentTimeMillis();
-                long minCheckTime = lastFailureTimeOrMin + 5000;
+                long minCheckTime = lastFailureTimeOrMin + 60000;
                 if (now > minCheckTime) {
                     try {
                         PersistentReport report = storage.obtainReportToSend();
@@ -219,7 +219,7 @@ public class FeedbackEngineImpl implements FeedbackEngine {
                         e.printStackTrace(System.err);
                     }
                 }
-                long nextCheck = Math.max(lastFailureTimeOrMin + 5000, Math.max(now,
+                long nextCheck = Math.max(lastFailureTimeOrMin + 60000, Math.max(now,
                     lastEmptyQueueTimeOrMin + 60000));
                 long delay = nextCheck - now;
                 if (delay > 0)
