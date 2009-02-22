@@ -10,7 +10,7 @@
         {% for bug in compartment.bugs %}
           <div class="problem-box sev{{ bug.max_severity }} clearfix">
             <a class="dropin" title="{{ bug.bug_name }}" href="bugs/{{ bug.key.name }}/">
-              {{bug.occurrence_count}}
+              {{bug.occurrence_count|scalenum}}
               <span class="caption">{% ifequal bug.occurrence_count 1 %}occurrence{% else %}occurrences{%endifequal%}</span>
             </a>
               <h2><a href="bugs/{{ bug.key.name }}/">

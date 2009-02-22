@@ -73,6 +73,8 @@ span.date { padding-left: 1ex; }
 .problem-box table              { margin-left: 120px; }
 
 .problem-box .dropin { display: block; text-decoration: none; float: left; font-size: 4em; line-height: 1; background: #008800;; color: white; height: 1.33em; width: 100px; text-align: center; padding: 0.1em 0.1em; }
+.problem-box .dropin span.dig3 { font-size: 0.9em; }
+.problem-box .dropin span.dig4 { font-size: 0.7em; }
 
 /*.problem-box.minor-visual .dropin { background: #777700; }*/
 

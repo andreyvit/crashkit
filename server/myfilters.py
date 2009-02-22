@@ -42,6 +42,14 @@ def split_klass(value):
   else:
     outer, inner = value[0:pos], value[pos:]
     return "%s<small>%s</small>" % (outer, inner)
+    
+@register.filter
+def scalenum(value):
+  if value >= 1000:
+    return """<span class="dig4">%d</span>""" % value
+  if value >= 100:
+    return """<span class="dig3">%d</span>""" % value
+  return value
 
 @register.filter
 def naturalday(value, fmt = '%A'):
