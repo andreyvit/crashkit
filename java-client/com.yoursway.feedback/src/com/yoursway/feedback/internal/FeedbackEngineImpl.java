@@ -1,5 +1,6 @@
 package com.yoursway.feedback.internal;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -41,18 +42,27 @@ public class FeedbackEngineImpl implements FeedbackEngine {
         this.communicator = communicator;
         this.clientInfoManager = new ClientInfoManager(storage, communicator);
         this.role = determineRole(productName);
+        if (!"customer".equals(role))
+            System.out.println(productName + " Feedback Role: " + role);
         new FeedbackPostingThread().start();
     }
     
     private static String determineRole(String productName) {
-        String override = System.getProperty(productName.replaceAll("[^a-zA-Z0-9.]+", "").toLowerCase()
-                + ".feedback.role");
+        String unixStyleName = productName.replaceAll("[^a-zA-Z0-9.]+", "");
+        String override = System.getProperty(unixStyleName.toLowerCase() + ".feedback.role");
         if (override != null)
             return override;
         override = System.getenv(productName.replaceAll("[^a-zA-Z0-9]+", "_").toUpperCase()
                 + "_FEEDBACK_ROLE");
         if (override != null && override.trim().length() > 0)
-            return override;
+            return override.trim();
+        File path = new File(new File(System.getProperty("user.home")), unixStyleName + ".role");
+        try {
+            override = YsFileUtils.readAsString(path).trim();
+            if (override.length() > 0)
+                return override;
+        } catch (IOException e) {
+        }
         return "customer";
     }
     
