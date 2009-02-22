@@ -63,10 +63,11 @@ public class FeedbackStorage {
     }
     
     public void addReport(Map<String, String> info, List<ExceptionInfo> exceptions, Map<String, String> data,
-            Map<String, String> env) {
+            Map<String, String> env, String role) {
         String hash = YsDigest.sha1(RequestString.encode(info) + "|" + RequestString.encode(data) + "|"
                 + RequestString.encode(env));
         JSONObject json = encodeInfo(info, exceptions, data, env);
+        json.put("role", role);
         json.put("hash", hash);
         merge(json);
     }

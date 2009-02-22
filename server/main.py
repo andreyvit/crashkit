@@ -25,15 +25,23 @@ class FinishRequest(Exception):
   pass
 
 class prolog(object):
-  def __init__(decor, path_components = [], fetch = [], config_needed = True):
+  def __init__(decor, fetch = [], config_needed = True):
     decor.config_needed = config_needed
-    decor.path_components = path_components
     decor.fetch = fetch
     pass
 
   def __call__(decor, original_func):
     def decoration(self, *args):
       try:
+        args = list(args)
+        for func in decor.fetch:
+          func = getattr(self, 'fetch_%s' % func)
+          try:
+            func()
+          except TypeError, e:
+            arg = args[0]
+            del args[0]
+            func(arg)
         return original_func(self, *args)
       except FinishRequest:
         pass
@@ -83,32 +91,56 @@ class BaseHandler(webapp.RequestHandler):
     self.data.update(message = message)
     self.render_and_finish('errors', template)
     
+  def fetch_account(self):
+    self.account = Account.get_or_insert(self.request.host, host = self.request.host)
+    self.data.update(account=self.account)
+    
+  def fetch_product(self, product_name):
+    self.product = self.account.products.filter('unique_name =', product_name).get()
+    if self.product == None:
+      self.not_found("Product not found")
+    self.data.update(product=self.product)
+
+  def fetch_bug(self, bug_name):
+    self.bug = Bug.get_by_key_name(bug_name)
+    if self.bug == None or self.bug.product.key() != self.product.key():
+      self.not_found("Bug not found")
+    self.data.update(bug=self.bug)
+    
+  def fetch_client(self, client_id):
+    self.client = Client.get_by_id(int(client_id))
+    if self.client == None:
+      logging.warn('Client ID requested but not found: "%s"' % client_id)
+      self.blow(403, 'invalid-client-id')
+    self.data.update(client=self.client)
+  
+  def fetch_client_cookie(self, client_cookie):
+    if client_cookie != self.client.cookie:
+      logging.warn('Client ID cookie invalid: "%s" / "%s"' % (client_id, client_cookie))
+      self.blow(403, 'invalid-client-id')
 
 class MainHandler(BaseHandler):
 
-  @prolog()
+  @prolog(fetch = ['account'])
   def get(self):
-    account = Account.get_or_insert(self.request.host, host = self.request.host)
-    products = account.products.order('unique_name').fetch(100)
+    products = self.account.products.order('unique_name').fetch(100)
     for product in products:
       new_bugs = product.bugs.filter('ticket =', None).order('-occurrence_count').fetch(7)
       product.more_new_bugs = (len(new_bugs) == 7)
       product.new_bugs = new_bugs[0:6]
       product.new_bug_count = len(product.new_bugs)
     
-    self.data.update(tabid='home-tab', account=account, products=products)
+    self.data.update(tabid='home-tab', account=self.account, products=products)
     self.render_and_finish('home.html')
 
 class CreateProductHandler(BaseHandler):
 
-  @prolog()
+  @prolog(fetch = ['account'])
   def get(self):
-    account = Account.get_or_insert(self.request.host, host = self.request.host)
-    
     product = Product.all().filter('unique_name =', self.request.get('unique_name')).get()
     if product == None:
       product = Product()
-    product.account = account
+    product.account = self.account
     product.unique_name = self.request.get('unique_name')
     product.friendly_name = self.request.get('friendly_name')
     product.put()
@@ -117,74 +149,64 @@ class CreateProductHandler(BaseHandler):
 
 class ObtainClientIdHandler(BaseHandler):
 
-  @prolog()
-  def get(self, product_name):
-    account = Account.get_or_insert(self.request.host, host = self.request.host)
-    product = Product.all().filter('unique_name =', product_name).filter('account =', account).get()
-    if product == None:
-      self.not_found("Product not found")
-      
+  @prolog(fetch=['account', 'product'])
+  def get(self):
     client = Client()
-    client.product = product
+    client.product = self.product
     client.cookie = random_string()
     client.put()
     self.send_urlencoded_and_finish(response = 'ok', client_id = client.key().id(), client_cookie = client.cookie)
 
-class NewBugListHandler(BaseHandler):
+class BugListHandler(BaseHandler):
 
-  @prolog()
-  def get(self, product_name):
-    account = Account.get_or_insert(self.request.host, host = self.request.host)
-    product = Product.all().filter('unique_name =', product_name).filter('account =', account).get()
-    if product == None:
-      self.not_found("Product not found")
-      
-    bugs = product.bugs.filter('ticket =', None).order('-occurrence_count').fetch(100)
+  def show_bug_list(self, all_bugs):
+    compartments = [
+      dict(
+        title = "Bugs experienced only by developers",
+        bugs  = all_bugs().filter('roles =', 'developer').filter('roles !=', 'tester').filter('roles !=', 'customer').fetch(100)),
+      dict(
+        title = "Bugs experienced only by developers and testers",
+        bugs  = all_bugs().filter('roles =', 'tester').filter('roles !=', 'customer').fetch(100)),
+      dict(
+        title = "Bugs experienced by customers",
+        bugs  = all_bugs().filter('roles =', 'customer').fetch(100))]
     
-    self.data.update(tabid = 'new-tab', product_path=".", account = account, product = product, bugs=bugs)
+    self.data.update(product_path=".", compartments=compartments)
     self.render_and_finish('buglist.html')
 
-class AllBugListHandler(BaseHandler):
+class NewBugListHandler(BugListHandler):
 
-  @prolog()
-  def get(self, product_name):
-    account = Account.get_or_insert(self.request.host, host = self.request.host)
-    product = Product.all().filter('unique_name =', product_name).filter('account =', account).get()
-    if product == None:
-      self.not_found("Product not found")
-      
-    bugs = product.bugs.order('-occurrence_count').fetch(100)
-    
-    self.data.update(tabid = 'all-tab', product_path=".", account = account, product = product, bugs = bugs)
-    self.render_and_finish('buglist.html')
+  @prolog(fetch=['account', 'product'])
+  def get(self):
+    self.data.update(tabid = 'new-tab')
+    self.show_bug_list(self.all_bugs)
+
+  def all_bugs(self):
+    return self.product.bugs.order('-occurrence_count').filter('ticket =', None)
+
+class AllBugListHandler(BugListHandler):
+
+  @prolog(fetch=['account', 'product'])
+  def get(self):
+    self.data.update(tabid = 'all-tab')
+    self.show_bug_list(self.all_bugs)
+
+  def all_bugs(self):
+    return self.product.bugs.order('-occurrence_count')
 
 class RecentCaseListHandler(BaseHandler):
 
-  @prolog()
-  def get(self, product_name):
-    account = Account.get_or_insert(self.request.host, host = self.request.host)
-    product = Product.all().filter('unique_name =', product_name).filter('account =', account).get()
-    if product == None:
-      self.not_found("Product not found")
-      
-    bugs = product.bugs.order('-occurrence_count').fetch(100)
-    self.data.update(account = account, product = product, bugs = bugs)
+  @prolog(fetch=['account', 'product'])
+  def get(self):
+    bugs = self.product.bugs.order('-occurrence_count').fetch(100)
+    self.data.update(bugs = bugs)
     self.render_and_finish('buglist.html')
 
 class BugHandler(BaseHandler):
 
-  @prolog()
-  def get(self, product_name, bug_name):
-    account = Account.get_or_insert(self.request.host, host = self.request.host)
-    product = Product.all().filter('unique_name =', product_name).filter('account =', account).get()
-    if product == None:
-      self.not_found("Product not found")
-      
-    bug = Bug.get_by_key_name(bug_name)
-    if bug == None or bug.product.key() != product.key():
-      self.not_found("Bug not found")
-    
-    cases = bug.cases.order('-occurrence_count').fetch(100)
+  @prolog(fetch=['account', 'product', 'bug'])
+  def get(self):
+    cases = self.bug.cases.order('-occurrence_count').fetch(100)
     occurrences = Occurrence.all().filter('case IN', cases).order('-count').fetch(100)
     clients = Client.get([o.client.key() for o in occurrences])
 
@@ -210,61 +232,39 @@ class BugHandler(BaseHandler):
     common_data_items = [(k, common_map[k]) for k in common_keys if k.startswith('data_')]
       
     self.data.update(tabid = 'bug-tab', product_path="../..", bug_id=True,
-        account = account, product = product, bug = bug, cases=cases, cover_case=cover_case,
+        cases=cases, cover_case=cover_case,
         occurrences = occurrences, env_items = env_items, common_data_items = common_data_items,
         data_keys = data_keys)
     self.render_and_finish('bug.html')
 
 class AssignTicketToBugHandler(BaseHandler):
   
-  @prolog()
-  def post(self, product_name, bug_name):
-    account = Account.get_or_insert(self.request.host, host = self.request.host)
-    product = Product.all().filter('unique_name =', product_name).filter('account =', account).get()
-    if product == None:
-      self.not_found("Product not found")
-    bug = Bug.get_by_key_name(bug_name)
-    if bug == None or bug.product.key() != product.key():
-      self.not_found("Bug report not found")
-      
+  @prolog(fetch=['account', 'product', 'bug'])
+  def post(self):
     ticket_name = self.request.get('ticket')
     if ticket_name == None or len(ticket_name.strip()) == 0:
       ticket = None
     else:
-      ticket = Ticket.get_or_insert(key_name=Ticket.key_name_for(product.key().id_or_name(), ticket_name),
-          product=product, name=ticket_name)
+      ticket = Ticket.get_or_insert(key_name=Ticket.key_name_for(self.product.key().id_or_name(), ticket_name),
+          product=self.product, name=ticket_name)
       
     def txn(bug_key):
       b = Bug.get(bug_key)
       b.ticket = ticket
       b.put()
-    db.run_in_transaction(txn, bug.key())
+    db.run_in_transaction(txn, self.bug.key())
     
     self.redirect_and_finish(".")
 
 class PostBugReportHandler(BaseHandler):
 
-  @prolog()
-  def post(self, product_name, client_id, client_cookie):
-    account = Account.get_or_insert(self.request.host, host = self.request.host)
-    product = account.products.filter('unique_name =', product_name).get()
-    if product == None:
-      self.not_found("Product not found")
-      
-    client = Client.get_by_id(int(client_id))
-    if client == None:
-      logging.warn('Client ID requested but not found: "%s"' % client_id)
-      self.blow(403, 'invalid-client-id')
-      
-    if client_cookie != client.cookie:
-      logging.warn('Client ID cookie invalid: "%s" / "%s"' % (client_id, client_cookie))
-      self.blow(403, 'invalid-client-id')
-      
+  @prolog(fetch=['account', 'product', 'client', 'client_cookie'])
+  def post(self):
     body = (self.request.body or '').strip()
     if len(body) == 0:
       self.blow(400, 'json-payload-required')
     
-    report = Report(product=product, client=client, remote_ip=self.request.remote_addr, data=self.request.body)
+    report = Report(product=self.product, client=self.client, remote_ip=self.request.remote_addr, data=self.request.body)
     report.put()
     
     process_report(report)
@@ -322,11 +322,11 @@ class Temp(BaseHandler):
     self.response.out.write("""</form>\n""");
       
     
-  # def temp(self, item):
-  #   if item == None:
-  #     return 20, Bug.all()
-  #   item.ticket = None
-  #   item.put()
+  def temp(self, item):
+    if item == None:
+      return 20, Bug.all()
+    item.ticket = None
+    item.put()
       
   def delete_all_cases(self, item):
     if item == None:
@@ -336,6 +336,11 @@ class Temp(BaseHandler):
   def delete_all_bugs(self, item):
     if item == None:
       return 40, Bug.all()
+    item.delete()
+      
+  def delete_all_occurrences(self, item):
+    if item == None:
+      return 100, Occurrence.all()
     item.delete()
     
   def clear_bugs_from_cases(self, item):
@@ -370,8 +375,8 @@ class ProcessPendingReportsHandler(BaseHandler):
   
   @prolog()
   def get(self):
-    account = Account.get_or_insert(self.request.host, host = self.request.host)
-    report = account.reports.filter('status =', 0).get()
+    self.account = Account.get_or_insert(self.request.host, host = self.request.host)
+    report = self.account.reports.filter('status =', 0).get()
     if report == None:
       self.send_urlencoded_and_finish(response = 'no-more')
     process_report(report)

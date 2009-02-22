@@ -33,7 +33,7 @@ def flatten(l, ltypes=(list, tuple)):
 
 def is_interesting_package(name):
   name_with_dot = name + "."
-  if name_with_dot.startswith('java') or name_with_dot.startswith('javax') or name_with_dot.startswith('org.eclipse'):
+  if name_with_dot.startswith('java') or name_with_dot.startswith('javax') or name_with_dot.startswith('sun') or name_with_dot.startswith('org.eclipse') or name_with_dot.startswith("com.yoursway.utils.bugs"):
     return False
   return True
 
@@ -99,7 +99,7 @@ class Context(db.Model):
     
 class Bug(db.Model):
   product = db.ReferenceProperty(Product, required=True, collection_name='bugs')
-  ticket  = db.ReferenceProperty(Ticket, default=None, collection_name = "bugs")
+  ticket  = db.ReferenceProperty(Ticket, collection_name = "bugs")
   # name    = db.StringProperty(required=True)
   
   @staticmethod
@@ -118,6 +118,7 @@ class Bug(db.Model):
   occurrence_count    = db.IntegerProperty(required=True)
   first_occurrence_on = db.DateProperty(required=True)
   last_occurrence_on  = db.DateProperty(required=True)
+  roles               = db.StringListProperty()
   
     
 class Case(db.Model):
@@ -134,6 +135,7 @@ class Case(db.Model):
   occurrence_count = db.IntegerProperty(required=True)
   first_occurrence_on = db.DateProperty(required=True)
   last_occurrence_on = db.DateProperty(required=True)
+  roles = db.StringListProperty()
   
   @staticmethod
   def key_name_for(product, case_hash):
@@ -190,6 +192,7 @@ class Occurrence(db.Expando):
   exception_messages = db.TextProperty(required=True)
   date = db.DateProperty(required=True)
   count = db.IntegerProperty()
+  role = db.StringProperty(required=True, default='customer')
     
   @staticmethod
   def key_name_for(case_key_name, client_key_name, occurrence_hash):

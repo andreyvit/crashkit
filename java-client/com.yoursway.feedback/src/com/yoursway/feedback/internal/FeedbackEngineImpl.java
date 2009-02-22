@@ -23,6 +23,7 @@ public class FeedbackEngineImpl implements FeedbackEngine {
     private final ClientInfoManager clientInfoManager;
     private final String productName;
     private final String productVersion;
+    private final String role;
     
     public FeedbackEngineImpl(String productName, String productVersion, FeedbackStorage storage,
             FeedbackCommunicator communicator) {
@@ -39,7 +40,20 @@ public class FeedbackEngineImpl implements FeedbackEngine {
         this.storage = storage;
         this.communicator = communicator;
         this.clientInfoManager = new ClientInfoManager(storage, communicator);
+        this.role = determineRole(productName);
         new FeedbackPostingThread().start();
+    }
+    
+    private static String determineRole(String productName) {
+        String override = System.getProperty(productName.replaceAll("[^a-zA-Z0-9.]+", "").toLowerCase()
+                + ".feedback.role");
+        if (override != null)
+            return override;
+        override = System.getenv(productName.replaceAll("[^a-zA-Z0-9]+", "_").toUpperCase()
+                + "_FEEDBACK_ROLE");
+        if (override != null && override.trim().length() > 0)
+            return override;
+        return "customer";
     }
     
     private void report(Severity severity, Throwable cause) {
@@ -49,7 +63,7 @@ public class FeedbackEngineImpl implements FeedbackEngine {
         Map<String, String> data = collectData(cause);
         Map<String, String> env = collectEnvironmentInfo();
         List<ExceptionInfo> exceptions = collectExceptions(cause);
-        storage.addReport(info, exceptions, data, env);
+        storage.addReport(info, exceptions, data, env, role);
         synchronized (this) {
             notifyAll();
         }
