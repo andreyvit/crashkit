@@ -33,6 +33,15 @@ def unshortened_tooltip(value, l):
     return value
   else:
     return ''
+    
+@register.filter
+def split_klass(value):
+  pos = value.find('$')
+  if pos < 0:
+    return value
+  else:
+    outer, inner = value[0:pos], value[pos:]
+    return "%s<small>%s</small>" % (outer, inner)
 
 @register.filter
 def naturalday(value, fmt = '%A'):

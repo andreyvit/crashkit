@@ -4,18 +4,18 @@
 <div class="long-container">
   
   <div style="width: 80%; margin: 0px auto 2em auto; padding-left: 10%;">
-  <div class="problem-box singlular sev{{ case.severity }} clearfix">
-    <a class="dropin" title="{{ case.bug_name }}" href="bugs/{{ case.key.name }}">
-      {{case.occurrence_count}}
-      <span class="caption">{% ifequal case.occurrence_count 1 %}occurrence{% else %}occurrences{%endifequal%}</span>
+  <div class="problem-box singlular sev{{ bug.max_severity }} clearfix">
+    <a class="dropin" title="{{ bug.bug_name }}" href="bugs/{{ bug.key.name }}">
+      {{bug.occurrence_count}}
+      <span class="caption">{% ifequal bug.occurrence_count 1 %}occurrence{% else %}occurrences{%endifequal%}</span>
     </a>
-      <h2><a href="bugs/{{ case.key.name }}">
-          {{ case.exception_name|escape }}
+      <h2><a href="bugs/{{ bug.key.name }}">
+          {{ bug.exception_name|escape }}
       </a></h2>
-      <p>{{ case.exception_package|escape }}<br>
-      {{ case.exception_klass|escape }}<span class="dim">.{{ case.exception_method|escape }} {{ case.exception_line }}</span></p>
+      <p>{{ bug.exception_package|escape }}<br>
+      {{ bug.exception_klass|escape }}<span class="dim">.{{ bug.exception_method|escape }} {{ bug.exception_line }}</span></p>
     <p class="date">
-      {% ifequal case.first_occurrence_on case.last_occurrence_on %}Occurred {{ case.first_occurrence_on|naturalday:"%b %d, %Y" }}{% else %}Occurring {{ case.first_occurrence_on|naturalday:"%b %d, %Y" }} till {{ case.last_occurrence_on|naturalday:"%b %d, %Y"}}{% endifequal %},
+      {% ifequal bug.first_occurrence_on bug.last_occurrence_on %}Occurred {{ bug.first_occurrence_on|naturalday:"%b %d, %Y" }}{% else %}Occurring {{ bug.first_occurrence_on|naturalday:"%b %d, %Y" }} till {{ bug.last_occurrence_on|naturalday:"%b %d, %Y"}}{% endifequal %},
       4 clients affected.
     </p>
   </div>
@@ -25,30 +25,14 @@
     <col width="230" />
     <tr>
       <td>Lighthouse ticket id</td>
-      <td>{% if case.ticket %}<span id="ticket-display">#{{ case.ticket.name }} — <a href="#" onclick="$('#ticket-display').hide();$('#ticket-form').show().focus();return false;">change</a></span>{% endif %}<form id="ticket-form" action="assign-ticket" method="POST" {% if case.ticket %}style="display: none"{% endif %}><input name="ticket" value="{{ case.ticket.name }}"> <input type="submit" value="Assign"></form></td>
+      <td>{% if bug.ticket %}<span id="ticket-display">#{{ bug.ticket.name }} — <a href="#" onclick="$('#ticket-display').hide();$('#ticket-form').show().focus();return false;">change</a></span>{% endif %}<form id="ticket-form" action="assign-ticket" method="POST" {% if bug.ticket %}style="display: none"{% endif %}><input name="ticket" value="{{ bug.ticket.name }}"> <input type="submit" value="Assign"></form></td>
     </tr>
   </table>
-  
-    <!--
-    <tr>
-      <td>exception name</td>
-      <td>{{ case.exception_name }}</td>
-    </tr>
-    <tr>
-      <td>location</td>
-      <td><p>{{ case.exception_package }}<br>
-        {{ case.exception_location }} <span class="dim">{{ case.exception_line }}</span></p></td>
-    </tr>
-    <tr>
-      <td>occurred</td>
-      <td>{{ case.occurrence_count }} times &nbsp;{% ifequal case.first_occurrence_on case.last_occurrence_on %}{{ case.first_occurrence_on|naturalday:"%b %d, %Y"}} only{% else %}{{ case.first_occurrence_on|naturalday:"%b %d, %Y"}} – {{ case.last_occurrence_on|naturalday:"%b %d, %Y"}}{% endifequal %}</td>
-    </tr>
-  -->
   
   <h2>Stack trace</h2>
   <table style="width: 80%">
     <col width="230" />
-    {% for exception in case.exceptions_list %}
+    {% for exception in cover_case.exceptions_list %}
       {% for location in exception.locations %}
         <tr class="{% cycle odd,even %}">
           <td>{% if forloop.first %}<small>{{ exception.name|escape }}</small>{% endif %}</td>

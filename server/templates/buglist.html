@@ -3,22 +3,22 @@
 {% block content %}
 
 <div class="long-container clearfix">
-  {% for case in cases %}
-    <div class="problem-box sev{{ case.severity }} clearfix">
-      <a class="dropin" title="{{ case.bug_name }}" href="bugs/{{ case.key.name }}/">
-        {{case.occurrence_count}}
-        <span class="caption">{% ifequal case.occurrence_count 1 %}occurrence{% else %}occurrences{%endifequal%}</span>
+  {% for bug in bugs %}
+    <div class="problem-box sev{{ bug.max_severity }} clearfix">
+      <a class="dropin" title="{{ bug.bug_name }}" href="bugs/{{ bug.key.name }}/">
+        {{bug.occurrence_count}}
+        <span class="caption">{% ifequal bug.occurrence_count 1 %}occurrence{% else %}occurrences{%endifequal%}</span>
       </a>
-        <h2><a href="bugs/{{ case.key.name }}/">
-            {{ case.exception_name|escape }}
+        <h2><a href="bugs/{{ bug.key.name }}/">
+            {{ bug.exception_name|escape }}
         </a></h2>
-        <p>{{ case.exception_package|escape }}<br>
-        {{ case.exception_location|escape }} <span class="dim">{{ case.exception_line }}</span></p>
+        <p>{{ bug.exception_package|escape }}<br>
+        {{ bug.exception_klass|escape|split_klass }}<small>.{{ bug.exception_method|escape }}&nbsp;<span class="dim">{{ bug.exception_line }}</span></small></p>
       <p class="date">
-        {% ifequal case.first_occurrence_on case.last_occurrence_on %}
-          Occurred {{ case.first_occurrence_on|naturalday:"%b %d, %Y" }}
+        {% ifequal bug.first_occurrence_on bug.last_occurrence_on %}
+          Occurred {{ bug.first_occurrence_on|naturalday:"%b %d, %Y" }}
         {% else %}
-          Occurring from {{ case.first_occurrence_on|naturalday:"%b %d, %Y" }} till {{ case.last_occurrence_on|naturalday:"%b %d, %Y"}}
+          Occurring from {{ bug.first_occurrence_on|naturalday:"%b %d, %Y" }} till {{ bug.last_occurrence_on|naturalday:"%b %d, %Y"}}
         {% endifequal %}
       </p>
     </div>

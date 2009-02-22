@@ -144,9 +144,9 @@ class AllBugListHandler(BaseHandler):
     if product == None:
       self.not_found("Product not found")
       
-    cases = product.cases.order('-occurrence_count').fetch(100)
+    bugs = product.bugs.order('-occurrence_count').fetch(100)
     
-    self.data.update(tabid = 'all-tab', product_path=".", account = account, product = product, cases = cases)
+    self.data.update(tabid = 'all-tab', product_path=".", account = account, product = product, bugs = bugs)
     self.render_and_finish('buglist.html')
 
 class RecentCaseListHandler(BaseHandler):
@@ -158,23 +158,25 @@ class RecentCaseListHandler(BaseHandler):
     if product == None:
       self.not_found("Product not found")
       
-    problems = product.problems.order('-occurrence_count').fetch(100)
-    self.data.update(account = account, product = product, problems = problems)
+    bugs = product.bugs.order('-occurrence_count').fetch(100)
+    self.data.update(account = account, product = product, bugs = bugs)
     self.render_and_finish('buglist.html')
 
 class BugHandler(BaseHandler):
 
   @prolog()
-  def get(self, product_name, problem_name):
+  def get(self, product_name, bug_name):
     account = Account.get_or_insert(self.request.host, host = self.request.host)
     product = Product.all().filter('unique_name =', product_name).filter('account =', account).get()
     if product == None:
       self.not_found("Product not found")
-    case = Case.get_by_key_name(problem_name)
-    if case == None or case.product.key() != product.key():
-      self.not_found("Bug report not found")
+      
+    bug = Bug.get_by_key_name(bug_name)
+    if bug == None or bug.product.key() != product.key():
+      self.not_found("Bug not found")
     
-    occurrences = case.occurrences.order('-count').fetch(100)
+    cases = bug.cases.order('-occurrence_count').fetch(100)
+    occurrences = Occurrence.all().filter('case IN', cases).order('-count').fetch(100)
     clients = Client.get([o.client.key() for o in occurrences])
 
     common_map = dict()
@@ -184,6 +186,11 @@ class BugHandler(BaseHandler):
         common_map[key] = set
     if 'env_hash' in common_map:
       del common_map['env_hash']
+      
+    cover_case = cases[0]
+    for case in cases:
+      if len(case.exceptions) < len(cover_case.exceptions):
+        cover_case = case
     
     # data_keys contains all columns that differ across occurrences
     data_keys = list(sets.Set(flatten([ [k for k in o.dynamic_properties() if k in common_map and len(common_map[k])>1] for o in occurrences ])))
@@ -194,7 +201,7 @@ class BugHandler(BaseHandler):
     common_data_items = [(k, common_map[k]) for k in common_keys if k.startswith('data_')]
       
     self.data.update(tabid = 'bug-tab', product_path="../..", bug_id=True,
-        account = account, product = product, case = case,
+        account = account, product = product, bug = bug, cases=cases, cover_case=cover_case,
         occurrences = occurrences, env_items = env_items, common_data_items = common_data_items,
         data_keys = data_keys)
     self.render_and_finish('bug.html')
