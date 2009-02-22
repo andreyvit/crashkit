@@ -4,16 +4,16 @@
 <div class="long-container">
   
   <div style="width: 80%; margin: 0px auto 2em auto; padding-left: 10%;">
-  <div class="problem-box singlular {{ case.severity }} clearfix">
+  <div class="problem-box singlular sev{{ case.severity }} clearfix">
     <a class="dropin" title="{{ case.bug_name }}" href="bugs/{{ case.key.name }}">
       {{case.occurrence_count}}
       <span class="caption">{% ifequal case.occurrence_count 1 %}occurrence{% else %}occurrences{%endifequal%}</span>
     </a>
       <h2><a href="bugs/{{ case.key.name }}">
-          {{ case.exception_name }}
+          {{ case.exception_name|escape }}
       </a></h2>
-      <p>{{ case.exception_package }}<br>
-      {{ case.exception_klass }}<span class="dim">.{{ case.exception_method }} {{ case.exception_line }}</span></p>
+      <p>{{ case.exception_package|escape }}<br>
+      {{ case.exception_klass|escape }}<span class="dim">.{{ case.exception_method|escape }} {{ case.exception_line }}</span></p>
     <p class="date">
       {% ifequal case.first_occurrence_on case.last_occurrence_on %}Occurred {{ case.first_occurrence_on|naturalday:"%b %d, %Y" }}{% else %}Occurring {{ case.first_occurrence_on|naturalday:"%b %d, %Y" }} till {{ case.last_occurrence_on|naturalday:"%b %d, %Y"}}{% endifequal %},
       4 clients affected.
@@ -51,9 +51,9 @@
     {% for exception in case.exceptions_list %}
       {% for location in exception.locations %}
         <tr class="{% cycle odd,even %}">
-          <td>{% if forloop.first %}<small>{{ exception.name }}</small>{% endif %}</td>
-          <td class="evencol" style="text-align: right">{{ location.package }}</td>
-          <td>{{location.klass}}<span class="dim">.{{location.method}} {{location.line}}</span></td>
+          <td>{% if forloop.first %}<small>{{ exception.name|escape }}</small>{% endif %}</td>
+          <td class="evencol" style="text-align: right">{{ location.package|escape }}</td>
+          <td>{{location.klass|escape}}<span class="dim">.{{location.method|escape}} {{location.line}}</span></td>
         </tr>
       {% endfor %}
     {% endfor %}
@@ -66,7 +66,7 @@
       {% for item in env_items %}
         <tr class="{% cycle odd,even %}">
           <td>{{item.0|strip_prefix:"env_"}}</td>
-          <td class="evencol">{% for v in item.1%}{% if not forloop.first %}, {% endif %}{{v}}{%endfor%}</td>
+          <td class="evencol">{% for v in item.1%}{% if not forloop.first %}, {% endif %}{{v|escape}}{%endfor%}</td>
         </tr>
       {% endfor %}
     </table>
@@ -79,7 +79,7 @@
       {% for item in common_data_items %}
         <tr class="{% cycle odd,even %}">
           <td>{{item.0|strip_prefix:"data_"}}</td>
-          <td class="evencol">{% for v in item.1%}{% if not forloop.first %}, {% endif %}{{v}}{%endfor%}</td>
+          <td class="evencol">{% for v in item.1%}{% if not forloop.first %}, {% endif %}{{v|escape}}{%endfor%}</td>
         </tr>
       {% endfor %}
     </table>
@@ -100,7 +100,7 @@
       <tr class="{% cycle odd,even %}">
         <td class="oddcol"><big>{{occurrence.count}}</big> <span class="dim">{%ifequal occurrence.count 1%}occur.{%else%}occur.{%endifequal%}</span></td>
         <td class="date evencol">{{ occurrence.date|date:"N j, Y" }}</td>
-        {% for key in data_keys %}<td class="{% if forloop.counter|divisibleby:2 %}evencol{%else%}oddcol{% endif %}" title="{{ occurrence|kgetattr:key|unshortened_tooltip:15}}">{{ occurrence|kgetattr:key|shorten:15 }}</td>{% endfor %}
+        {% for key in data_keys %}<td class="{% if forloop.counter|divisibleby:2 %}evencol{%else%}oddcol{% endif %}" title="{{ occurrence|kgetattr:key|unshortened_tooltip:15}}">{{ occurrence|kgetattr:key|shorten:15|escape }}</td>{% endfor %}
       </tr>
     {% endfor %}
   </table>
