@@ -47,10 +47,9 @@ def process_case(case):
   
   location_salt = "%s|%s|%s|%s|%d" % (case.exception_name, case.exception_package, case.exception_klass, case.exception_method, case.exception_line)
   location_hash = hashlib.sha1(location_salt).hexdigest()
-  logging.warn("hash(%s) = %s" % (location_salt, location_hash))
   
-  def txn():
-    key_name = Bug.key_name_for(case.product.key().id_or_name(), location_hash)
+  def txn(product_key):
+    key_name = Bug.key_name_for(product_key.id_or_name(), location_hash)
     bug = Bug.get_by_key_name(key_name)
     if bug == None:
       bug = Bug(key_name=key_name, product=case.product, exception_name=case.exception_name,
@@ -68,7 +67,7 @@ def process_case(case):
       bug.role_count          = len(bug.roles)
     bug.put()
     return bug
-  bug = db.run_in_transaction(txn)
+  bug = db.run_in_transaction(txn, case.product.key())
   
   def txn(key):
     case = Case.get(key)
