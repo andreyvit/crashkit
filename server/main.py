@@ -163,10 +163,10 @@ class BugListHandler(BaseHandler):
     compartments = [
       dict(
         title = "Bugs experienced only by developers",
-        bugs  = all_bugs().filter('roles =', 'developer').filter('roles !=', 'tester').filter('roles !=', 'customer').fetch(100)),
+        bugs  = filter(lambda b: not(u'customer' in b.roles or u'tester' in b.roles), all_bugs().filter('roles =', 'developer').fetch(100))),
       dict(
         title = "Bugs experienced only by developers and testers",
-        bugs  = all_bugs().filter('roles =', 'tester').filter('roles !=', 'customer').fetch(100)),
+        bugs  = filter(lambda b: not(u'customer' in b.roles), all_bugs().filter('roles =', 'tester').fetch(100))),
       dict(
         title = "Bugs experienced by customers",
         bugs  = all_bugs().filter('roles =', 'customer').fetch(100))]
@@ -264,7 +264,8 @@ class PostBugReportHandler(BaseHandler):
     if len(body) == 0:
       self.blow(400, 'json-payload-required')
     
-    report = Report(product=self.product, client=self.client, remote_ip=self.request.remote_addr, data=self.request.body)
+    report = Report(product=self.product, client=self.client, remote_ip=self.request.remote_addr,
+        data=unicode(self.request.body, 'utf-8'))
     report.put()
     
     process_report(report)
