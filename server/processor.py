@@ -32,7 +32,7 @@ def process_report(report):
     report.occurrences = map(lambda o: o.key(), resulting_occurrences)
     cases = list(sets.Set(map(lambda o: o.case, resulting_occurrences)))
     for case in cases:
-      process_case(case)
+      process_case(report.product, case)
   except ApiError, e:
     report.error = "%s: %s" % (e.__class__.__name__, e.message)
     report.status = REPORT_ERROR
@@ -41,8 +41,8 @@ def process_report(report):
   report.status = REPORT_OK
   report.put()
   
-def process_case(case):
-  definitive_location = case.definitive_location()
+def process_case(product, case):
+  definitive_location = case.definitive_location(product)
   dummy_index, case.exception_name, case.exception_package, case.exception_klass, case.exception_method, case.exception_line = definitive_location
   
   location_salt = "%s|%s|%s|%s|%d" % (case.exception_name, case.exception_package, case.exception_klass, case.exception_method, case.exception_line)

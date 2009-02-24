@@ -31,12 +31,6 @@ def flatten(l, ltypes=(list, tuple)):
     i += 1
   return ltype(l)
 
-def is_interesting_package(name):
-  name_with_dot = name + "."
-  if name_with_dot.startswith('java') or name_with_dot.startswith('javax') or name_with_dot.startswith('sun') or name_with_dot.startswith('org.eclipse') or name_with_dot.startswith("com.yoursway.utils.bugs"):
-    return False
-  return True
-
 # models
 
 def transaction(method):
@@ -58,6 +52,9 @@ BUG_TRACKERS = (
 )
 BUG_TRACKERS_DICT = dict(BUG_TRACKERS)
 
+def match_package(pattern, item):
+  return (item + '.').startswith(pattern + '.')
+
 class Product(db.Model):
   account = db.ReferenceProperty(Account, collection_name = 'products')
   unique_name = db.StringProperty()
@@ -68,6 +65,18 @@ class Product(db.Model):
   bug_tracker_url = db.StringProperty()
   
   public_access = db.BooleanProperty()
+  
+  uninteresting_packages = db.TextProperty(default="java,javax,sun,org.eclipse,com.yoursway.utils.bugs")
+  
+  def is_interesting_package(self, name):
+    for uninteresting_package in map(lambda s: s.strip(), self.uninteresting_packages.split(',')):
+      if uninteresting_package[0] == '!':
+        if match_package(uninteresting_package[1:], name):
+          return True
+      else:
+        if match_package(uninteresting_package, name):
+          return False
+    return True
   
   def bug_tracker_name(self):
     if self.bug_tracker in BUG_TRACKERS_DICT:
@@ -170,6 +179,12 @@ class Case(db.Model):
   last_occurrence_on = db.DateProperty(required=True)
   roles = db.StringListProperty()
   
+  # exception_name    = db.StringProperty()
+  # exception_package = db.StringProperty(required=True)
+  # exception_klass   = db.StringProperty(required=True)
+  # exception_method  = db.StringProperty(required=True)
+  # exception_line    = db.IntegerProperty(required=True)
+  
   @staticmethod
   def key_name_for(product, case_hash):
     return 'P%s-C%s' % (product.id_or_name(), case_hash)
@@ -177,35 +192,35 @@ class Case(db.Model):
   def exceptions_list(self):
     return eval(self.exceptions)
   
-  def definitive_location(self):
+  def definitive_location(self, product):
     exceptions = eval(self.exceptions)
     index = 0
     for exception in exceptions:
       locations = exception['locations']
       for location in locations:
         package_name, class_name, method_name, line = location['package'], location['klass'], location['method'], location['line']
-        if is_interesting_package(package_name):
+        if product.is_interesting_package(package_name):
           return (index, exception['name'], package_name, class_name, method_name, line)
       index += 1
     raise StandardError, "No exception info recorded for this case"
-    
-  def exception_name(self):
-    return self.definitive_location()[1]
-    
-  def exception_package(self):
-    return self.definitive_location()[2]
-    
-  def exception_location(self):
-    return '%s.%s' % (self.definitive_location()[3], self.definitive_location()[4])
-    
-  def exception_klass(self):
-    return self.definitive_location()[3]
-    
-  def exception_method(self):
-    return self.definitive_location()[4]
-    
-  def exception_line(self):
-    return self.definitive_location()[5]
+  #   
+  # def exception_name(self):
+  #   return self.definitive_location()[1]
+  #   
+  # def exception_package(self):
+  #   return self.definitive_location()[2]
+  #   
+  # def exception_location(self):
+  #   return '%s.%s' % (self.definitive_location()[3], self.definitive_location()[4])
+  #   
+  # def exception_klass(self):
+  #   return self.definitive_location()[3]
+  #   
+  # def exception_method(self):
+  #   return self.definitive_location()[4]
+  #   
+  # def exception_line(self):
+  #   return self.definitive_location()[5]
     
   def bug_name(self):
     if self.severity == 1:

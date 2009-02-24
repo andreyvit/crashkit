@@ -29,9 +29,14 @@
     </p>
     <p>
       <label for="bug_tracker_url">Project URL:</label>
-      <input id="bug_tracker_url" name="bug_tracker_url" value="{{product.bug_tracker_url|escape}}" />
+      <input id="bug_tracker_url" name="bug_tracker_url" value="{{product.bug_tracker_url|ifnone|escape}}" />
       {{bug_tracker_url_error|errorspan}}
     </p>
+    
+    <h2>Ignored Packages</h2>
+    <p>The packages listed below will be ignored when grouping exception reports into bugs.</p>
+    <p><label for="uninteresting_packages">Ignore packages:</label> <input id="uninteresting_packages" name="uninteresting_packages" value="{{product.uninteresting_packages|escape}}" size="60" /> {{uninteresting_packages_error|errorspan}}</p>
+    <p>(Changes to this setting only affect new exception reports.)</p>
     
     <h2>Make this product public?</h2>
     <p>

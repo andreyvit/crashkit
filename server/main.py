@@ -253,7 +253,7 @@ class Temp(BaseHandler):
   def assign_bugs_to_cases_without_bugs(self, item):
     if item == None:
       return 20, Case.all().filter('bug =', None)
-    process_case(item)
+    process_case(item.product, item)
       
   def requeue_all_reports(self, item):
     if item == None:
