@@ -7,6 +7,34 @@ from google.appengine.ext.webapp import template
 register = template.create_template_register()
 
 @register.filter
+def errorspan(error):
+  if error:
+    return """ <span class="error">%s</span> """ % error
+  else:
+    return ""
+
+@register.filter
+def ifnone(value, subst = ''):
+  if value == None:
+    return subst
+  else:
+    return value
+
+@register.filter
+def selectedifeq(value, sample):
+  if str(value) == str(sample):
+    return """ selected="selected" """
+  else:
+    return ""
+
+@register.filter
+def checkediftrue(value):
+  if value:
+    return """ checked="checked" """
+  else:
+    return ""
+
+@register.filter
 def kgetattr(value, key):
   try:
     return getattr(value, key)

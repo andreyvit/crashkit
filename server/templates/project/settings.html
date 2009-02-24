@@ -1,0 +1,44 @@
+{% extends '../base.html' %}
+{% block title %}{{ project.friendly_name}} Settings{% endblock %}
+{% block content %}
+<div class="long-container">
+  <form method="POST">
+    <h2>Identification</h2>
+    <p>
+      <label for="unique_name">Permalink:</label>
+      <input id="unique_name" name="unique_name" value="{{product.unique_name|escape}}" />
+      {{unique_name_error|errorspan}}
+    </p>
+    <p>
+      <label for="friendly_name">Name:</label>
+      <input id="friendly_name" name="friendly_name" value="{{product.friendly_name|escape}}" />
+      {{friendly_name_error|errorspan}}
+    </p>
+    
+    <h2>Bug Tracker Setup</h2>
+    <p>YourSway Feedback Kit bugs can be associated with your bug tracker tickets.</p>
+    <p>
+      <label for="bug_tracker">Choose your bug tracker:</label>
+      <select id="bug_tracker" name="bug_tracker">
+        <option value="" {{product.bug_tracker|selectedifeq:"" }}>(none)</option>
+        <option value="lighthouse" {{product.bug_tracker|selectedifeq:"lighthouse" }}>Lighthouse</option>
+        <option value="trac" {{product.bug_tracker|selectedifeq:"trac" }}>Trac</option>
+      </select>
+      {{bug_tracker_error|errorspan}}
+    </p>
+    <p>
+      <label for="bug_tracker_url">Project URL:</label>
+      <input id="bug_tracker_url" name="bug_tracker_url" value="{{project.bug_tracker_url|escape}}" />
+      {{bug_tracker_url_error|errorspan}}
+    </p>
+    
+    <h2>Make this product public?</h2>
+    <p>
+      <input id="public_access" type="checkbox" name="public_access" {{product.public_access|checkediftrue}} /> <label for="public_access">Yes, make this product public so anyone in the world can see its bugs</label>
+    </p>
+    
+    <h2><input type="submit" value="Save Product Settings" /></h2>
+  </form>
+</div>
+
+{% endblock %}

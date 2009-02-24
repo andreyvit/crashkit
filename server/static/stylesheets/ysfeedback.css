@@ -112,12 +112,12 @@ ul#tabnav li { /* do not change */
 	display: inline;
 }
 
-body#home-tab li.home-tab, body#new-tab li.new-tab, body#all-tab li.all-tab, body#bug-tab li.bug-tab, body#tab4 li.tab4 { /* settings for selected tab */
+body#product-tab li.product-tab, body#home-tab li.home-tab, body#new-tab li.new-tab, body#all-tab li.all-tab, body#bug-tab li.bug-tab, body#tab4 li.tab4 { /* settings for selected tab */
 	border-bottom: 1px solid #eee; /* set border color to page background color */
 	background-color: #eee; /* set background color to match above border color */
 }
 
-body#home-tab li.home-tab a, body#new-tab li.new-tab a, body#all-tab li.all-tab a, body#bug-tab li.bug-tab a, body#tab4 li.tab4 a { /* settings for selected tab link */
+body#product-tab li.product-tab a, body#home-tab li.home-tab a, body#new-tab li.new-tab a, body#all-tab li.all-tab a, body#bug-tab li.bug-tab a, body#tab4 li.tab4 a { /* settings for selected tab link */
 	background-color: #eee; /* set selected tab background color as desired */
 	color: #000; /* set selected tab link color as desired */
 	position: relative;

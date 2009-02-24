@@ -19,6 +19,7 @@
     <ul id="tabnav">
     	<li class="home-tab"><a href="/">Account</a></li>
     	{% if product_path %}
+      	<li class="product-tab"><a href="{{product_path}}/settings">Product</a></li>
       	<li class="new-tab"><a href="{{product_path}}/">New Bugs</a></li>
       	<li class="all-tab"><a href="{{product_path}}/all">All Bugs</a></li>
       	{% if bug_id %}

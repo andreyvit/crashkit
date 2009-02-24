@@ -56,7 +56,12 @@ class Product(db.Model):
   unique_name = db.StringProperty()
   friendly_name = db.StringProperty()
   created_at = db.DateTimeProperty(auto_now_add = True)
-
+  
+  bug_tracker     = db.StringProperty()
+  bug_tracker_url = db.StringProperty()
+  
+  public_access = db.BooleanProperty()
+  
 class Client(db.Model):
   product = db.ReferenceProperty(Product, collection_name = 'clients')
   cookie = db.StringProperty()

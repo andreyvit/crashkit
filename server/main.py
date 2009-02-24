@@ -17,6 +17,7 @@ from django.utils import simplejson as json
 from models import *
 from processor import process_report, process_case
 from controllers.base import *
+from controllers.project import *
 
 class MainHandler(BaseHandler):
 
@@ -287,6 +288,7 @@ url_mapping = [
   ('/create-product', CreateProductHandler),
   ('/process', ProcessPendingReportsHandler),
   ('/iterate', Temp),
+  ('/([a-zA-Z0-9._-]+)/settings', ProductSettingsHandler),
   ('/([a-zA-Z0-9._-]+)/', NewBugListHandler),
   ('/([a-zA-Z0-9._-]+)/all', AllBugListHandler),
   ('/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/', BugHandler),
