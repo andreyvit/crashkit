@@ -70,7 +70,7 @@ class BugListHandler(BaseHandler):
         title = "Bugs experienced by customers",
         bugs  = all_bugs().filter('roles =', 'customer').fetch(100))]
     
-    self.data.update(product_path=".", compartments=compartments)
+    self.data.update(compartments=compartments)
     self.render_and_finish('buglist.html')
 
 class NewBugListHandler(BugListHandler):
@@ -130,7 +130,7 @@ class BugHandler(BaseHandler):
     env_items = [(k, common_map[k]) for k in common_keys if k.startswith('env_')]
     common_data_items = [(k, common_map[k]) for k in common_keys if k.startswith('data_')]
       
-    self.data.update(tabid = 'bug-tab', product_path="../..", bug_id=True,
+    self.data.update(tabid = 'bug-tab', bug_id=True,
         cases=cases, cover_case=cover_case,
         occurrences = occurrences, env_items = env_items, common_data_items = common_data_items,
         data_keys = data_keys)

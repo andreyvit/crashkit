@@ -99,7 +99,7 @@ class BaseHandler(webapp.RequestHandler):
     self.product = self.account.products.filter('unique_name =', product_name).get()
     if self.product == None:
       self.not_found("Product not found")
-    self.data.update(product=self.product)
+    self.data.update(product=self.product, product_path='/%s' % self.product.unique_name)
 
   def fetch_bug(self, bug_name):
     self.bug = Bug.get_by_key_name(bug_name)
