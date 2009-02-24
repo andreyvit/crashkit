@@ -41,4 +41,5 @@ class ProductSettingsHandler(BaseHandler):
     if not self.is_valid():
       self.render_screen_and_finish()
     self.product.put()
-    self.redirect_and_finish('/%s/settings' % self.product.unique_name)
+    self.redirect_and_finish(u'/%s/settings' % self.product.unique_name,
+      flash = u"“%s” has been saved." % self.product.friendly_name)

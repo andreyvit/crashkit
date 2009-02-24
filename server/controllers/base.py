@@ -16,6 +16,7 @@ from google.appengine.api import memcache
 from django.utils import simplejson as json
 from models import *
 from processor import process_report, process_case
+from appengine_utilities.flash import Flash
 
 template_path = os.path.join(os.path.dirname(__file__), '..', 'templates')
 template.register_template_library('myfilters')
@@ -33,6 +34,7 @@ class prolog(object):
   def __call__(decor, original_func):
     def decoration(self, *args):
       try:
+        self.read_flash()
         args = list(args)
         for func in decor.fetch:
           func = getattr(self, 'fetch_%s' % func)
@@ -56,7 +58,23 @@ class BaseHandler(webapp.RequestHandler):
     self.data = dict(now = self.now)
     self.validation_errors = False
     
+  def read_flash(self):
+    try:
+      self._flash = Flash()
+    except EOFError:
+      # this is a workaround for an unknown problem when running live on Google App Engine
+      class PseudoFlash:
+        def __init__(self):
+          self.msg = ''
+      self._flash = PseudoFlash()
+    self.data.update(flash = self._flash.msg)
+
+  def flash(self, message):
+    self._flash.msg = message
+    
   def redirect_and_finish(self, url, flash = None):
+    if flash:
+      self.flash(flash)
     self.redirect(url)
     raise FinishRequest
     

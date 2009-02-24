@@ -17,7 +17,7 @@ from django.utils import simplejson as json
 from models import *
 from processor import process_report, process_case
 from controllers.base import *
-from controllers.project import *
+from controllers.product import *
 
 class MainHandler(BaseHandler):
 

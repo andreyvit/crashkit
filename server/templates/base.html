@@ -15,6 +15,16 @@
     {% else %}
       <h1>{{ account.name }}</h1>
     {% endif %}
+    
+    <div class="flashbox">
+      {% if flash %}
+        <span class="flash">
+          {{ flash }}
+        </span>
+      {% else %}
+        &nbsp;
+      {% endif %}
+  </div>
 
     <ul id="tabnav">
     	<li class="home-tab"><a href="/">Account</a></li>
