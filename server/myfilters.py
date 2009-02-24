@@ -2,10 +2,64 @@
 import datetime
 import os
 import re
+import logging
 from google.appengine.ext.webapp import template
+from django import template as templ
 
 register = template.create_template_register()
 
+def escape(html):
+    """Returns the given HTML with ampersands, quotes and carets encoded."""
+    return html.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
+
+@register.tag(name='e')
+def parse_eval_tag(parser, token):
+  tag_name, code = token.contents.split(' ', 1)
+  return PythonEvalNode(code, escape=(lambda x:x))
+
+@register.tag(name='ee')
+def parse_eval_and_escape_tag(parser, token):
+  tag_name, code = token.contents.split(' ', 1)
+  return PythonEvalNode(code, escape=escape)
+
+@register.tag(name='set')
+def parse_exec_tag(parser, token):
+  tag_name, variable, code = token.contents.split(' ', 2)
+  return PythonSetNode(variable, code)
+
+class PythonEvalNode(templ.Node):
+  def __init__(self, code, escape):
+    self.code = code
+    self.escape = escape
+
+  def render(self, context):
+    try:
+      v = eval(self.code, globals(), context)
+      # if not isinstance(v, unicode):
+      #   v = unicode(v, 'utf-8')
+      v = str(v)
+      return self.escape(v)
+    except Exception, e:
+      logging.error("""Python Eval Tag "%s" raised %s: %s """ % (self.code, e.__class__.__name__, e.message))
+      return ""
+
+class PythonSetNode(templ.Node):
+  def __init__(self, variable, code):
+    self.variable = variable
+    self.code = code
+
+  def render(self, context):
+    try:
+      v = eval(self.code, globals(), context)
+      context[self.variable] = v
+    except Exception, e:
+      logging.error("""Python Set Tag %s "%s" raised %s: %s """ % (self.variable, self.code, e.__class__.__name__, e.message))
+    return ""
+
+@register.filter
+def ticketurlin(ticket_id, product):
+  return None
+  
 @register.filter
 def errorspan(error):
   if error:

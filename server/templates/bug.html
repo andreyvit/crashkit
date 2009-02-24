@@ -23,8 +23,8 @@
   <table style="width: 80%">
     <col width="230" />
     <tr>
-      <td>Lighthouse ticket id</td>
-      <td>{% if bug.ticket %}<span id="ticket-display">#{{ bug.ticket.name }} — <a href="#" onclick="$('#ticket-display').hide();$('#ticket-form').show().focus();return false;">change</a></span>{% endif %}<form id="ticket-form" action="assign-ticket" method="POST" {% if bug.ticket %}style="display: none"{% endif %}><input name="ticket" value="{{ bug.ticket.name }}"> <input type="submit" value="Assign"></form></td>
+      <td>{{ product.bug_tracker_name }} ticket id</td>
+      <td>{% if bug.ticket %}<span id="ticket-display">{% if product.bug_tracker_autolinking %}<a target="_new" href="{%e product.bug_tracker_ticket_url(bug.ticket.name) %}">{% endif %}#{{ bug.ticket.name }}{% if product.bug_tracker_autolinking %}</a>{% endif %} — <a href="#" onclick="$('#ticket-display').hide();$('#ticket-form').show().focus();return false;">change</a></span>{% endif %}<form id="ticket-form" action="assign-ticket" method="POST" {% if bug.ticket %}style="display: none"{% endif %}><input name="ticket" value="{{ bug.ticket.name }}"> <input type="submit" value="Assign"></form></td>
     </tr>
   </table>
   

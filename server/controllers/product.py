@@ -28,7 +28,7 @@ class ProductSettingsHandler(BaseHandler):
     self.render_screen_and_finish()
     
   def render_screen_and_finish(self):
-    self.data.update(tabid = 'product-tab', product_path=".")
+    self.data.update(tabid = 'product-tab', product_path=".", bug_trackers=BUG_TRACKERS)
     self.render_and_finish('project', 'settings.html')
 
   @prolog(fetch=['account', 'product'])

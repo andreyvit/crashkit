@@ -50,6 +50,13 @@ class Account(db.Model):
   
   def name(self):
     return self.host
+    
+BUG_TRACKERS = (
+  ('lighthouse', dict(name='Lighthouse', ticket='%s/tickets/%s')),
+  ('redmine', dict(name='Redmine', ticket='%s/issues/show/%s')),
+  ('trac', dict(name='Trac', ticket='%s/ticket/%s')),
+)
+BUG_TRACKERS_DICT = dict(BUG_TRACKERS)
 
 class Product(db.Model):
   account = db.ReferenceProperty(Account, collection_name = 'products')
@@ -61,6 +68,27 @@ class Product(db.Model):
   bug_tracker_url = db.StringProperty()
   
   public_access = db.BooleanProperty()
+  
+  def bug_tracker_name(self):
+    if self.bug_tracker in BUG_TRACKERS_DICT:
+      return BUG_TRACKERS_DICT[self.bug_tracker]['name']
+    return 'Bug tracker'
+      
+  def bug_tracker_autolinking(self):
+    return self.bug_tracker in BUG_TRACKERS_DICT
+    
+  def bug_tracker_ticket_url(self, ticket_id):
+    if self.bug_tracker in BUG_TRACKERS_DICT:
+      url = self.bug_tracker_url
+      if url[-1] == '/':
+        url = url[0:-1]
+      if not url.startswith('http'):
+        url = "http://" + url
+
+      return BUG_TRACKERS_DICT[self.bug_tracker]['ticket'] % (url, ticket_id)
+    if self.bug_tracker == 'other':
+      return self.bug_tracker_url.replace('%s', ticket_id)
+    return u''
   
 class Client(db.Model):
   product = db.ReferenceProperty(Product, collection_name = 'clients')
