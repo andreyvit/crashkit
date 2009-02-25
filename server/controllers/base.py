@@ -233,6 +233,10 @@ class BaseHandler(webapp.RequestHandler):
     s = self.request.get(key)
     return s == '1' or s == 'yes' or s == 'on' or s == 'True'
     
+  def check_is_server_management_allowed(self):
+    if not users.is_current_user_admin():
+      self.access_denied("You cannot access server-wide management unless you are a developer of YourSway Feedback Kit.")
+      
   def check_is_managing_people_allowed(self):
     if not self.account_access.is_managing_people_allowed():
       self.access_denied("You need to be an administrator of the account to manage people & permissions.")

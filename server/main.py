@@ -179,7 +179,7 @@ class PostBugReportHandler(BaseHandler):
   get=post
   
 class Temp(BaseHandler):
-  # @prolog()
+  @prolog(check=['is_server_management_allowed'])
   def get(self):
     func_name = self.request.get('func')
     func = None
