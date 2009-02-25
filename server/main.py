@@ -244,6 +244,13 @@ class Temp(BaseHandler):
       return 40, Bug.all()
     item.delete()
       
+  def zero_all_bugs_stats(self, item):
+    if item == None:
+      return 40, Bug.all()
+    item.occurrence_count = 0
+    item.roles = []
+    item.put()
+      
   def delete_all_occurrences(self, item):
     if item == None:
       return 100, Occurrence.all()
