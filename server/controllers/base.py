@@ -140,18 +140,22 @@ class BaseHandler(webapp.RequestHandler):
         self.account_access.admin = True
         self.account_access.put()
     self.data.update(account=self.account, account_access=self.account_access)
+  fetch_account_nocheck = fetch_account
     
-  def fetch_product(self, product_name):
+  def fetch_product_nocheck(self, product_name):
     self.product = self.account.products.filter('unique_name =', product_name).get()
     if self.product == None:
       self.not_found("Product not found")
     self.product_path = '/%s' % self.product.unique_name
+    self.data.update(product=self.product, product_path=self.product_path)
+    
+  def fetch_product(self, product_name):
+    self.fetch_product_nocheck(product_name)
     
     self.product_access = self.account_access.product_access_for(self.product)
     if not self.product_access.is_viewing_allowed():
       self.access_denied("Sorry, you do not have access to this product.")
-      
-    self.data.update(product=self.product, product_path=self.product_path, product_access=self.product_access)
+    self.data.update(product_access=self.product_access)
 
   def fetch_bug(self, bug_name):
     self.bug = Bug.get_by_key_name(bug_name)

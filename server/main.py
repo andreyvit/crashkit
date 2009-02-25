@@ -163,7 +163,7 @@ class AssignTicketToBugHandler(BaseHandler):
 
 class PostBugReportHandler(BaseHandler):
 
-  @prolog(fetch=['account', 'product', 'client', 'client_cookie'])
+  @prolog(fetch=['account_nocheck', 'product_nocheck', 'client', 'client_cookie'])
   def post(self):
     body = (self.request.body or '').strip()
     if len(body) == 0:
