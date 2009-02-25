@@ -245,7 +245,101 @@ class Occurrence(db.Expando):
   @staticmethod
   def key_name_for(case_key_name, client_key_name, occurrence_hash):
     return 'C%s-CL%s-O%s' % (case_key_name, client_key_name, occurrence_hash)
-
-  # data_*
-  # env_*
+    
+class Person(db.Model):
+  user = db.UserProperty(required=True)
   
+  def account_access_for(self, account):
+    if not self.is_saved():
+      return AnonymousAccountAccess(account)
+    account_access = db.get(AccountAccess.key_for(self.key(), account.key()))
+    if not account_access:
+      account_access = AccountAccess(key_name=AccountAccess.key_for(self.key(), account.key()).name(), account=account, person=self)
+    return account_access
+  
+  @staticmethod
+  def key_for(email):
+    return db.Key.from_path('Person', 'u' + email)
+
+class AnonymousPerson(object):
+  
+  def account_access_for(self, account):
+    return AnonymousAccountAccess(account)
+  
+    
+class AccountAccess(db.Model):
+  account = db.ReferenceProperty(Account, required=True, collection_name='people_authorizations')
+  person = db.ReferenceProperty(Person, required=True, collection_name='account_authorizations')
+  admin = db.BooleanProperty(default=False)
+    
+  def product_access_for(self, product):
+    if self.admin:
+      return FullProductAccess()
+    access = db.get(ProductAccess.key_for(self.person.key(), product.key()))
+    if not access:
+      access = PublicProductAccess(product)
+    return access
+
+  def is_managing_people_allowed(self):
+    return self.admin
+  
+  @staticmethod
+  def key_for(person_key, account_key):
+    return db.Key.from_path('AccountAccess', 'a%sp%s' % (account_key.id_or_name(), person_key.id_or_name()))
+    
+
+class AnonymousAccountAccess(db.Model):
+  def __init__(self, account):
+    self.admin = False
+  def product_access_for(self, product):
+    return PublicProductAccess(product)
+  def is_managing_people_allowed(self):
+    return False
+    
+
+ACCESS_NONE = 0
+ACCESS_READ = 1
+ACCESS_WRITE = 2
+
+class ProductAccess(db.Model):
+  person = db.ReferenceProperty(Person, required=True)
+  product = db.ReferenceProperty(Product, required=True)
+  level = db.IntegerProperty(choices=[ACCESS_NONE,ACCESS_READ,ACCESS_WRITE])
+    
+  def is_listing_allowed(self):
+    return self.level > ACCESS_NONE
+  def is_viewing_allowed(self):
+    return self.product.public_access or self.level > ACCESS_NONE
+  def is_write_allowed(self):
+    return self.level >= ACCESS_WRITE
+  def is_admin_allowed(self):
+    return False
+  
+  @staticmethod
+  def key_for(person_key, product_key):
+    return db.Key.from_path('ProductAccess', 'p%sp%s' % (person_key.id_or_name(), product_key.id_or_name()))
+
+class PublicProductAccess(object):
+  
+  def __init__(self, product):
+    self.product = product
+    
+  def is_listing_allowed(self):
+    return self.product.public_access
+  def is_viewing_allowed(self):
+    return self.product.public_access
+  def is_write_allowed(self):
+    return False
+  def is_admin_allowed(self):
+    return False
+
+class FullProductAccess(object):
+  
+  def is_listing_allowed(self):
+    return True
+  def is_viewing_allowed(self):
+    return True
+  def is_write_allowed(self):
+    return True
+  def is_admin_allowed(self):
+    return True

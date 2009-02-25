@@ -20,13 +20,30 @@
   </div>
   </div>
 
+  {% if bug.ticket or product_access.is_write_allowed %}
   <table style="width: 80%">
     <col width="230" />
     <tr>
       <td>{{ product.bug_tracker_name }} ticket id</td>
-      <td>{% if bug.ticket %}<span id="ticket-display">{% if product.bug_tracker_autolinking %}<a target="_new" href="{%e product.bug_tracker_ticket_url(bug.ticket.name) %}">{% endif %}#{{ bug.ticket.name }}{% if product.bug_tracker_autolinking %}</a>{% endif %} — <a href="#" onclick="$('#ticket-display').hide();$('#ticket-form').show().focus();return false;">change</a></span>{% endif %}<form id="ticket-form" action="assign-ticket" method="POST" {% if bug.ticket %}style="display: none"{% endif %}><input name="ticket" value="{{ bug.ticket.name }}"> <input type="submit" value="Assign"></form></td>
+      <td>
+        {% if bug.ticket %}
+          <span id="ticket-display">
+            {% if product.bug_tracker_autolinking %}
+              <a target="_new" href="{%e product.bug_tracker_ticket_url(bug.ticket.name) %}">#{{ bug.ticket.name }}</a>
+            {% else %}
+              #{{ bug.ticket.name }}
+            {% endif %}
+            {% if product_access.is_write_allowed %}
+               — <a href="#" onclick="$('#ticket-display').hide();$('#ticket-form').show().focus();return false;">change</a>
+            {% endif %}
+          </span>
+        {% endif %}
+        {% if product_access.is_write_allowed %}
+          <form id="ticket-form" action="assign-ticket" method="POST" {% if bug.ticket %}style="display: none"{% endif %}><input name="ticket" value="{{ bug.ticket.name }}"> <input type="submit" value="Assign"></form></td>
+        {% endif %}
     </tr>
   </table>
+  {% endif %}
   
   <h2>Stack trace</h2>
   <table style="width: 80%">

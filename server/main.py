@@ -18,12 +18,17 @@ from models import *
 from processor import process_report, process_case
 from controllers.base import *
 from controllers.product import *
+from controllers.account import *
 
 class MainHandler(BaseHandler):
 
   @prolog(fetch = ['account'])
   def get(self):
     products = self.account.products.order('unique_name').fetch(100)
+    for product in products:
+      access = self.account_access.product_access_for(product)
+      product.access = access
+    products = filter(lambda p: p.access.is_listing_allowed(), products)
     for product in products:
       new_bugs = product.bugs.filter('ticket =', None).order('-occurrence_count').fetch(7)
       product.more_new_bugs = (len(new_bugs) == 7)
@@ -139,7 +144,7 @@ class BugHandler(BaseHandler):
 
 class AssignTicketToBugHandler(BaseHandler):
   
-  @prolog(fetch=['account', 'product', 'bug'])
+  @prolog(fetch=['account', 'product', 'bug'], check=['is_product_write_allowed'])
   def post(self):
     ticket_name = self.request.get('ticket')
     if ticket_name == None or len(ticket_name.strip()) == 0:
@@ -288,6 +293,7 @@ url_mapping = [
   ('/create-product', CreateProductHandler),
   ('/process', ProcessPendingReportsHandler),
   ('/iterate', Temp),
+  ('/people/', AccountPeopleHandler),
   ('/([a-zA-Z0-9._-]+)/settings', ProductSettingsHandler),
   ('/([a-zA-Z0-9._-]+)/', NewBugListHandler),
   ('/([a-zA-Z0-9._-]+)/all', AllBugListHandler),

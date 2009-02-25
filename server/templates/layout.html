@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>{% block title %}{% endblock %}</title>
+	<link rel="stylesheet" type="text/css" href="/static/stylesheets/ysfeedback.css" />
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.1/jquery.min.js"></script>
+</head>
+<body id="{{ tabid }}">
+  <div class="long-container clearfix">
+    <div class="userinfo">
+      {% if user %}
+        <span id="userid">{{user.email}}</span> | <a href="{{signout_url|escape}}">Sign out</a>
+      {% else %}
+        <a href="{{signin_url|escape}}">Sign in/register</a>
+      {% endif %}
+    </div>
+    <h1>{% block header %}{% endblock %}</h1>
+
+    <div class="flashbox">
+      {% if flash %}
+        <span class="flash">
+          {{ flash }}
+        </span>
+      {% else %}
+        &nbsp;
+      {% endif %}
+    </div>
+
+    {% block tabnav %}{% endblock %}
+  </div>
+  {% block content %}{% endblock %}
+  <div id="footer">
+    © 2009 — <a href="mailto:support@yoursway.com">e-mail support</a>
+  </div>
+</body>
+</html>

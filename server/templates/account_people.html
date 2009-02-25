@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}{{ account.name}} Settings{% endblock %}
+{% block content %}
+<div class="long-container">
+  <h2>People on this account</h2>
+  <form method="POST">
+    <table>
+      <col width="200" />
+      <col width="130" />
+      <col width="250" />
+      {% for person in people %}
+        <tr class="header">
+          <td>{{ person.user.email }}</td>
+          <td><input type="submit" name="person_{{ person.key|escape }}_remove" value="Remove" /></td>
+          <td>&nbsp;</td>
+        </tr>
+        {% for product in products %}
+          {% set auth person.product_authorization[product.key()] %}
+          <tr>
+            <td>&nbsp;</td>
+            <td>{{ product.friendly_name }}:</td>
+            <td>
+              <select id="person_{{ person.key|escape }}_{{ product.key|escape }}_level" name="person_{{ person.key|escape }}_{{ product.key|escape }}_level">
+                <option value="0" {{ auth.level|selectedifeq:0 }}>no access</option>
+                <option value="1" {{ auth.level|selectedifeq:1 }}>read-only access</option>
+                <option value="2" {{ auth.level|selectedifeq:2 }}>full access</option>
+              </select>
+            </td>
+          </tr>
+        {% endfor %}
+        <tr>
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+          <td><input type="checkbox" id="person_{{ person.key|escape }}_admin" name="person_{{ person.key|escape }}_admin" {{ person.account_access.admin|checkediftrue }} /> <label for="person_{{ person.key|escape }}_admin">administrator</label></td>
+        </tr>
+      {% endfor %}
+      <tr class="header">
+        <td>&nbsp;</td>
+        <td><input type="submit" value="Save Settings" /></td>
+        <td>&nbsp;</td>
+      </tr>
+    </table>
+  </form>
+    
+  <h2>Add new person</h2>
+  <form method="POST">
+    <table>
+      <col width="200" />
+      <col width="130" />
+      <col width="250" />
+      <tr class="header">
+        <td colspan="2">E-mail: <input name="new_person_email" value="{{new_person_email|escape}}" size="30" /></td>
+        <td>&nbsp;</td>
+      </tr>
+      {% for product in products %}
+        {% set auth person.product_authorization[product.key()] %}
+        <tr>
+          <td>&nbsp;</td>
+          <td>{{ product.friendly_name }}:</td>
+          <td>
+            <select id="new_person_{{ product.key|escape }}_level" name="new_person_{{ product.key|escape }}_level">
+              <option value="0" {{ product.public_access|selectedifeq:"False" }}>no access</option>
+              <option value="1" {{ product.public_access|selectedifeq:"True" }}>read-only access</option>
+              <option value="2">full access</option>
+            </select>
+          </td>
+        </tr>
+      {% endfor %}
+      <tr>
+        <td>&nbsp;</td>
+        <td>&nbsp;</td>
+        <td><input type="checkbox" id="new_person_admin" name="new_person_admin" {{ new_person_admin|checkediftrue }} /> <label for="new_person_admin">administrator</label></td>
+      </tr>
+    <tr class="header">
+        <td>&nbsp;</td>
+        <td><input type="submit" name="new" value="Add Person" /></td>
+        <td>&nbsp;</td>
+      </tr>
+    </table>
+  </form>
+</div>
+
+{% endblock %}

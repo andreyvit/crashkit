@@ -1,0 +1,10 @@
+{% extends "../layout.html" %}
+{% block title %}Access Denied{% endblock %}
+{% block header %}Access Denied{% endblock %}
+
+{% block content %}
+<div class="long-container">
+{% if message %}<p><b>{{ message }}</b></p>{% endif %}
+<p>Why not visit the <a href="/">home page</a> instead?</p>
+</div>
+{% endblock %}

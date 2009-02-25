@@ -7,6 +7,7 @@ import os
 import string
 import urllib
 import sets
+import re
 from random import Random
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
@@ -26,14 +27,16 @@ class FinishRequest(Exception):
   pass
   
 class prolog(object):
-  def __init__(decor, fetch = [], config_needed = True):
+  def __init__(decor, fetch = [], check = [], config_needed = True):
     decor.config_needed = config_needed
     decor.fetch = fetch
+    decor.check = check
     pass
 
   def __call__(decor, original_func):
     def decoration(self, *args):
       try:
+        self.read_user()
         self.read_flash()
         args = list(args)
         for func in decor.fetch:
@@ -41,9 +44,13 @@ class prolog(object):
           try:
             func()
           except TypeError, e:
+            if len(args) < 1:
+              raise
             arg = args[0]
             del args[0]
             func(arg)
+        for func in decor.check:
+          getattr(self, 'check_%s' % func)()
         return original_func(self, *args)
       except FinishRequest:
         pass
@@ -57,6 +64,20 @@ class BaseHandler(webapp.RequestHandler):
     self.now = datetime.now()
     self.data = dict(now = self.now)
     self.validation_errors = False
+    
+  def read_user(self):
+    self.user = users.get_current_user()
+    if self.user:
+      self.person = db.get(Person.key_for(self.user.email()))
+      if not self.person:
+        self.person = Person(key_name=Person.key_for(self.user.email()).name(), user=self.user)
+        if users.is_current_user_admin():
+          self.person.put()
+    else:
+      self.person = AnonymousPerson()
+    self.data.update(user=self.user, person=self.person,
+      signout_url=users.create_logout_url('/'),
+      signin_url=users.create_login_url(self.request.url))
     
   def read_flash(self):
     try:
@@ -92,7 +113,8 @@ class BaseHandler(webapp.RequestHandler):
     self.response.out.write(template.render(os.path.join(template_path, *path_components), self.data))
     raise FinishRequest
     
-  def access_denied(self, message = None, attemp_login = True):
+  def access_denied(self, message = "Sorry, you do not have access to this page.",
+        attemp_login = True):
     if attemp_login and self.user == None and self.request.method == 'GET':
       self.redirect_and_finish(users.create_login_url(self.request.uri))
     self.die(403, 'access_denied.html', message=message)
@@ -112,14 +134,24 @@ class BaseHandler(webapp.RequestHandler):
     
   def fetch_account(self):
     self.account = Account.get_or_insert(self.request.host, host = self.request.host)
-    self.data.update(account=self.account)
+    self.account_access = self.person.account_access_for(self.account)
+    if users.is_current_user_admin():
+      if not self.account_access.admin:
+        self.account_access.admin = True
+        self.account_access.put()
+    self.data.update(account=self.account, account_access=self.account_access)
     
   def fetch_product(self, product_name):
     self.product = self.account.products.filter('unique_name =', product_name).get()
     if self.product == None:
       self.not_found("Product not found")
     self.product_path = '/%s' % self.product.unique_name
-    self.data.update(product=self.product, product_path=self.product_path)
+    
+    self.product_access = self.account_access.product_access_for(self.product)
+    if not self.product_access.is_viewing_allowed():
+      self.access_denied("Sorry, you do not have access to this product.")
+      
+    self.data.update(product=self.product, product_path=self.product_path, product_access=self.product_access)
 
   def fetch_bug(self, bug_name):
     self.bug = Bug.get_by_key_name(bug_name)
@@ -150,7 +182,7 @@ class BaseHandler(webapp.RequestHandler):
     
   def is_valid(self, key = None):
     if key:
-      return (key + '_error') in self.data
+      return not (key + '_error') in self.data
     return not self.validation_errors
   
   def valid_string(self, key, required=True, use_none=True, min_len=None, max_len=None,
@@ -186,7 +218,7 @@ class BaseHandler(webapp.RequestHandler):
     if not re.match('^-?[0-9]+$', s):
       return self.invalid(key, not_a_number_message)
     i = int(s)
-    data = dict(value=value, key=key, min_value=min_value, max_value=max_value)
+    data = dict(value=i, key=key, min_value=min_value, max_value=max_value)
     if min_value != None and i < min_value:
       return self.invalid(key, min_value_message)
     if max_value != None and i > max_value:
@@ -196,3 +228,15 @@ class BaseHandler(webapp.RequestHandler):
   def valid_bool(self, key):
     s = self.request.get(key)
     return s == '1' or s == 'yes' or s == 'on' or s == 'True'
+    
+  def check_is_managing_people_allowed(self):
+    if not self.account_access.is_managing_people_allowed():
+      self.access_denied("You need to be an administrator of the account to manage people & permissions.")
+      
+  def check_is_product_admin_allowed(self):
+    if not self.product_access.is_admin_allowed():
+      self.access_denied("You need to be an administrator of the account to change project settings.")
+      
+  def check_is_product_write_allowed(self):
+    if not self.product_access.is_write_allowed():
+      self.access_denied("You need to have a write access to %s." % self.product.friendly_name)

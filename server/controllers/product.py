@@ -23,15 +23,15 @@ from controllers.base import *
 
 class ProductSettingsHandler(BaseHandler):
 
-  @prolog(fetch=['account', 'product'])
+  @prolog(fetch=['account', 'product'], check=['is_product_admin_allowed'])
   def get(self):
     self.render_screen_and_finish()
     
   def render_screen_and_finish(self):
     self.data.update(tabid = 'product-tab', product_path=".", bug_trackers=BUG_TRACKERS)
-    self.render_and_finish('project', 'settings.html')
+    self.render_and_finish('project_settings.html')
 
-  @prolog(fetch=['account', 'product'])
+  @prolog(fetch=['account', 'product'], check=['is_product_admin_allowed'])
   def post(self):
     self.product.unique_name = self.valid_string('unique_name')
     self.product.friendly_name = self.valid_string('friendly_name')
