@@ -13,6 +13,7 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 from django.utils import simplejson as json
 from models import *
+from commons import *
 
 class ApiError(Exception):
   pass
@@ -30,9 +31,9 @@ def process_report(report):
     for occurrence in occurrences:
       resulting_occurrences.append(occurrence.submit())
     report.occurrences = map(lambda o: o.key(), resulting_occurrences)
-    cases = list(sets.Set(map(lambda o: o.case, resulting_occurrences)))
-    for case in cases:
-      process_case(report.product, case)
+    cases = group(lambda o: o.case, resulting_occurrences)
+    for case, case_occurrences in cases.iteritems():
+      process_case(report.product, case, sum(map(lambda o: o.count_this_time, case_occurrences)))
   except ApiError, e:
     report.error = "%s: %s" % (e.__class__.__name__, e.message)
     report.status = REPORT_ERROR
@@ -41,7 +42,7 @@ def process_report(report):
   report.status = REPORT_OK
   report.put()
   
-def process_case(product, case):
+def process_case(product, case, occurrence_count_delta):
   definitive_location = case.definitive_location(product)
   dummy_index, case.exception_name, case.exception_package, case.exception_klass, case.exception_method, case.exception_line = definitive_location
   
@@ -60,7 +61,7 @@ def process_case(product, case):
           roles=case.roles, role_count=len(case.roles))
     else:
       bug.max_severity        = max(bug.max_severity, case.severity)
-      bug.occurrence_count   += case.occurrence_count
+      bug.occurrence_count   += occurrence_count_delta
       bug.first_occurrence_on = min(bug.first_occurrence_on, case.first_occurrence_on)
       bug.last_occurrence_on  = max(bug.last_occurrence_on, case.last_occurrence_on)
       bug.roles               = list(sets.Set(bug.roles + case.roles))
@@ -165,4 +166,5 @@ class ReportedOccurrence(object):
     case = create_or_update_case(case_hash, self.product, self.severity, context, self.date, self.count, self.role, exceptions_json)
     occurrence = create_or_update_occurrence(occurrence_hash, case, self.client, self.date,
         self.exception_messages, self.data, self.env, self.count, self.role)
+    occurrence.count_this_time = self.count
     return occurrence
