@@ -3,7 +3,9 @@
 {% block content %}
 
 <div class="long-container clearfix">
-  <p><a href="{{account_path}}/products/new/">Add a new product</a></p>
+  {% if account_access.is_admin_allowed %}
+    <p><a href="{{account_path}}/products/new/">Add a new product</a></p>
+  {% endif %}
   {% for product in products %}
     <div class="product">
       <h2>

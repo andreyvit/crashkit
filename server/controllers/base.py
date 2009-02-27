@@ -176,8 +176,8 @@ class BaseHandler(webapp.RequestHandler):
   def fetch_or_create_product(self, product_name):
     if product_name == 'new':
       self.product = Product(account=self.account,name='',permalink='')
-      self.product_access = FullProductAccess()
-      self.data.update(product=self.product,product_access=self.product_access)
+      self.product_access = None
+      self.data.update(product=self.product)
     else:
       self.fetch_product(product_name)
 
@@ -270,8 +270,12 @@ class BaseHandler(webapp.RequestHandler):
       self.access_denied("You need to be an administrator of the account to manage people & permissions.")
       
   def check_is_product_admin_allowed(self):
-    if not self.product_access.is_admin_allowed():
-      self.access_denied("You need to be an administrator of the account to change project settings.")
+    if self.product_access:
+      if not self.product_access.is_admin_allowed():
+        self.access_denied("You need to be an administrator of the account to change project settings.")
+    else:
+      if not self.account_access.is_admin_allowed():
+        self.access_denied("You need to be an administrator of the account to add a project.")
       
   def check_is_product_write_allowed(self):
     if not self.product_access.is_write_allowed():
