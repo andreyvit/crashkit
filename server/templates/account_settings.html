@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}{{account.name}} Settings{% endblock %}
+{% block content %}
+<div class="long-container">
+  <form method="POST">
+    <h2>Identification</h2>
+    <p>
+      <label for="permalink">Permalink:</label>
+      <input id="permalink" name="permalink" value="{{account.permalink|ifnone|escape}}" />
+      {{permalink_error|errorspan}}
+    </p>
+    <p>
+      <label for="name">Name:</label>
+      <input id="name" name="name" value="{{account.name|ifnone|escape}}" />
+      {{name_error|errorspan}}
+    </p>
+    
+    <h2>
+      {% if account.is_saved %}
+        <input type="submit" value="Save account settings" />
+      {% else %}
+        <input type="submit" value="Sign up" />
+      {% endif %}
+    </h2>
+  </form>
+</div>
+
+{% endblock %}

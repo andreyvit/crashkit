@@ -281,6 +281,9 @@ class AccountAccess(db.Model):
 
   def is_managing_people_allowed(self):
     return self.admin
+    
+  def is_admin_allowed(self):
+    return self.admin
   
   @staticmethod
   def key_for(person_key, account_key):
@@ -293,6 +296,8 @@ class AnonymousAccountAccess(db.Model):
   def product_access_for(self, product):
     return PublicProductAccess(product)
   def is_managing_people_allowed(self):
+    return False
+  def is_admin_allowed(self):
     return False
     
 

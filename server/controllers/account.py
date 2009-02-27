@@ -119,3 +119,34 @@ class AccountPeopleHandler(BaseHandler):
   def render_screen_and_finish(self):
     self.data.update(tabid = 'people-tab', people=self.people, products=self.products)
     self.render_and_finish('account_people.html')
+
+    # self.account = Account(permalink='')
+    # self.data.update(account=self.account)
+
+class AccountSettingsHandler(BaseHandler):
+
+  @prolog(fetch=['account'], check=['is_account_admin_allowed'])
+  def get(self):
+    self.render_screen_and_finish()
+    
+  def render_screen_and_finish(self):
+    self.data.update(tabid = 'account-settings-tab')
+    self.render_and_finish('account_settings.html')
+
+  @prolog(fetch=['account'], check=['is_account_admin_allowed'])
+  def post(self):
+    self.account.permalink = self.valid_string('permalink')
+    self.account.name = self.valid_string('name')
+    if not self.is_valid():
+      self.render_screen_and_finish()
+    self.account.put()
+    self.redirect_and_finish(u'/%s/settings/' % self.account.permalink,
+      flash = u"“%s” settings have been saved." % self.account.name)
+    # else:
+    #   if not self.person.is_saved():
+    #     self.person.put()
+    #   self.product_access = ProductAccess(key_name=ProductAccess.key_for(self.person.key(), self.product.key()).name(),
+    #       product=self.product, person=self.person, level=ACCESS_ADMIN)
+    #   self.product_access.put()
+    #   self.redirect_and_finish(u'/%s/%s/all' % (self.account_path, self.product.permalink),
+    #     flash = u"“%s” has been created." % self.product.name)

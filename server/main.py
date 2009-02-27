@@ -323,6 +323,7 @@ url_mapping = [
   # per-account
   ('/([a-zA-Z0-9._-]+)/', AccountDashboardHandler),
   ('/([a-zA-Z0-9._-]+)/people/', AccountPeopleHandler),
+  ('/([a-zA-Z0-9._-]+)/settings/', AccountSettingsHandler),
   # per-project API (compatibility)
   ('/([a-zA-Z0-9._-]+)/obtain-client-id', CompatObtainClientIdHandler),
   ('/([a-zA-Z0-9._-]+)/post-report/([0-9]+)/([a-zA-Z0-9]+)', CompatPostBugReportHandler),

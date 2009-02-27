@@ -23,6 +23,9 @@
       {% ifequal tabid "product-tab" %}
       	<li class="product-tab"><a href="{{account_path}}/products/new">Add Product</a></li>
       {% endifequal %}
+      {% if account_access.is_admin_allowed %}
+      	<li class="account-settings-tab"><a href="{{account_path}}/settings/">Account Settings</a></li>
+      {% endif %}
       {% if account_access.is_managing_people_allowed %}
       	<li class="people-tab"><a href="{{account_path}}/people/">People & Permissions</a></li>
       {% endif %}
