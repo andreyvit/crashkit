@@ -19,6 +19,7 @@ from processor import process_report, process_case
 from controllers.base import *
 from controllers.product import *
 from controllers.account import *
+from controllers.invites import *
 
 class HomeHandler(BaseHandler):
   
@@ -304,7 +305,11 @@ class Temp(BaseHandler):
 
 url_mapping = [
   ('/', HomeHandler),
-  ('/signup/', SignupHandler),
+  ('/signup/([a-zA-Z0-9]*)', SignupHandler),
+  ('/betasignup/', SignUpForLimitedBetaHandler),
+  ('/beta/', LimitedBetaCandidateListHandler),
+  ('/beta/accept', LimitedBetaAcceptCandidateHandler),
+  ('/beta/reject', LimitedBetaRejectCandidateHandler),
   ('/iterate', Temp),
   # per-account
   ('/([a-zA-Z0-9._-]+)/', AccountDashboardHandler),

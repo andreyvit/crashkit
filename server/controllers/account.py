@@ -145,12 +145,15 @@ class AccountSettingsHandler(BaseHandler):
 class SignupHandler(BaseHandler):
 
   @prolog(fetch=['new_account'])
-  def get(self):
-    if not self.person.is_signup_allowed():
-      if self.user == None:
-        self.force_login()
-      else:
-        self.redirect_and_finish('/') # TODO
+  def get(self, invitation_code):
+    self.data.update(invitation_code=invitation_code, tabid='account-settings-tab')
+    if invitation_code == None or len(invitation_code.strip()) == 0:
+      self.render_and_finish('account_signup_nocode.html')
+    candidate = LimitedBetaCandidate.all().filter('invitation_code', invitation_code).get()
+    if candidate == None:
+      self.render_and_finish('account_signup_badcode.html')
+    if not self.user:
+      self.render_and_finish('account_signup_googlenotice.html')
     self.render_screen_and_finish()
     
   def render_screen_and_finish(self):
@@ -158,7 +161,11 @@ class SignupHandler(BaseHandler):
     self.render_and_finish('account_settings.html')
 
   @prolog(fetch=['new_account'], check=['is_signup_allowed'])
-  def post(self):
+  def post(self, invitation_code):
+    candidate = LimitedBetaCandidate.all().filter('invitation_code', invitation_code).get()
+    if candidate == None:
+      self.redirect_and_finish('/signup/%s' % invitation_code)
+    
     self.account.permalink = self.valid_string('permalink')
     self.account.name = self.valid_string('name')
     if not self.is_valid():

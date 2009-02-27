@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}YourSway Feedback Kit{% endblock %}
+{% block content %}
+<div class="long-container">
+  <p>Hey! Nice to meet you.</p>
+  <p>Unfortunately, YourSway Feedback Kit is currently in a limited beta stage.</p>
+  <p>This means you cannot simply sign up for an account. Instead, you need to leave
+    us your e-mail address, and we'll send you an invitation code when our servers are ready
+    to accept you.</p>
+  {% include "beta_signup_form.html" %}
+  
+</div>
+
+{% endblock %}

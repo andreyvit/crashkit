@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}YourSway Feedback Kit Beta Program{% endblock %}
+{% block content %}
+<div class="long-container">
+  <table style="width: 80%">
+    {% for candidate in candidates %}
+      <tr>
+        <td>{{ candidate.email|escape }}</td>
+        <td>{{ candidate.tech|escape }}</td>
+        <td>
+          <a href="/beta/accept?key={{candidate.key|escape}}">Accept this gentleman</a> |
+          <a href="/beta/reject?key={{candidate.key|escape}}">Reject</a>
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>
+
+{% endblock %}

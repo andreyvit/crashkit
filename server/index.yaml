@@ -140,7 +140,7 @@ indexes:
   - name: ticket
   - name: roles
 
-# Used 37 times in query history.
+# Used 54 times in query history.
 - kind: Bug
   properties:
   - name: product
@@ -185,6 +185,13 @@ indexes:
   - name: occurrence_count
     direction: desc
 
+# Used 5 times in query history.
+- kind: LimitedBetaCandidate
+  properties:
+  - name: invitation_code
+  - name: rejected
+  - name: created_at
+
 # Used 9 times in query history.
 - kind: Occurrence
   properties:
@@ -206,7 +213,7 @@ indexes:
   - name: occurrence_count
     direction: desc
 
-# Used 49 times in query history.
+# Used 71 times in query history.
 - kind: Product
   properties:
   - name: account

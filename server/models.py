@@ -12,9 +12,7 @@ from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.api import memcache
 from django.utils import simplejson as json
-
-def random_string(len = 12, chars = string.letters+string.digits):
-  return ''.join(Random().sample(chars, 12))
+from commons import *
   
 def flatten(l, ltypes=(list, tuple)):
   ltype = type(l)
@@ -37,7 +35,14 @@ def transaction(method):
   def decorate(*args, **kwds):
     return db.run_in_transaction(method, *args, **kwds)
   return decorate
-  
+
+class LimitedBetaCandidate(db.Model):
+  email           = db.StringProperty(required=True)
+  tech            = db.StringProperty(required=True)
+  invitation_code = db.StringProperty(default=None)
+  rejected        = db.BooleanProperty(default=False)
+  created_at      = db.DateTimeProperty(auto_now_add = True)
+
 class Account(db.Model):
   name = db.TextProperty(default=None)
   permalink = db.StringProperty(default=None)

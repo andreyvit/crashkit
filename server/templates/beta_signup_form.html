@@ -1,0 +1,62 @@
+<div style="width: 270px">
+  <h2>Limited Beta</h2>
+  <div id="beta_signup">
+    <form id="beta_signup_form" action="/betasignup/" method="POST">
+      <p><input type="text" id="email" name="email" size="30" placeholder="Your e-mail" style="width: 100%;"></p>
+      <p><input type="text" id="tech" name="tech" size="30" placeholder="Java or Python or Ruby or what?" style="width: 100%;"></p>
+      <p id="beta_signup_message" style="line-height: 1"><small>We'll send you 2 e-mails: your beta invitation and the final release announcement.</small></p>
+      <p><input type="submit" class="submit" value="I wanna use Feedback Kit"></p>
+    </form>
+  </div>
+</div>
+
+<script>
+function enablePlaceholders() {
+  var detect = navigator.userAgent.toLowerCase(); 
+  if (detect.indexOf("safari") > 0) return false;
+  var inputs = document.getElementsByTagName("input");
+  for (var i=0;i<inputs.length;i++) {
+    if (inputs[i].getAttribute("type") == "text") {
+      if (inputs[i].getAttribute("placeholder") && inputs[i].getAttribute("placeholder").length > 0) {
+        inputs[i].value = inputs[i].getAttribute("placeholder");
+        inputs[i].onclick = function() {
+          if (this.value == this.getAttribute("placeholder"))
+          this.value = "";
+          return false;
+        }
+        inputs[i].onblur = function() {
+          if (this.value.length < 1)
+          this.value = this.getAttribute("placeholder");
+        }
+      }
+    }
+  }
+};
+
+$(function() {
+  enablePlaceholders();
+  
+  // ajax submittion
+  $('#beta_signup_form').submit(function() {
+    var email = $('input#email').val();
+    var tech  = $('input#tech').val();
+    // $(':inputs', this).each(function() {})
+    $('#beta_signup_form .submit').val("Sending data...").attr('disabled', 'disabled');
+    $.ajax({
+      type: 'POST',
+      url: '/betasignup/',
+      timeout: 3000,
+      data: 'email=' + escape(email) + '&tech=' + escape(tech),
+      error: function() {
+        $('#beta_signup_message').html("<small>Could not reach our servers right now. Please try again in a few moments.</small>");
+        $('#beta_signup_form .submit').val("I wanna use Feedback Kit").attr('disabled', '');
+      },
+      success: function(t) {
+        $('#beta_signup_form .submit').val("I wanna use Feedback Kit").attr('disabled', '');
+        $('#beta_signup').html(t);
+      }
+    });
+    return false;
+  });
+});
+</script>
