@@ -16,6 +16,8 @@ public class FeedbackCommunicator {
     
     private final String productName;
     
+    private final String accountName;
+    
     public FeedbackCommunicator(String accountName, String productName) {
         if (accountName == null)
             throw new NullPointerException("accountName is null");
@@ -30,6 +32,7 @@ public class FeedbackCommunicator {
             this.host = host;
             this.port = 80;
         }
+        this.accountName = accountName;
         this.productName = productName;
     }
     
@@ -110,12 +113,12 @@ public class FeedbackCommunicator {
         if (override != null && override.trim().length() > 0)
             return override;
         else
-            return accountName;
+            return "feedback.yoursway.com";
     }
     
     public URL feedbackPageUrl() {
         try {
-            return new URL("http", host, port, "/" + productName + "/feedback/");
+            return new URL("http", host, port, productUrl() + "/feedback/");
         } catch (MalformedURLException e) {
             throw new AssertionError(e);
         }
@@ -123,7 +126,7 @@ public class FeedbackCommunicator {
     
     public URL postReportUrl(ClientInfo clientInfo) {
         try {
-            return new URL("http", host, port, "/" + productName + "/post-report/" + clientInfo.id() + "/"
+            return new URL("http", host, port, productUrl() + "/post-report/" + clientInfo.id() + "/"
                     + clientInfo.cookie());
         } catch (MalformedURLException e) {
             throw new AssertionError(e);
@@ -132,10 +135,14 @@ public class FeedbackCommunicator {
     
     public URL obtainClientInfoUrl() {
         try {
-            return new URL("http", host, port, "/" + productName + "/obtain-client-id");
+            return new URL("http", host, port, productUrl() + "/obtain-client-id");
         } catch (MalformedURLException e) {
             throw new AssertionError(e);
         }
+    }
+    
+    private String productUrl() {
+        return "/" + accountName + "/products/" + productName;
     }
     
 }

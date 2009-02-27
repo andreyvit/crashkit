@@ -62,7 +62,7 @@ class AccountPeopleHandler(BaseHandler):
           auth.delete()
         person.account_access.delete()
         person.delete()
-        self.redirect_and_finish(u'/people/', flash = u"%s removed." % (person.user.email()))
+        self.redirect_and_finish(u'%s/people/' % self.account_path, flash = u"%s removed." % (person.user.email()))
     
     if self.request.get('new'):
       txns = []
@@ -81,7 +81,7 @@ class AccountPeopleHandler(BaseHandler):
         if self.is_valid():
           for txn in txns:
             db.run_in_transaction(*txn)
-          self.redirect_and_finish(u'/people/', flash = u"%s has been created." % new_person_email)
+          self.redirect_and_finish(u'%s/people/' % self.account_path, flash = u"%s has been created." % new_person_email)
         else:
           self.data.update(new_person_email=new_person_email)
           self.render_screen_and_finish()
@@ -97,7 +97,7 @@ class AccountPeopleHandler(BaseHandler):
       if self.is_valid():
         for txn in txns:
           db.run_in_transaction(*txn)
-        self.redirect_and_finish(u'/people/', flash = u"Permission settings have been saved.")
+        self.redirect_and_finish(u'%s/people/' % self.account_path, flash = u"Permission settings have been saved.")
       else:
         self.render_screen_and_finish()
     

@@ -16,7 +16,7 @@ import com.yoursway.feedback.exceptions.Failure;
 public class Main {
 
     public static final FeedbackEngine FEEDBACK = new FeedbackConfiguration(
-	    "FuckUpper", "0.99a.N20090216", "feedback.yoursway.com",
+	    "FuckUpper", "0.99a.N20090216", "ys",
 	    "fuckupper").create();
 
     static class HellsBrokeLoose extends Failure {

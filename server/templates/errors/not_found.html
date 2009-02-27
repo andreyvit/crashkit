@@ -1,7 +1,10 @@
-{% extends "../base.html" %}
+{% extends "../layout.html" %}
 {% block title %}Not Found{% endblock %}
+{% block header %}Not Found{% endblock %}
 
 {% block content %}
-{% if message %}<p><b>{{ message }}</b></p>{% endif %}
-<p>Sorry, the item you are referencing does not exist. Why not try to find it on the <a href="/">home page</a>?</p>
+<div class="long-container">
+  {% if message %}<p><b>{{ message }}</b></p>{% endif %}
+  <p>Sorry, the item you are referencing does not exist. Why not try to find it on the <a href="/">home page</a>?</p>
+</div>
 {% endblock %}

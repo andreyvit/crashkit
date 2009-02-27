@@ -23,7 +23,8 @@
               <select id="person_{{ person.key|escape }}_{{ product.key|escape }}_level" name="person_{{ person.key|escape }}_{{ product.key|escape }}_level">
                 <option value="0" {{ auth.level|selectedifeq:0 }}>no access</option>
                 <option value="1" {{ auth.level|selectedifeq:1 }}>read-only access</option>
-                <option value="2" {{ auth.level|selectedifeq:2 }}>full access</option>
+                <option value="2" {{ auth.level|selectedifeq:2 }}>write access</option>
+                <option value="3" {{ auth.level|selectedifeq:3 }}>write access + changing settings</option>
               </select>
             </td>
           </tr>
@@ -61,7 +62,8 @@
             <select id="new_person_{{ product.key|escape }}_level" name="new_person_{{ product.key|escape }}_level">
               <option value="0" {{ product.public_access|selectedifeq:"False" }}>no access</option>
               <option value="1" {{ product.public_access|selectedifeq:"True" }}>read-only access</option>
-              <option value="2">full access</option>
+              <option value="2">write access</option>
+              <option value="3">write access + changing settings</option>
             </select>
           </td>
         </tr>

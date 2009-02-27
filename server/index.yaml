@@ -10,14 +10,14 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
-# Used 57 times in query history.
+# Unused in query history -- copied from input.
 - kind: Bug
   properties:
   - name: product
   - name: occurrence_count
     direction: desc
 
-# Used 24 times in query history.
+# Unused in query history -- copied from input.
 - kind: Bug
   properties:
   - name: product
@@ -28,7 +28,7 @@ indexes:
   - name: ticket
   - name: role
 
-# Used 24 times in query history.
+# Unused in query history -- copied from input.
 - kind: Bug
   properties:
   - name: product
@@ -37,7 +37,7 @@ indexes:
   - name: ticket
   - name: role
 
-# Used 12 times in query history.
+# Unused in query history -- copied from input.
 - kind: Bug
   properties:
   - name: product
@@ -45,110 +45,110 @@ indexes:
   - name: ticket
   - name: role
 
-# Used 2 times in query history.
+# Unused in query history -- copied from input.
 - kind: Bug
   properties:
   - name: product
   - name: roles
   - name: occurrence_count
 
-# Used 56 times in query history.
+# Used 39 times in query history.
 - kind: Bug
   properties:
   - name: product
   - name: roles
-  - name: occurrence_count
-    direction: desc
-
-# Used 102 times in query history.
-- kind: Bug
-  properties:
-  - name: product
-  - name: roles
-  - name: roles
-
-# Used 70 times in query history.
-- kind: Bug
-  properties:
-  - name: product
-  - name: roles
-  - name: roles
-  - name: roles
-  - name: roles
-  - name: ticket
-  - name: roles
-
-# Used 2 times in query history.
-- kind: Bug
-  properties:
-  - name: product
-  - name: roles
-  - name: roles
-  - name: roles
-  - name: ticket
-  - name: roles
-
-# Used 112 times in query history.
-- kind: Bug
-  properties:
-  - name: product
-  - name: roles
-  - name: roles
-  - name: ticket
-  - name: roles
-
-# Used 2 times in query history.
-- kind: Bug
-  properties:
-  - name: product
-  - name: roles
-  - name: roles
-  - name: ticket
-  - name: ticket
-  - name: roles
-
-# Used 2 times in query history.
-- kind: Bug
-  properties:
-  - name: product
-  - name: roles
-  - name: ticket
-
-# Used 267 times in query history.
-- kind: Bug
-  properties:
-  - name: product
-  - name: roles
-  - name: ticket
   - name: occurrence_count
     direction: desc
 
-# Used 560 times in query history.
+# Unused in query history -- copied from input.
 - kind: Bug
   properties:
   - name: product
+  - name: roles
+  - name: roles
+
+# Unused in query history -- copied from input.
+- kind: Bug
+  properties:
+  - name: product
+  - name: roles
+  - name: roles
+  - name: roles
   - name: roles
   - name: ticket
   - name: roles
 
-# Used 2 times in query history.
+# Unused in query history -- copied from input.
 - kind: Bug
   properties:
   - name: product
+  - name: roles
+  - name: roles
+  - name: roles
+  - name: ticket
+  - name: roles
+
+# Unused in query history -- copied from input.
+- kind: Bug
+  properties:
+  - name: product
+  - name: roles
+  - name: roles
+  - name: ticket
+  - name: roles
+
+# Unused in query history -- copied from input.
+- kind: Bug
+  properties:
+  - name: product
+  - name: roles
   - name: roles
   - name: ticket
   - name: ticket
   - name: roles
 
-# Used 305 times in query history.
+# Unused in query history -- copied from input.
 - kind: Bug
   properties:
   - name: product
+  - name: roles
+  - name: ticket
+
+# Used 126 times in query history.
+- kind: Bug
+  properties:
+  - name: product
+  - name: roles
   - name: ticket
   - name: occurrence_count
     direction: desc
 
-# Used once in query history.
+# Unused in query history -- copied from input.
+- kind: Bug
+  properties:
+  - name: product
+  - name: roles
+  - name: ticket
+  - name: roles
+
+# Unused in query history -- copied from input.
+- kind: Bug
+  properties:
+  - name: product
+  - name: roles
+  - name: ticket
+  - name: ticket
+  - name: roles
+
+# Used 13 times in query history.
+- kind: Bug
+  properties:
+  - name: product
+  - name: ticket
+  - name: occurrence_count
+    direction: desc
+
+# Unused in query history -- copied from input.
 - kind: Bug
   properties:
   - name: product
@@ -157,27 +157,27 @@ indexes:
   - name: occurrence_count
     direction: desc
 
-# Used 12 times in query history.
+# Unused in query history -- copied from input.
 - kind: Case
   properties:
   - name: bug
   - name: __key__
 
-# Used 143 times in query history.
+# Used 9 times in query history.
 - kind: Case
   properties:
   - name: bug
   - name: occurrence_count
     direction: desc
 
-# Used 112 times in query history.
+# Unused in query history -- copied from input.
 - kind: Case
   properties:
   - name: product
   - name: occurrence_count
     direction: desc
 
-# Used 91 times in query history.
+# Unused in query history -- copied from input.
 - kind: Case
   properties:
   - name: product
@@ -185,34 +185,34 @@ indexes:
   - name: occurrence_count
     direction: desc
 
-# Used 364 times in query history.
+# Used 9 times in query history.
 - kind: Occurrence
   properties:
   - name: case
   - name: count
     direction: desc
 
-# Used 384 times in query history.
+# Unused in query history -- copied from input.
 - kind: Occurrence
   properties:
   - name: problem
   - name: count
     direction: desc
 
-# Used 228 times in query history.
+# Unused in query history -- copied from input.
 - kind: Problem
   properties:
   - name: product
   - name: occurrence_count
     direction: desc
 
-# Used 110 times in query history.
+# Used 22 times in query history.
 - kind: Product
   properties:
   - name: account
   - name: unique_name
 
-# Used 32 times in query history.
+# Unused in query history -- copied from input.
 - kind: Report
   properties:
   - name: status

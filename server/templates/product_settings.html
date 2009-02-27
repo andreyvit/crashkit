@@ -6,16 +6,16 @@
     <h2>Identification</h2>
     <p>
       <label for="unique_name">Permalink:</label>
-      <input id="unique_name" name="unique_name" value="{{product.unique_name|escape}}" />
+      <input id="unique_name" name="unique_name" value="{{product.unique_name|ifnone|escape}}" />
       {{unique_name_error|errorspan}}
     </p>
     <p>
       <label for="friendly_name">Name:</label>
-      <input id="friendly_name" name="friendly_name" value="{{product.friendly_name|escape}}" />
+      <input id="friendly_name" name="friendly_name" value="{{product.friendly_name|ifnone|escape}}" />
       {{friendly_name_error|errorspan}}
     </p>
     
-    <h2>Bug Tracker Setup</h2>
+    <h2>Integrate with a bug tracker?</h2>
     <p>YourSway Feedback Kit bugs can be associated with your bug tracker tickets.</p>
     <p>
       <label for="bug_tracker">Choose your bug tracker:</label>
@@ -33,17 +33,25 @@
       {{bug_tracker_url_error|errorspan}}
     </p>
     
-    <h2>Ignored Packages</h2>
+    {% if product.is_saved %}
+    <h2>Ignored packages</h2>
     <p>The packages listed below will be ignored when grouping exception reports into bugs.</p>
     <p><label for="uninteresting_packages">Ignore packages:</label> <input id="uninteresting_packages" name="uninteresting_packages" value="{{product.uninteresting_packages|escape}}" size="60" /> {{uninteresting_packages_error|errorspan}}</p>
     <p>(Changes to this setting only affect new exception reports.)</p>
+    {% endif %}
     
     <h2>Make this product public?</h2>
     <p>
       <input id="public_access" type="checkbox" name="public_access" {{product.public_access|checkediftrue}} /> <label for="public_access">Yes, make this product public so anyone in the world can see its bugs</label>
     </p>
     
-    <h2><input type="submit" value="Save Product Settings" /></h2>
+    <h2>
+      {% if product.is_saved %}
+        <input type="submit" value="Save Product Settings" />
+      {% else %}
+        <input type="submit" value="Add Product" />
+      {% endif %}
+    </h2>
   </form>
 </div>
 

@@ -39,11 +39,10 @@ def transaction(method):
   return decorate
   
 class Account(db.Model):
+  name = db.TextProperty(default=None)
+  permalink = db.StringProperty(default=None)
   host = db.StringProperty()
   created_at = db.DateTimeProperty(auto_now_add = True)
-  
-  def name(self):
-    return self.host
     
 BUG_TRACKERS = (
   ('lighthouse', dict(name='Lighthouse', ticket='%s/tickets/%s')),
@@ -300,11 +299,12 @@ class AnonymousAccountAccess(db.Model):
 ACCESS_NONE = 0
 ACCESS_READ = 1
 ACCESS_WRITE = 2
+ACCESS_ADMIN = 3
 
 class ProductAccess(db.Model):
   person = db.ReferenceProperty(Person, required=True)
   product = db.ReferenceProperty(Product, required=True)
-  level = db.IntegerProperty(choices=[ACCESS_NONE,ACCESS_READ,ACCESS_WRITE])
+  level = db.IntegerProperty(choices=[ACCESS_NONE,ACCESS_READ,ACCESS_WRITE,ACCESS_ADMIN])
     
   def is_listing_allowed(self):
     return self.level > ACCESS_NONE
@@ -313,7 +313,7 @@ class ProductAccess(db.Model):
   def is_write_allowed(self):
     return self.level >= ACCESS_WRITE
   def is_admin_allowed(self):
-    return False
+    return self.level >= ACCESS_ADMIN
   
   @staticmethod
   def key_for(person_key, product_key):

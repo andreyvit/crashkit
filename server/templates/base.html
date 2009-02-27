@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block header %}
-  {% if product %}
+  {% if product_path %}
     {{ product.friendly_name}} <span>Bugs</span>
   {% else %}
     {{ account.name }}
@@ -9,10 +9,10 @@
 
 {% block tabnav %}
   <ul id="tabnav">
-  	<li class="home-tab"><a href="/">Account</a></li>
+  	<li class="dashboard-tab"><a href="{{account_path}}/">Account Dashboard</a></li>
   	{% if product_path %}
   	  {% if product_access.is_admin_allowed %}
-      	<li class="product-tab"><a href="{{product_path}}/settings">Product</a></li>
+      	<li class="product-tab"><a href="{{product_path}}/settings">Product Settings</a></li>
       {% endif %}
     	<li class="new-tab"><a href="{{product_path}}/">New Bugs</a></li>
     	<li class="all-tab"><a href="{{product_path}}/all">All Bugs</a></li>
@@ -20,8 +20,11 @@
     	<li class="bug-tab"><a href="{{product_path}}/all">{% if case.ticket %}Assigned{%else%}Unassigned{%endif%} Bug</a></li>
       {% endif %}
     {% else %}
+      {% ifequal tabid "product-tab" %}
+      	<li class="product-tab"><a href="{{account_path}}/products/new">Add Product</a></li>
+      {% endifequal %}
       {% if account_access.is_managing_people_allowed %}
-      	<li class="people-tab"><a href="/people/">People & Permissions</a></li>
+      	<li class="people-tab"><a href="{{account_path}}/people/">People & Permissions</a></li>
       {% endif %}
     {% endif %}
   </ul>

@@ -23,24 +23,35 @@ from controllers.base import *
 
 class ProductSettingsHandler(BaseHandler):
 
-  @prolog(fetch=['account', 'product'], check=['is_product_admin_allowed'])
+  @prolog(fetch=['account', 'or_create_product'], check=['is_product_admin_allowed'])
   def get(self):
     self.render_screen_and_finish()
     
   def render_screen_and_finish(self):
-    self.data.update(tabid = 'product-tab', product_path=".", bug_trackers=BUG_TRACKERS)
-    self.render_and_finish('project_settings.html')
+    self.data.update(tabid = 'product-tab', bug_trackers=BUG_TRACKERS)
+    self.render_and_finish('product_settings.html')
 
-  @prolog(fetch=['account', 'product'], check=['is_product_admin_allowed'])
+  @prolog(fetch=['account', 'or_create_product'], check=['is_product_admin_allowed'])
   def post(self):
+    is_saved = self.product.is_saved()
     self.product.unique_name = self.valid_string('unique_name')
     self.product.friendly_name = self.valid_string('friendly_name')
     self.product.public_access = self.valid_bool('public_access')
     self.product.bug_tracker = self.valid_string('bug_tracker', required=False)
     self.product.bug_tracker_url = self.valid_string('bug_tracker_url', required=(self.product.bug_tracker != None))
-    self.product.uninteresting_packages = self.valid_string('uninteresting_packages')
+    if self.product.is_saved():
+      self.product.uninteresting_packages = self.valid_string('uninteresting_packages')
     if not self.is_valid():
       self.render_screen_and_finish()
     self.product.put()
-    self.redirect_and_finish(u'/%s/settings' % self.product.unique_name,
-      flash = u"“%s” has been saved." % self.product.friendly_name)
+    if is_saved:
+      self.redirect_and_finish(u'%s/%s/settings' % (self.account_path, self.product.unique_name),
+        flash = u"“%s” has been saved." % self.product.friendly_name)
+    else:
+      if not self.person.is_saved():
+        self.person.put()
+      self.product_access = ProductAccess(key_name=ProductAccess.key_for(self.person.key(), self.product.key()).name(),
+          product=self.product, person=self.person, level=ACCESS_ADMIN)
+      self.product_access.put()
+      self.redirect_and_finish(u'%s/%s/all' % (self.account_path, self.product.unique_name),
+        flash = u"“%s” has been created." % self.product.friendly_name)

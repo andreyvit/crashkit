@@ -132,21 +132,30 @@ class BaseHandler(webapp.RequestHandler):
     self.data.update(message = message)
     self.render_and_finish('errors', template)
     
-  def fetch_account(self):
-    self.account = Account.get_or_insert(self.request.host, host = self.request.host)
+  def fetch_account(self, account_permalink):
+    # host = self.request.host
+    # if host = 'feedback.yoursway.com' or host = 'localhost':
+    #   self.account = Account.all().filter('host =', self.request.host)
+    self.account = Account.all().filter('permalink =', account_permalink).get()
+    if self.account == None:
+      self.not_found("Account %s does not exist." % account_permalink)
     self.account_access = self.person.account_access_for(self.account)
     if users.is_current_user_admin():
       if not self.account_access.admin:
         self.account_access.admin = True
         self.account_access.put()
-    self.data.update(account=self.account, account_access=self.account_access)
+    self.account_path = '/%s' % self.account.permalink
+    self.data.update(account=self.account, account_access=self.account_access, account_path=self.account_path)
   fetch_account_nocheck = fetch_account
+    
+  def fetch_compat_account(self):
+    self.fetch_account('ys')
     
   def fetch_product_nocheck(self, product_name):
     self.product = self.account.products.filter('unique_name =', product_name).get()
     if self.product == None:
       self.not_found("Product not found")
-    self.product_path = '/%s' % self.product.unique_name
+    self.product_path = '%s/products/%s' % (self.account_path, self.product.unique_name)
     self.data.update(product=self.product, product_path=self.product_path)
     
   def fetch_product(self, product_name):
@@ -156,6 +165,14 @@ class BaseHandler(webapp.RequestHandler):
     if not self.product_access.is_viewing_allowed():
       self.access_denied("Sorry, you do not have access to this product.")
     self.data.update(product_access=self.product_access)
+    
+  def fetch_or_create_product(self, product_name):
+    if product_name == 'new':
+      self.product = Product(account=self.account,name='',permalink='')
+      self.product_access = FullProductAccess()
+      self.data.update(product=self.product,product_access=self.product_access)
+    else:
+      self.fetch_product(product_name)
 
   def fetch_bug(self, bug_name):
     self.bug = Bug.get_by_key_name(bug_name)

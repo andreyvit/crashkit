@@ -20,7 +20,13 @@ from controllers.base import *
 from controllers.product import *
 from controllers.account import *
 
-class MainHandler(BaseHandler):
+class HomeHandler(BaseHandler):
+  
+  @prolog()
+  def get(self):
+    self.render_and_finish('site_home.html')
+
+class AccountDashboardHandler(BaseHandler):
 
   @prolog(fetch = ['account'])
   def get(self):
@@ -35,8 +41,8 @@ class MainHandler(BaseHandler):
       product.new_bugs = new_bugs[0:6]
       product.new_bug_count = len(product.new_bugs)
     
-    self.data.update(tabid='home-tab', account=self.account, products=products)
-    self.render_and_finish('home.html')
+    self.data.update(tabid='dashboard-tab', account=self.account, products=products)
+    self.render_and_finish('account_dashboard.html')
 
 class CreateProductHandler(BaseHandler):
 
@@ -54,7 +60,17 @@ class CreateProductHandler(BaseHandler):
 
 class ObtainClientIdHandler(BaseHandler):
 
-  @prolog(fetch=['account', 'product'])
+  @prolog(fetch=['account', 'product_nocheck'])
+  def get(self):
+    client = Client()
+    client.product = self.product
+    client.cookie = random_string()
+    client.put()
+    self.send_urlencoded_and_finish(response = 'ok', client_id = client.key().id(), client_cookie = client.cookie)
+
+class CompatObtainClientIdHandler(BaseHandler):
+
+  @prolog(fetch=['compat_account', 'product_nocheck'])
   def get(self):
     client = Client()
     client.product = self.product
@@ -160,6 +176,23 @@ class AssignTicketToBugHandler(BaseHandler):
     db.run_in_transaction(txn, self.bug.key())
     
     self.redirect_and_finish(".")
+
+class CompatPostBugReportHandler(BaseHandler):
+
+  @prolog(fetch=['compat_account', 'product_nocheck', 'client', 'client_cookie'])
+  def post(self):
+    body = (self.request.body or '').strip()
+    if len(body) == 0:
+      self.blow(400, 'json-payload-required')
+    
+    report = Report(product=self.product, client=self.client, remote_ip=self.request.remote_addr,
+        data=unicode(self.request.body, 'utf-8'))
+    report.put()
+    
+    process_report(report)
+      
+    self.send_urlencoded_and_finish(response = 'ok', status = report.status, error = (report.error or 'none'))
+  get=post
 
 class PostBugReportHandler(BaseHandler):
 
@@ -282,32 +315,27 @@ class Temp(BaseHandler):
       item.status = 2
       item.put()
       self.response.out.write("""<div>Error: %s %s</div>""" % (e.__class__.__name__, e.message));
-      
-    
-class ProcessPendingReportsHandler(BaseHandler):
-  
-  @prolog()
-  def get(self):
-    self.account = Account.get_or_insert(self.request.host, host = self.request.host)
-    report = self.account.reports.filter('status =', 0).get()
-    if report == None:
-      self.send_urlencoded_and_finish(response = 'no-more')
-    process_report(report)
-    self.send_urlencoded_and_finish(response = 'done', report_key = report.key())
 
 url_mapping = [
-  ('/', MainHandler),
+  ('/', HomeHandler),
   ('/create-product', CreateProductHandler),
-  ('/process', ProcessPendingReportsHandler),
   ('/iterate', Temp),
-  ('/people/', AccountPeopleHandler),
-  ('/([a-zA-Z0-9._-]+)/settings', ProductSettingsHandler),
-  ('/([a-zA-Z0-9._-]+)/', NewBugListHandler),
-  ('/([a-zA-Z0-9._-]+)/all', AllBugListHandler),
-  ('/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/', BugHandler),
-  ('/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/assign-ticket', AssignTicketToBugHandler),
-  ('/([a-zA-Z0-9._-]+)/obtain-client-id', ObtainClientIdHandler),
-  ('/([a-zA-Z0-9._-]+)/post-report/([0-9]+)/([a-zA-Z0-9]+)', PostBugReportHandler),
+  # per-account
+  ('/([a-zA-Z0-9._-]+)/', AccountDashboardHandler),
+  ('/([a-zA-Z0-9._-]+)/people/', AccountPeopleHandler),
+  # per-project API (compatibility)
+  ('/([a-zA-Z0-9._-]+)/obtain-client-id', CompatObtainClientIdHandler),
+  ('/([a-zA-Z0-9._-]+)/post-report/([0-9]+)/([a-zA-Z0-9]+)', CompatPostBugReportHandler),
+  # per-project API
+  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/obtain-client-id', ObtainClientIdHandler),
+  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/post-report/([0-9]+)/([a-zA-Z0-9]+)', PostBugReportHandler),
+  # per-project (users)
+  ('/([a-zA-Z0-9._-]+)/products/(new)/', ProductSettingsHandler),
+  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/', NewBugListHandler),
+  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/settings', ProductSettingsHandler),
+  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/all', AllBugListHandler),
+  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/', BugHandler),
+  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/assign-ticket', AssignTicketToBugHandler),
 ]
 
 def main():
