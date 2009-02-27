@@ -118,6 +118,9 @@ class BaseHandler(webapp.RequestHandler):
     if attemp_login and self.user == None and self.request.method == 'GET':
       self.redirect_and_finish(users.create_login_url(self.request.uri))
     self.die(403, 'access_denied.html', message=message)
+    
+  def force_login(self):
+    self.redirect_and_finish(users.create_login_url(self.request.uri))
 
   def not_found(self, message = None):
     self.die(404, 'not_found.html', message=message)
@@ -147,6 +150,10 @@ class BaseHandler(webapp.RequestHandler):
     self.account_path = '/%s' % self.account.permalink
     self.data.update(account=self.account, account_access=self.account_access, account_path=self.account_path)
   fetch_account_nocheck = fetch_account
+  
+  def fetch_new_account(self):
+    self.account = Account(permalink='')
+    self.data.update(account=self.account)
     
   def fetch_compat_account(self):
     self.fetch_account('ys')
@@ -269,3 +276,8 @@ class BaseHandler(webapp.RequestHandler):
   def check_is_product_write_allowed(self):
     if not self.product_access.is_write_allowed():
       self.access_denied("You need to have a write access to %s." % self.product.friendly_name)
+      
+  def check_is_signup_allowed(self):
+    if not self.person.is_signup_allowed():
+      self.access_denied("You have not been invited into our beta program yet. Sorry, buddy.")
+

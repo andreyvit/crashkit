@@ -120,8 +120,6 @@ class AccountPeopleHandler(BaseHandler):
     self.data.update(tabid = 'people-tab', people=self.people, products=self.products)
     self.render_and_finish('account_people.html')
 
-    # self.account = Account(permalink='')
-    # self.data.update(account=self.account)
 
 class AccountSettingsHandler(BaseHandler):
 
@@ -142,6 +140,35 @@ class AccountSettingsHandler(BaseHandler):
     self.account.put()
     self.redirect_and_finish(u'/%s/settings/' % self.account.permalink,
       flash = u"“%s” settings have been saved." % self.account.name)
+
+
+class SignupHandler(BaseHandler):
+
+  @prolog(fetch=['new_account'])
+  def get(self):
+    if not self.person.is_signup_allowed():
+      if self.user == None:
+        self.force_login()
+      else:
+        self.redirect_and_finish('/') # TODO
+    self.render_screen_and_finish()
+    
+  def render_screen_and_finish(self):
+    self.data.update(tabid = 'account-settings-tab')
+    self.render_and_finish('account_settings.html')
+
+  @prolog(fetch=['new_account'], check=['is_signup_allowed'])
+  def post(self):
+    self.account.permalink = self.valid_string('permalink')
+    self.account.name = self.valid_string('name')
+    if not self.is_valid():
+      self.render_screen_and_finish()
+    self.account.put()
+    self.account_access = AccountAccess(key_name=AccountAccess.key_for(self.person.key(), self.account.key()).name(),
+        person=self.person, account=self.account, admin=True)
+    self.account_access.put()
+    self.redirect_and_finish(u'/%s/' % self.account.permalink,
+      flash = u"Congratulations! Your account “%s” has been created." % self.account.name)
     # else:
     #   if not self.person.is_saved():
     #     self.person.put()

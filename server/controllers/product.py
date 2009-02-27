@@ -45,7 +45,7 @@ class ProductSettingsHandler(BaseHandler):
       self.render_screen_and_finish()
     self.product.put()
     if is_saved:
-      self.redirect_and_finish(u'%s/%s/settings' % (self.account_path, self.product.unique_name),
+      self.redirect_and_finish(u'%s/products/%s/settings' % (self.account_path, self.product.unique_name),
         flash = u"“%s” has been saved." % self.product.friendly_name)
     else:
       if not self.person.is_saved():
@@ -53,5 +53,5 @@ class ProductSettingsHandler(BaseHandler):
       self.product_access = ProductAccess(key_name=ProductAccess.key_for(self.person.key(), self.product.key()).name(),
           product=self.product, person=self.person, level=ACCESS_ADMIN)
       self.product_access.put()
-      self.redirect_and_finish(u'%s/%s/all' % (self.account_path, self.product.unique_name),
+      self.redirect_and_finish(u'%s/products/%s/all' % (self.account_path, self.product.unique_name),
         flash = u"“%s” has been created." % self.product.friendly_name)

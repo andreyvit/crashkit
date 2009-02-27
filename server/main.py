@@ -44,20 +44,6 @@ class AccountDashboardHandler(BaseHandler):
     self.data.update(tabid='dashboard-tab', account=self.account, products=products)
     self.render_and_finish('account_dashboard.html')
 
-class CreateProductHandler(BaseHandler):
-
-  @prolog(fetch = ['account'])
-  def get(self):
-    product = Product.all().filter('unique_name =', self.request.get('unique_name')).get()
-    if product == None:
-      product = Product()
-    product.account = self.account
-    product.unique_name = self.request.get('unique_name')
-    product.friendly_name = self.request.get('friendly_name')
-    product.put()
-      
-    self.send_urlencoded_and_finish(response = 'ok', host = self.request.host)
-
 class ObtainClientIdHandler(BaseHandler):
 
   @prolog(fetch=['account', 'product_nocheck'])
@@ -318,7 +304,7 @@ class Temp(BaseHandler):
 
 url_mapping = [
   ('/', HomeHandler),
-  ('/create-product', CreateProductHandler),
+  ('/signup/', SignupHandler),
   ('/iterate', Temp),
   # per-account
   ('/([a-zA-Z0-9._-]+)/', AccountDashboardHandler),

@@ -255,6 +255,9 @@ class Person(db.Model):
     if not account_access:
       account_access = AccountAccess(key_name=AccountAccess.key_for(self.key(), account.key()).name(), account=account, person=self)
     return account_access
+    
+  def is_signup_allowed(self):
+    return True
   
   @staticmethod
   def key_for(email):
@@ -264,6 +267,9 @@ class AnonymousPerson(object):
   
   def account_access_for(self, account):
     return AnonymousAccountAccess(account)
+    
+  def is_signup_allowed(self):
+    return False
   
     
 class AccountAccess(db.Model):
