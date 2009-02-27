@@ -15,6 +15,15 @@
       {{friendly_name_error|errorspan}}
     </p>
     
+    <h2>New bug notifications</h2>
+    <p>One e-mail per bug per day. Similar reports are considered the same bug, so we won't spam you
+      with a thousand emails.</p>
+    <p>
+      <label for="new_bug_notification_emails">E-mails:</label>
+      <input id="new_bug_notification_emails" name="new_bug_notification_emails" size="80" value="{{product.new_bug_notification_emails|ifnone|escape}}" />
+      {{new_bug_notification_emails_error|errorspan}}
+    </p>
+    
     <h2>Integrate with a bug tracker?</h2>
     <p>YourSway Feedback Kit bugs can be associated with your bug tracker tickets.</p>
     <p>

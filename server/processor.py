@@ -11,6 +11,7 @@ import hashlib
 from random import Random
 from google.appengine.ext import db
 from google.appengine.api import memcache
+from google.appengine.api import mail
 from django.utils import simplejson as json
 from models import *
 from commons import *
@@ -32,8 +33,30 @@ def process_report(report):
       resulting_occurrences.append(occurrence.submit())
     report.occurrences = map(lambda o: o.key(), resulting_occurrences)
     cases = group(lambda o: o.case, resulting_occurrences)
+    
+    bugs = []
     for case, case_occurrences in cases.iteritems():
-      process_case(report.product, case, sum(map(lambda o: o.count_this_time, case_occurrences)))
+      bugs.append(process_case(report.product, case, sum(map(lambda o: o.count_this_time, case_occurrences))))
+    bugs = list(sets.Set(bugs))
+    bugs_to_email = [b for b in bugs if b.should_spam()]
+    if len(bugs_to_email) > 0:
+      account = report.product.account
+      product_path = 'http://feedback.yoursway.com/%s/products/%s' % (account.permalink, report.product.unique_name)
+      bugs_description = "\n\n".join([b.describe_for_email(product_path) for b in bugs_to_email])
+      body = u"""
+Ladies and gentelemen,
+
+I bet it comes as no surprise for you that “%(name)s” is still buggy.
+
+%(descr)s
+""" % dict(name=report.product.friendly_name, descr=bugs_description)
+      emails = report.product.new_bug_notification_emails.split(',')
+      mail.send_mail('andreyvit@gmail.com', emails, '%s bugs summary' % report.product.friendly_name, body)
+      
+      for bug in bugs_to_email:
+        bug.last_email_on = datetime.now().date()
+        bug.put()
+
   except ApiError, e:
     report.error = "%s: %s" % (e.__class__.__name__, e.message)
     report.status = REPORT_ERROR
@@ -76,6 +99,7 @@ def process_case(product, case, occurrence_count_delta):
     dummy_index, case.exception_name, case.exception_package, case.exception_klass, case.exception_method, case.exception_line = definitive_location
     case.put()
   db.run_in_transaction(txn, case.key())
+  return bug
 
 # class ExceptionInfo(object):
 #   def __init__(self, name, locations):

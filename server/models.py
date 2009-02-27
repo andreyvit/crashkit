@@ -68,6 +68,8 @@ class Product(db.Model):
   bug_tracker     = db.StringProperty()
   bug_tracker_url = db.StringProperty()
   
+  new_bug_notification_emails = db.TextProperty(default='')
+  
   public_access = db.BooleanProperty()
   
   uninteresting_packages = db.TextProperty(default="java,javax,sun,org.eclipse,com.yoursway.utils.bugs")
@@ -165,6 +167,28 @@ class Bug(db.Model):
   first_occurrence_on = db.DateProperty(required=True)
   last_occurrence_on  = db.DateProperty(required=True)
   roles               = db.StringListProperty()
+  
+  last_email_on = db.DateProperty(default=None)
+  
+  def should_spam(self):
+    if self.last_email_on == None:
+      return True
+    if (self.last_occurrence_on - self.last_email_on).days > 0:
+      return True
+    return False
+    
+  def describe_for_email(self, product_path):
+    return u"""
+Bug:        %(url)s
+Exception:  %(exception_name)s
+In:         %(exception_package)s.%(exception_klass)s.%(exception_method)s:%(exception_line)s
+Occurred:   %(occurrence_count)s time(s)
+Last time:  %(last_occurrence_on)s
+""" % dict(url='%s/bugs/%s' % (product_path, self.key()),
+  exception_name=self.exception_name, exception_package=self.exception_package,
+  exception_klass=self.exception_klass, exception_method=self.exception_method,
+  exception_line=self.exception_line, occurrence_count=self.occurrence_count,
+  last_occurrence_on=self.last_occurrence_on)
   
     
 class Case(db.Model):

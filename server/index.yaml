@@ -52,7 +52,7 @@ indexes:
   - name: roles
   - name: occurrence_count
 
-# Used 42 times in query history.
+# Used 45 times in query history.
 - kind: Bug
   properties:
   - name: product
@@ -114,7 +114,7 @@ indexes:
   - name: roles
   - name: ticket
 
-# Used 129 times in query history.
+# Used 132 times in query history.
 - kind: Bug
   properties:
   - name: product
@@ -140,7 +140,7 @@ indexes:
   - name: ticket
   - name: roles
 
-# Used 54 times in query history.
+# Used 55 times in query history.
 - kind: Bug
   properties:
   - name: product
@@ -213,7 +213,7 @@ indexes:
   - name: occurrence_count
     direction: desc
 
-# Used 71 times in query history.
+# Used 72 times in query history.
 - kind: Product
   properties:
   - name: account

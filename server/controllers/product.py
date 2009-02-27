@@ -39,6 +39,7 @@ class ProductSettingsHandler(BaseHandler):
     self.product.public_access = self.valid_bool('public_access')
     self.product.bug_tracker = self.valid_string('bug_tracker', required=False)
     self.product.bug_tracker_url = self.valid_string('bug_tracker_url', required=(self.product.bug_tracker != None))
+    self.product.new_bug_notification_emails = self.valid_string('new_bug_notification_emails', required=False, use_none=False)
     if self.product.is_saved():
       self.product.uninteresting_packages = self.valid_string('uninteresting_packages')
     if not self.is_valid():
