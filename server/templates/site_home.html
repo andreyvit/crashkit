@@ -8,42 +8,50 @@
 	<script src="/static/javascript/marketing.js"></script>
 </head>
 <body>
-  <div id="top" class="clearfix">
-    <div id="logo">CrashKit</div>
-    <div id="scroller" class="scrolling">
-      <a href="#home">Home</a>
-      <a href="#one">1</a>
-      <a href="#two">2</a>
-      <a href="#three">3</a>
-      <a href="#four">4</a>
-      <a href="#five">5</a>
-      <a href="#six">6</a>
-      <a href="#signup" style="width: 90px;" class="signup">Sign up</a>
+  <!--
+    == 970 == 119
+    400+20
+    450+100
+    == 730 == 90
+    580+150 live data
+    == 650 == 80
+    500+150 how it works?
+    == 730 == 90
+    580+150 every detail
+    == 570 == 70
+    420+150 notifications
+    == 500 == 61
+    350+150 grouping
+    == 500 == 61
+    350+150 QA
+    == 730 == 90
+    580+150 five min
+    == 500 == 61
+    350+150 languages
+    == 650 == 80
+    500+150 signup
+    
+    == x == (x * 800 / 6530)
+  -->
+  <div id="top" class="clearfix scrolling">
+    <div id="scroller">
+      <a id="logo" href="#home" style="width: 119px;">CrashKit</a>
+      <a href="#one" style="width: 90px;">1</a>
+      <a style="width: 80px;">&nbsp;</a>
+      <a href="#two" style="width: 90px;">2</a>
+      <a href="#three" style="width: 70px;">3</a>
+      <a href="#four" style="width: 61px;">4</a>
+      <a href="#five" style="width: 61px;">5</a>
+      <a href="#six" style="width: 90px;">6</a>
+      <a style="width: 61px;">&nbsp;</a>
+      <a href="#signup" style="width: 80px;" class="signup">Sign up</a>
       <div id="slider" style="z-index: 1; position: absolute; width: 2em; height: 0.66em; bottom: -1px; background: white;"></div>
     </div>
   </div>
   
-  <div class="container" style="width: 6010px;">
-    <div id="home" class="screen" style="width: 450px;">
-      <div style="text-align: center; position: relative;">
-        <div style="position: absolute; top: 14em; margin-top: -2em; right: 0px;">
-          <span style="font-size: 400%; line-height: 1;">»</span>
-        </div>
-        <span style="font-size: 1400%; line-height: 0.428;">6</span><br>
-        <span style="font-size: 600%; line-height: 1;">reasons</span><br>
-        <span style="font-size: 350%; line-height: 1.714;">why you need</span><br>
-        <span style="font-size: 550%; line-height: 1.09;">CrashKit</span>
-      </div>
-    </div>
-  
-    <div id="one" class="screen" style="width: 580px;">
-      <div style="text-align: center; height: 3em;">
-        <span style="font-size: 300%; line-height: 1;">Live crash data</span>
-      </div>
-      <div><img src="/static/images/marketing/bugs.png" /></div>
-    </div>
+  <div class="container" style="width: 6530px;">
 
-    <div class="screen" style="width: 350px;">
+    <div id="home" class="screen" style="width: 350px; padding-left: 50px; padding-right: 20px;">
       <div style="line-height: 1.5;">
         <div style="margin-top: 5em;">
           <span style="font-size: 200%;">
@@ -64,6 +72,51 @@
         <div style="margin-top: 1.5em;">
           <span style="font-size: 150%;">
             Probably you want to know about&nbsp;it?
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="screen" style="width: 450px; padding-right: 100px;">
+      <div style="text-align: center; position: relative;">
+        <div style="position: absolute; top: 14em; margin-top: -2em; right: 0px;">
+          <span style="font-size: 400%; line-height: 1;">»</span>
+        </div>
+        <span style="font-size: 1400%; line-height: 0.428;">6</span><br>
+        <span style="font-size: 600%; line-height: 1;">reasons</span><br>
+        <span style="font-size: 350%; line-height: 1.714;">why you need</span><br>
+        <span style="font-size: 550%; line-height: 1.09;">CrashKit</span>
+      </div>
+    </div>
+  
+    <div id="one" class="screen" style="width: 580px;">
+      <div style="text-align: center; height: 3em;">
+        <span style="font-size: 300%; line-height: 1;">Live crash data</span>
+      </div>
+      <div><img src="/static/images/marketing/bugs.png" /></div>
+    </div>
+
+    <div class="screen" style="width: 500px;">
+      <div style="line-height: 1.5;">
+        <div style="margin-top: 3em;">
+          <span style="font-size: 200%;">
+            How it works?
+          </span>
+        </div>
+        <div style="margin-top: 1.5em;">
+          <span style="font-size: 150%;">
+            You install CrashKit client code into your application.
+          </span>
+        </div>
+        <div style="margin-top: 1.5em;">
+          <span style="font-size: 150%;">
+            CrashKit client code intercepts unhandled exceptions and sends them to the server.
+          </span>
+        </div>
+        <div style="margin-top: 1.5em;">
+          <span style="font-size: 150%;">
+            CrashKit web application processes the exception reports and allows to view
+            them online.
           </span>
         </div>
       </div>
@@ -196,7 +249,14 @@
   </div>
 <script>
   $('.scrolling a').click(function() {
-    $.scrollTo($(this.href.substring(this.href.indexOf('#'))), 750, {'axis': 'x'});
+    var el = $(this.href.substring(this.href.indexOf('#')));
+    var elWidth = parseInt(el.css('width')) + parseInt(el.css('padding-right'));
+    console.log("elWidth = " + elWidth);
+    var elOffset = el.offset()['left'];
+    console.log("elOffset = " + elOffset);
+    var scroll = Math.max(0, elOffset - (bodyWidth() - elWidth) / 2);
+    console.log('scroll = ' + scroll)
+    $.scrollTo(scroll, 750, {'axis': 'x'});
     return false;
   });
   function bodyWidth() {
@@ -212,10 +272,11 @@
     }
   }
   var containerWidth = parseInt($('.container').css('width'));
+  var scrollerWidth = 800;
   function scrollSlider() {
     var scrollLeft = $('#logo').offset()['left'] - 100;
-    $('#slider').css('width', Math.floor(bodyWidth() * 580 / containerWidth) + 'px');
-    $('#slider').css('left', Math.floor((scrollLeft * 1.0 / containerWidth) * 580) + 'px');
+    $('#slider').css('width', Math.floor(bodyWidth() * scrollerWidth / containerWidth) + 'px');
+    $('#slider').css('left', Math.floor((scrollLeft * 1.0 / containerWidth) * scrollerWidth) + 'px');
   }
   $(window).scroll(scrollSlider);
   $(window).resize(scrollSlider);

@@ -28,13 +28,14 @@ body { font-family: Gill Sans, Arial, sans-serif; background: #fffffe; color: #1
 
 #bottom { position: fixed; left: 0px; bottom: 0px; background: black; height: 4em; width: 100%; color: #fff; }
 
-#logo, #scroller, #signuplink { font-size: 250%; }
-#logo { position: absolute; height: 1.6em; line-height: 1.6; left: 100px; }
+#scroller, #signuplink { font-size: 250%; }
+/*#logo { height: 1.6em; line-height: 1.6; }*/
 #signuplink { position: absolute; height: 1.6em; line-height: 1.6; left: 100px; }
-#scroller { position: absolute; left: 30%; font-size: 150%; line-height: 2.666; }
+#scroller { position: absolute; left: 100px; font-size: 150%; line-height: 2.666; }
 #scroller a { display: block; float: left; width: 70px; text-align: center; z-index: 2; overflow: visible; white-space: nowrap;}
 .scrolling a, .scrolling a:visited, .scrolling a:active { color: #fff; text-decoration: none; }
 a.signup, a.signup:visited, a.signup:active { color: #f33; }
+.scrolling #logo { font-size: 166.7%; line-height: 1.6; text-align: left; }
 
 #authors { position: absolute; right: 60px; }
 
