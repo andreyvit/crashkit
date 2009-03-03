@@ -22,18 +22,18 @@ a img { border: none; }
 
 /* our styles */
 
-body { font-family: Gill Sans, sans-serif; background: #fffffe; color: #111; font-size: 100%; line-height: 1.2;  margin-bottom: 1.5em; overflow: scroll; }
+body { font-family: Gill Sans, sans-serif; background: #fffffe; color: #111; font-size: 100%; line-height: 1.2;  margin-bottom: 1.5em; overflow: scroll;}
 
-#top { position: fixed; left: 0px; top: 0px; background: black; height: 4em; width: 100%; color: #fff; }
+#top { position: fixed; left: 0px; top: 0px; background: black; height: 4em; width: 100%; color: #fff; min-width: 950px; }
 
 #bottom { position: fixed; left: 0px; bottom: 0px; background: black; height: 4em; width: 100%; color: #fff; }
 
-#logo, #scroller, #signuplink, #authors { font-size: 250%; }
+#logo, #scroller, #signuplink { font-size: 250%; }
 #logo { position: absolute; height: 1.6em; line-height: 1.6; left: 100px; }
 #signuplink { position: absolute; height: 1.6em; line-height: 1.6; left: 100px; }
 #scroller { position: absolute; left: 30%; font-size: 150%; line-height: 2.666; }
 #scroller a { display: block; float: left; width: 70px; text-align: center; z-index: 2; }
-.scrolling a, .scrolling a:visited, .scrolling a:active { color: #fff; }
+.scrolling a, .scrolling a:visited, .scrolling a:active { color: #fff; text-decoration: none; }
 a.signup, a.signup:visited, a.signup:active { color: #f33; }
 
 #authors { position: absolute; right: 60px; }
