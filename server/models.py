@@ -38,7 +38,7 @@ def transaction(method):
 
 class LimitedBetaCandidate(db.Model):
   email           = db.StringProperty(required=True)
-  tech            = db.StringProperty(required=True)
+  tech            = db.StringProperty()
   invitation_code = db.StringProperty(default=None)
   rejected        = db.BooleanProperty(default=False)
   created_at      = db.DateTimeProperty(auto_now_add = True)

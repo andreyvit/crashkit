@@ -18,12 +18,12 @@
       <a href="#four">4</a>
       <a href="#five">5</a>
       <a href="#six">6</a>
-      <a href="#signup" class="signup">Sign up</a>
+      <a href="#signup" style="width: 90px;" class="signup">Sign up</a>
       <div id="slider" style="z-index: 1; position: absolute; width: 2em; height: 0.66em; bottom: -1px; background: white;"></div>
     </div>
   </div>
   
-  <div class="container" style="width: 5927px;">
+  <div class="container" style="width: 6010px;">
     <div id="home" class="screen" style="width: 450px;">
       <div style="text-align: center; position: relative;">
         <div style="position: absolute; top: 14em; margin-top: -2em; right: 0px;">
@@ -76,7 +76,7 @@
       <div><img src="/static/images/marketing/details.png" /></div>
     </div>
 
-    <div id="three" class="screen" style="width: 337px;">
+    <div id="three" class="screen" style="width: 420px;">
       <div style="text-align: center; height: 4em;">
         <span style="font-size: 300%; line-height: 1;">Instant notifications</span>
       </div>
@@ -214,12 +214,21 @@
   var containerWidth = parseInt($('.container').css('width'));
   function scrollSlider() {
     var scrollLeft = $('#logo').offset()['left'] - 100;
-    $('#slider').css('width', Math.floor(bodyWidth() * 560 / containerWidth) + 'px');
-    $('#slider').css('left', Math.floor((scrollLeft * 1.0 / containerWidth) * 560) + 'px');
+    $('#slider').css('width', Math.floor(bodyWidth() * 580 / containerWidth) + 'px');
+    $('#slider').css('left', Math.floor((scrollLeft * 1.0 / containerWidth) * 580) + 'px');
   }
   $(window).scroll(scrollSlider);
   $(window).resize(scrollSlider);
   $(scrollSlider);
 </script>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-861679-10");
+pageTracker._trackPageview();
+} catch(err) {}</script>
 </body>
 </html>

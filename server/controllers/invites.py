@@ -26,6 +26,8 @@ class SignUpForLimitedBetaHandler(BaseHandler):
   def post(self):
     email = self.request.get('email')
     tech  = self.request.get('tech')
+    if tech == None:
+      tech = ''
     pers = LimitedBetaCandidate(email=email, tech=tech)
     pers.put()
     

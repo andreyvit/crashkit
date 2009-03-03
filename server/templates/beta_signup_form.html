@@ -45,7 +45,7 @@ $(function() {
     $.ajax({
       type: 'POST',
       url: '/betasignup/',
-      timeout: 3000,
+      timeout: 6000,
       data: 'email=' + escape(email) + '&tech=' + escape(tech),
       error: function() {
         $('#beta_signup_message').html("<small>Could not reach our servers right now. Please try again in a few moments.</small>");
