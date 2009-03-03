@@ -50,10 +50,14 @@ $(function() {
       error: function() {
         $('#beta_signup_message').html("<small>Could not reach our servers right now. Please try again in a few moments.</small>");
         $('#beta_signup_form .submit').val("I wanna use Feedback Kit").attr('disabled', '');
+        if (pageTracker)
+          pageTracker._trackEvent('Beta Signups', 'FailedSignup');
       },
       success: function(t) {
         $('#beta_signup_form .submit').val("I wanna use Feedback Kit").attr('disabled', '');
         $('#beta_signup').html(t);
+        if (pageTracker)
+          pageTracker._trackEvent('Beta Signups', 'Signup');
       }
     });
     return false;
