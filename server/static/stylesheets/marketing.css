@@ -22,22 +22,22 @@ a img { border: none; }
 
 /* our styles */
 
-body { font-family: Gill Sans, Arial, sans-serif; background: #fffffe; color: #111; font-size: 100%; line-height: 1.2;  margin-bottom: 1.5em; overflow: scroll;}
+body { font-family: Gill Sans, Arial, sans-serif; background: #e5dfdf; color: #111; font-size: 100%; line-height: 1.2;  margin-bottom: 1.5em; overflow: scroll;}
 
 #top { position: fixed; left: 0px; top: 0px; background: black; height: 4em; width: 100%; color: #fff; min-width: 950px; }
 
 #bottom { position: fixed; left: 0px; bottom: 0px; background: black; height: 4em; width: 100%; color: #fff; }
 
-#scroller, #signuplink { font-size: 250%; }
-/*#logo { height: 1.6em; line-height: 1.6; }*/
-#signuplink { position: absolute; height: 1.6em; line-height: 1.6; left: 100px; }
-#scroller { position: absolute; left: 100px; font-size: 150%; line-height: 2.666; }
-#scroller a { display: block; float: left; width: 70px; text-align: center; z-index: 2; overflow: visible; white-space: nowrap;}
-.scrolling a, .scrolling a:visited, .scrolling a:active { color: #fff; text-decoration: none; }
-a.signup, a.signup:visited, a.signup:active { color: #f33; }
-.scrolling #logo { font-size: 166.7%; line-height: 1.6; text-align: left; }
+#scroller { position: absolute; left: 100px; font-size: 100%; }
+#scroller a { display: block; float: left; line-height: 4; width: 70px; text-align: center; z-index: 2; overflow: visible; white-space: nowrap;}
+.scrolling a, .scrolling a:visited, .scrolling a:active { color: #e5dfdf; text-decoration: none; }
+a#logo { font-size: 200%; line-height: 2; text-align: left; padding-top: 0px; padding-bottom: 0px; }
 
-#authors { position: absolute; right: 60px; }
+a#signup-top img { position: absolute; top: 50%; height: 50px; margin-top: -25px; width: 150px; }
+
+#bottom a { position: absolute; display: block; height: 4em; }
+a#signup-bottom { left: 80px; top: 50%; height: 50px; width: 150px; margin-top: -25px; }
+a#authors       { right: 80px; top: 50%; height: 40px; width: 126px; margin-top: -20px; }
 
 #top, #bottom { z-index: 1; }
 

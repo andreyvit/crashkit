@@ -30,12 +30,13 @@
     350+150 languages
     == 650 == 80
     500+150 signup
+    == 250 == 31
     
     == x == (x * 800 / 6530)
   -->
   <div id="top" class="clearfix scrolling">
     <div id="scroller">
-      <a id="logo" href="#home" style="width: 119px;">CrashKit</a>
+      <a id="logo" href="#home" style="width: 119px">CrashKit</a>
       <a href="#one" style="width: 90px;">1</a>
       <a style="width: 80px;">&nbsp;</a>
       <a href="#two" style="width: 90px;">2</a>
@@ -44,18 +45,19 @@
       <a href="#five" style="width: 61px;">5</a>
       <a href="#six" style="width: 90px;">6</a>
       <a style="width: 61px;">&nbsp;</a>
-      <a href="#signup" style="width: 80px;" class="signup">Sign up</a>
-      <div id="slider" style="z-index: 1; position: absolute; width: 2em; height: 0.66em; bottom: -1px; background: white;"></div>
+      <a href="#signup" style="width: 80px; margin-left: -35px;" id="signup-top" class="clearfix"><img src="/static/images/marketing/signup.png" width="150" height="50" alt="Sign up" /></a>
+      <a style="width: 31px;">&nbsp;</a>
+      <div id="slider" style="z-index: 1; position: absolute; width: 2em; height: 1em; bottom: -1px; background: url(/static/images/marketing/triangle.png) 50% 0% no-repeat;"></div>
     </div>
   </div>
   
-  <div class="container" style="width: 6530px;">
+  <div class="container" style="width: 6780px;">
 
     <div id="home" class="screen" style="width: 350px; padding-left: 50px; padding-right: 20px;">
       <div style="line-height: 1.5;">
-        <div style="margin-top: 5em;">
+        <div style="margin-top: 3em;">
           <span style="font-size: 200%;">
-            Why risk your reputation?
+            Easy and powerful crash&nbsp;reporting.
           </span>
         </div>
         <div style="margin-top: 1.5em;">
@@ -71,14 +73,14 @@
         </div>
         <div style="margin-top: 1.5em;">
           <span style="font-size: 150%;">
-            Probably you want to know about&nbsp;it?
+            Do you want to know about&nbsp;it?
           </span>
         </div>
       </div>
     </div>
     
     <div class="screen" style="width: 450px; padding-right: 100px;">
-      <div style="text-align: center; position: relative;">
+      <div style="text-align: center; position: relative; padding-top: 1.5em;">
         <div style="position: absolute; top: 14em; margin-top: -2em; right: 0px;">
           <span style="font-size: 400%; line-height: 1;">»</span>
         </div>
@@ -223,7 +225,7 @@
         </div>
         <div style="margin-top: 1.5em;">
           <span style="font-size: 150%;">
-            Oh, sorry: we are only running a&nbsp;limited beta at&nbsp;the moment.
+            We are only running a&nbsp;limited beta at&nbsp;the moment.
             But we promise to&nbsp;invite you within&nbsp;a&nbsp;month.
           </span>
         </div>
@@ -237,26 +239,17 @@
     
   </div>
   
-  <div id="bottom">
-    <div id="signuplink" class="scrolling">
-      <a href="#signup" class="signup">Sign up</a>
-    </div>
-    <div id="authors" style="height: 4em;">
-      <div style="position: absolute; top: 50%; height: 40px; width: 126px; right: 0px; margin-top: -20px;">
-        <a href="http://www.yoursway.com/"><img src="/static/images/marketing/logo.png" /></a>
-      </div>
-    </div>
+  <div id="bottom" class="scrolling">
+    <a id="signup-bottom" href="#signup"><img src="/static/images/marketing/signup.png" width="150" height="50" alt="Sign up" /></a>
+    <a id="authors" href="http://www.yoursway.com/"><img src="/static/images/marketing/logo.png" /></a>
   </div>
 <script>
   $('.scrolling a').click(function() {
     var el = $(this.href.substring(this.href.indexOf('#')));
     var elWidth = parseInt(el.css('width')) + parseInt(el.css('padding-right'));
-    console.log("elWidth = " + elWidth);
     var elOffset = el.offset()['left'];
-    console.log("elOffset = " + elOffset);
     var scroll = Math.max(0, elOffset - (bodyWidth() - elWidth) / 2);
-    console.log('scroll = ' + scroll)
-    $.scrollTo(scroll, 750, {'axis': 'x'});
+    $.scrollTo(Math.floor(scroll), 750, {'axis': 'x'});
     return false;
   });
   function bodyWidth() {
@@ -272,7 +265,7 @@
     }
   }
   var containerWidth = parseInt($('.container').css('width'));
-  var scrollerWidth = 800;
+  var scrollerWidth = 830;
   function scrollSlider() {
     var scrollLeft = $('#logo').offset()['left'] - 100;
     $('#slider').css('width', Math.floor(bodyWidth() * scrollerWidth / containerWidth) + 'px');
