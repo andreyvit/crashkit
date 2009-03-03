@@ -1,4 +1,4 @@
-application: yoursway-feedback
+application: crashkitapp
 version: 2
 runtime: python
 api_version: 1
