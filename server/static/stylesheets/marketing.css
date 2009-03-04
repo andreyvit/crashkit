@@ -42,8 +42,11 @@ a#authors       { right: 80px; top: 50%; height: 40px; width: 126px; margin-top:
 #top, #bottom { z-index: 1; }
 
 .container { width: 5360px; height: 30em; position: absolute; top: 50%; margin-top: -15em; }
-.screen { line-height: 1; float: left; padding: 20px 150px 20px 0px; }
-.text { font-size: 500%; line-height: 1.5; display: table-cell; vertical-align: middle; }
+.screen { line-height: 1; float: left; padding: 0px 150px 20px 0px; }
+
+.screen h2 { font-size: 200%; line-height: 1; margin-bottom: 0.5em;}
+.screen p { margin-top: 0.778em; font-size: 128.5%; line-height: 1.167; }
+img.screenshot { margin-left: -20px; margin-right: -20px; margin-top: -12px; margin-bottom: -20px; }
 
 input { font-size: 75%; }
 

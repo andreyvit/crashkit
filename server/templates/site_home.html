@@ -80,7 +80,7 @@
     </div>
     
     <div class="screen" style="width: 450px; padding-right: 100px;">
-      <div style="text-align: center; position: relative; padding-top: 1.5em;">
+      <div style="text-align: center; position: relative; padding-top: 3em;">
         <div style="position: absolute; top: 14em; margin-top: -2em; right: 0px;">
           <span style="font-size: 400%; line-height: 1;">»</span>
         </div>
@@ -92,149 +92,106 @@
     </div>
   
     <div id="one" class="screen" style="width: 580px;">
-      <div style="text-align: center; height: 3em;">
-        <span style="font-size: 300%; line-height: 1;">Live crash data</span>
-      </div>
-      <div><img src="/static/images/marketing/bugs.png" /></div>
+      <h2>See crashes live</h2>
+      <p>
+        Inspect crashes online as soon as they occur.
+        See how frequent each exception is.
+        Filter out the ones you have already seen.
+      </p>
+      <p><img class="screenshot" src="/static/images/marketing/bugs.png" width="580" height="330" style="padding-bottom: 4px;" /></p>
     </div>
 
-    <div class="screen" style="width: 500px;">
-      <div style="line-height: 1.5;">
-        <div style="margin-top: 3em;">
-          <span style="font-size: 200%;">
-            How it works?
-          </span>
-        </div>
-        <div style="margin-top: 1.5em;">
-          <span style="font-size: 150%;">
-            You install CrashKit client code into your application.
-          </span>
-        </div>
-        <div style="margin-top: 1.5em;">
-          <span style="font-size: 150%;">
-            CrashKit client code intercepts unhandled exceptions and sends them to the server.
-          </span>
-        </div>
-        <div style="margin-top: 1.5em;">
-          <span style="font-size: 150%;">
-            CrashKit web application processes the exception reports and allows to view
-            them online.
-          </span>
-        </div>
-      </div>
+    <div class="screen" style="width: 500px; padding-top: 8.5em;">
+      <h2>How it works?</h2>
+      <p>
+        You install CrashKit client code into your application.
+      </p>
+      <p>
+        CrashKit client code intercepts unhandled exceptions and sends them to the server.
+      </p>
+      <p>
+        CrashKit web application processes the exception reports and allows to view them online.
+      </p>
     </div>
 
     <div id="two" class="screen" style="width: 580px;">
-      <div style="text-align: center; height: 3em;">
-        <span style="font-size: 300%; line-height: 1;">Every detail you want</span>
-      </div>
-      <div><img src="/static/images/marketing/details.png" /></div>
+      <h2>Get every detail you want</h2>
+      <p>CrashKit automatically gathers product version, os&nbsp;version, processor type and other small
+        yet&nbsp;important details.</p>
+      <p><img class="screenshot" src="/static/images/marketing/details.png" width="580" height="334" /></p>
     </div>
 
-    <div id="three" class="screen" style="width: 420px;">
-      <div style="text-align: center; height: 4em;">
-        <span style="font-size: 300%; line-height: 1;">Instant notifications</span>
-      </div>
-      <div style="margin-top: 1em; text-align: center;"><img src="/static/images/marketing/email.png" /></div>
-      <div style="margin-top: 1em; padding-left: 5px; padding-right: 5px;">
-        <span style="font-size: 150%; line-height: 1.5;">
-          Learn about new bugs before your users even notice.
-          Fix them before the users complain.
-        </span>
-      </div>
+    <div id="three" class="screen" style="width: 420px; padding-top: 3em;">
+      <h2>E-mail notifications</h2>
+      <p>
+        Learn about new bugs before your users even notice.
+        Fix&nbsp;them before the users complain.
+      </p>
+      <p>
+        We won't spam your inbox, though: similar crashes
+        are never reported twice during the day.
+      </p>
+      <p><img src="/static/images/marketing/email.png" /></p>
     </div>
   
-    <div id="four" class="screen" style="width: 350px;">
-      <div style="line-height: 1.5;">
-        <div style="margin-top: 5em;">
-          <span style="font-size: 200%;">
-            Smart grouping
-          </span>
-        </div>
-        <div style="margin-top: 1.5em;">
-          <span style="font-size: 150%;">
-            Thousands of similar exception reports are&nbsp;grouped into dozens of&nbsp;bugs.
-            You only have to&nbsp;see and deal with bugs.
-          </span>
-        </div>
-        <div style="margin-top: 1.5em;">
-          <span style="font-size: 150%;">
-            That's also why we do not fill&nbsp;up your inbox: you'll be getting only one e-mail per
-            bug per day.
-          </span>
-        </div>
-      </div>
+    <div id="four" class="screen" style="width: 350px; padding-top: 3em;">
+      <h2>Smart grouping</h2>
+      <p>
+        Not all crash reports are created equal. Some differ in&nbsp;details.
+        Some have different stack traces, but still occur at&nbsp;the&nbsp;same spot.
+      </p>
+      <p>
+        1000s of similar exception reports are&nbsp;grouped into&nbsp;10s of&nbsp;bugs.
+        You only have to&nbsp;see and deal with those bugs.
+      </p>
+      <p>
+        That's why we can avoid filling&nbsp;up your inbox: you are getting only one e-mail per
+        bug per day.
+      </p>
     </div>
 
-   <div id="five" class="screen" style="width: 350px;">
-     <div style="line-height: 1.5;">
-       <div style="margin-top: 5em;">
-         <span style="font-size: 200%;">
-           QA support
-         </span>
-       </div>
-       <div style="margin-top: 1.5em;">
-         <span style="font-size: 150%;">
-           See the bugs that only happened in your QA environment separately. And also
-           separate are the bugs happening on developer machines.
-         </span>
-       </div>
-       <div style="margin-top: 1.5em;">
-         <span style="font-size: 150%;">
-           Expect more QA tools to&nbsp;come as&nbsp;CrashKit evolves.
-         </span>
-       </div>
-     </div>
-   </div>
+    <div id="five" class="screen" style="width: 350px; padding-top: 3em;">
+      <h2>QA support</h2>
+      <p>
+        See the bugs that only happened in your QA environment separately. And also
+        separate are the bugs happening on developer machines.
+      </p>
+      <p>
+        Expect more QA tools to&nbsp;come as&nbsp;CrashKit evolves.
+      </p>
+    </div>
 
-   <div id="six" class="screen" style="width: 580px;">
-     <div style="text-align: center; height: 3em;">
-       <span style="font-size: 300%; line-height: 1;">Five minutes to integrate</span>
-     </div>
-     <div style="margin-top: 1em; padding-left: 5px; padding-right: 5px;">
-       <span style="font-size: 150%; line-height: 1.5;">
-         1. Add our client to your project. 2. Tell it your app name and version.
-         3. Feed it all your uncaught exceptions.
-       </span>
-     </div>
-     <div><img src="/static/images/marketing/integrate.png" /></div>
-   </div>
+    <div id="six" class="screen" style="width: 580px;">
+      <h2>Five minutes to integrate</h2>
+      <p>1. Add CrashKit client code to your project.</p>
+      <p>2. Tell it your app name and version.</p>
+      <p>3. Feed all your uncaught exceptions into CrashKit.</p>
+      <p><img src="/static/images/marketing/integrate.png" /></p>
+    </div>
 
-   <div class="screen" style="width: 350px;">
-     <div style="line-height: 1.5;">
-       <div style="margin-top: 7.5em;">
-         <span style="font-size: 150%;">
-           We support or plan to support within&nbsp;a&nbsp;month:
-          </span>
-       </div>
-       <div style="margin-top: 1.5em;">
-         <span style="font-size: 150%;">
-           <b>Java,</b> Eclipse, OSGi, Servlets, Spring, <b>Objective-C,</b> Cocoa,
-           <b>Python,</b> Google App Engine, Django, <b>Ruby</b>, Ruby on Rails.
-         </span>
-       </div>
-     </div>
-   </div>
+    <div class="screen" style="width: 350px; padding-top: 10.5em;">
+      <p>
+        We support or plan to support within&nbsp;a&nbsp;month:
+      </p>
+      <p>
+        <b>Java,</b> Eclipse, OSGi, Spring, Log4j.
+      </p>
+      <p>
+        <b>Python,</b> Google App Engine, Django.
+      </p>
+      <p>
+        <b>Ruby</b>, Ruby on Rails.
+      </p>
+      </p>
+    </div>
 
-    <div class="screen" style="width: 500px;" id="signup">
-      <div style="line-height: 1.5;">
-        <div style="margin-top: 0em;">
-          <span style="font-size: 200%;">
-            <a name="signup">Sign up?</a>
-          </span>
-        </div>
-        <div style="margin-top: 1.5em;">
-          <span style="font-size: 150%;">
-            We are only running a&nbsp;limited beta at&nbsp;the moment.
-            But we promise to&nbsp;invite you within&nbsp;a&nbsp;month.
-          </span>
-        </div>
-        <div style="margin-top: 1.5em;">
-          <span style="font-size: 150%;">
-            {% include "beta_signup_form.html" %}
-          </span>
-        </div>
-      </div>
+    <div class="screen" style="width: 500px; padding-top: 3em;" id="signup">
+      <h2><a name="signup">Sign up?</a></h2>
+      <p>
+        We are only running a&nbsp;limited beta at&nbsp;the moment.
+        But we promise to&nbsp;invite you within&nbsp;a&nbsp;month.
+      </p>
+      {% include "beta_signup_form.html" %}
     </div>
     
   </div>
