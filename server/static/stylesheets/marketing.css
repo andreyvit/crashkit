@@ -22,7 +22,7 @@ a img { border: none; }
 
 /* our styles */
 
-body { font-family: Gill Sans, Arial, sans-serif; background: #e5dfdf; color: #111; font-size: 100%; line-height: 1.2;  margin-bottom: 1.5em; overflow: scroll;}
+body { font-family: Gill Sans, Arial, sans-serif; background: #e5dfdf; color: #111; font-size: 87.5%; line-height: 1.2;  margin-bottom: 1.5em; overflow: scroll;}
 
 #top { position: fixed; left: 0px; top: 0px; background: black; height: 4em; width: 100%; color: #fff; min-width: 950px; }
 
@@ -45,7 +45,7 @@ a#authors       { right: 80px; top: 50%; height: 40px; width: 126px; margin-top:
 .screen { line-height: 1; float: left; padding: 20px 150px 20px 0px; }
 .text { font-size: 500%; line-height: 1.5; display: table-cell; vertical-align: middle; }
 
-input { font-size: 110%; }
+input { font-size: 75%; }
 
 textarea { width: 75%; }
 #submit-div { text-align: right; width: 75%; }
