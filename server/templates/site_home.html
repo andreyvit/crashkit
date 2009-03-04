@@ -32,18 +32,19 @@
     500+150 signup
     == 250 == 31
     
-    == x == (x * 800 / 6530)
+    == x == (x * 904 / 7380)
   -->
   <div id="top" class="clearfix scrolling">
     <div id="scroller">
       <a id="logo" href="#home">&nbsp;</a>
       <a href="#one" style="width: 90px;">1</a>
-      <a style="width: 80px;">&nbsp;</a>
+      <a href="#howitworks" style="width: 80px;">•</a>
       <a href="#two" style="width: 90px;">2</a>
       <a href="#three" style="width: 70px;">3</a>
       <a href="#four" style="width: 61px;">4</a>
       <a href="#five" style="width: 61px;">5</a>
-      <a href="#six" style="width: 90px;">6</a>
+      <a href="#six" style="width: 90px;">•</a>
+      <a href="#seven" style="width: 73px;">6</a>
       <a style="width: 61px;">&nbsp;</a>
       <a href="#signup" style="width: 80px; margin-left: -35px;" id="signup-top" class="clearfix"><img src="/static/images/marketing/signup.png" width="150" height="50" alt="Sign up" /></a>
       <a style="width: 31px;">&nbsp;</a>
@@ -51,7 +52,7 @@
     </div>
   </div>
   
-  <div class="container" style="width: 6780px;">
+  <div class="container" style="width: 7380px;">
 
     <div id="home" class="screen" style="width: 350px; padding-left: 50px; padding-right: 20px;">
       <div style="line-height: 1.5;">
@@ -101,7 +102,7 @@
       <p><img class="screenshot" src="/static/images/marketing/bugs.png" width="580" height="330" style="padding-bottom: 4px;" /></p>
     </div>
 
-    <div class="screen" style="width: 500px; padding-top: 8.5em;">
+    <div id="howitworks" class="screen" style="width: 500px; padding-top: 7em;">
       <h2>How it works?</h2>
       <p>
         You install CrashKit client code into your application.
@@ -129,7 +130,7 @@
       </p>
       <p>
         We won't spam your inbox, though: similar crashes
-        are never reported twice during the day.
+        are never reported twice during the&nbsp;day.
       </p>
       <p><img src="/static/images/marketing/email.png" /></p>
     </div>
@@ -146,7 +147,7 @@
       </p>
       <p>
         That's why we can avoid filling&nbsp;up your inbox: you are getting only one e-mail per
-        bug per day.
+        bug per&nbsp;day.
       </p>
     </div>
 
@@ -162,16 +163,28 @@
     </div>
 
     <div id="six" class="screen" style="width: 580px;">
-      <h2>Five minutes to integrate</h2>
+      <h2>Start using in five minutes</h2>
       <p>1. Add CrashKit client code to your project.</p>
       <p>2. Tell it your app name and version.</p>
       <p>3. Feed all your uncaught exceptions into CrashKit.</p>
       <p><img src="/static/images/marketing/integrate.png" /></p>
     </div>
 
+    <div id="seven" class="screen" style="width: 450px; padding-top: 1em;">
+      <h2>Bug tracker integration</h2>
+      <p>
+        Assign ticket ids to CrashKit bugs.
+        Open the&nbsp;assigned ticket in&nbsp;one&nbsp;click.
+        Quick ticket creation coming soon.
+      </p>
+      <p>
+        Lighthouse, Trac and Redmine are supported.
+      </p>
+    </div>
+
     <div class="screen" style="width: 350px; padding-top: 10.5em;">
       <p>
-        We support or plan to support within&nbsp;a&nbsp;month:
+        We support or plan to support soon:
       </p>
       <p>
         <b>Java,</b> Eclipse, OSGi, Spring, Log4j.
@@ -180,7 +193,7 @@
         <b>Python,</b> Google App Engine, Django.
       </p>
       <p>
-        <b>Ruby</b>, Ruby on Rails.
+        <b>Ruby,</b> Ruby on Rails.
       </p>
       </p>
     </div>
@@ -222,7 +235,7 @@
     }
   }
   var containerWidth = parseInt($('.container').css('width'));
-  var scrollerWidth = 830;
+  var scrollerWidth = 904;
   function scrollSlider() {
     var scrollLeft = $('#logo').offset()['left'] - 100;
     $('#slider').css('width', Math.floor(bodyWidth() * scrollerWidth / containerWidth) + 'px');
