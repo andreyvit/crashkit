@@ -1,4 +1,4 @@
-package com.yoursway.feedback.internal;
+package com.yoursway.feedback.internal.utils;
 
 import static java.util.Collections.emptyList;
 

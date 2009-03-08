@@ -2,12 +2,12 @@ package com.yoursway.feedback.internal;
 
 import java.io.IOException;
 
-public class DesignatedCommunicationFailure extends IOException {
+public class ServerInitiatedError extends IOException {
 
 	private static final long serialVersionUID = 1L;
 	private final String response;
 	
-	public DesignatedCommunicationFailure(String response) {
+	public ServerInitiatedError(String response) {
 		super(response);
 		this.response = response;
 	}

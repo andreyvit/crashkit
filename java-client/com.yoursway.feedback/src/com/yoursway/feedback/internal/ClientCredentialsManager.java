@@ -2,15 +2,18 @@ package com.yoursway.feedback.internal;
 
 import java.io.IOException;
 
-public class ClientInfoManager {
-	
-	private final FeedbackStorage storage;
-	
-	private ClientInfo cachedInfo;
+import com.yoursway.feedback.internal.model.ClientCredentials;
+import com.yoursway.feedback.internal.model.Repository;
 
-	private final FeedbackCommunicator communicator;
+public class ClientCredentialsManager {
 	
-	public ClientInfoManager(FeedbackStorage storage, FeedbackCommunicator communicator) {
+	private final Repository storage;
+	
+	private ClientCredentials cachedInfo;
+
+	private final ServerConnection communicator;
+	
+	public ClientCredentialsManager(Repository storage, ServerConnection communicator) {
 		if (storage == null)
 			throw new NullPointerException("storage is null");
 		if (communicator == null)
@@ -19,7 +22,7 @@ public class ClientInfoManager {
 		this.communicator = communicator;
 	}
 	
-	public synchronized ClientInfo get() throws IOException {
+	public synchronized ClientCredentials get() throws IOException {
 		if (cachedInfo == null) {
 			cachedInfo = storage.readClientInfo();
 			if (cachedInfo == null) {

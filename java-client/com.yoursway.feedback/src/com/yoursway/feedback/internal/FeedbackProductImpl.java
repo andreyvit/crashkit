@@ -7,27 +7,35 @@ import java.lang.reflect.Modifier;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-import com.yoursway.feedback.Detail;
-import com.yoursway.feedback.FeedbackEngine;
+import com.yoursway.feedback.FeedbackProduct;
 import com.yoursway.feedback.exceptions.NullReportedExceptionFailure;
+import com.yoursway.feedback.internal.model.ExceptionInfo;
+import com.yoursway.feedback.internal.model.Report;
+import com.yoursway.feedback.internal.model.ReportFile;
+import com.yoursway.feedback.internal.model.Repository;
+import com.yoursway.feedback.internal.model.Severity;
+import com.yoursway.feedback.internal.utils.EventScheduler;
+import com.yoursway.feedback.internal.utils.YsFileUtils;
 
-public class FeedbackEngineImpl implements FeedbackEngine {
+public class FeedbackProductImpl implements FeedbackProduct {
     
-    private final FeedbackStorage storage;
-    private final FeedbackCommunicator communicator;
-    private final ClientInfoManager clientInfoManager;
+    private final Repository storage;
+    private final ServerConnection communicator;
+    private final ClientCredentialsManager clientCredentialsManager;
     private final String productName;
     private final String productVersion;
     private final String role;
+    private final EventScheduler scheduler = new EventScheduler();
     
-    public FeedbackEngineImpl(String productName, String productVersion, FeedbackStorage storage,
-            FeedbackCommunicator communicator) {
+    public FeedbackProductImpl(String productName, String productVersion, Repository storage,
+            ServerConnection communicator) {
         if (productName == null)
             throw new NullPointerException("productName is null");
         if (productVersion == null)
@@ -40,7 +48,7 @@ public class FeedbackEngineImpl implements FeedbackEngine {
         this.productVersion = productVersion;
         this.storage = storage;
         this.communicator = communicator;
-        this.clientInfoManager = new ClientInfoManager(storage, communicator);
+        this.clientCredentialsManager = new ClientCredentialsManager(storage, communicator);
         this.role = determineRole(productName);
         if (!"customer".equals(role))
             System.out.println(productName + " Feedback Role: " + role);
@@ -69,24 +77,17 @@ public class FeedbackEngineImpl implements FeedbackEngine {
     private void report(Severity severity, Throwable cause) {
         if (cause == null)
             cause = new NullReportedExceptionFailure();
-        Map<String, String> info = encodeExceptionInfo(severity, cause);
-        Map<String, String> data = collectData(cause);
-        Map<String, String> env = collectEnvironmentInfo();
-        List<ExceptionInfo> exceptions = collectExceptions(cause);
-        storage.addReport(info, exceptions, data, env, role);
-        synchronized (this) {
-            notifyAll();
-        }
+        Report report = new Report(severity.toString(), today(), ".", collectExceptions(cause),
+                collectData(cause), collectEnvironmentInfo(), role);
+        scheduler.scheduleIn(Constants.NEW_EXCEPTION_DELAY);
+        storage.addReport(report);
     }
     
-    private Map<String, String> encodeExceptionInfo(Severity severity, Throwable cause) {
-        Map<String, String> data = new HashMap<String, String>();
-        data.put("severity", severity.apiName);
-        data.put("count", "1");
+    private String today() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         dateFormat.setCalendar(Calendar.getInstance(TimeZone.getTimeZone("GMT")));
-        data.put("date", dateFormat.format(new Date()));
-        return data;
+        String date = dateFormat.format(new Date());
+        return date;
     }
     
     @SuppressWarnings("unchecked")
@@ -165,20 +166,14 @@ public class FeedbackEngineImpl implements FeedbackEngine {
     }
     
     public void major(Throwable cause) {
-        if (cause != null)
-            report(Severity.MAJOR, cause);
+        report(Severity.MAJOR, cause);
     }
     
     public void bug(Throwable cause) {
-        if (cause != null)
-            report(Severity.NORMAL, cause);
+        report(Severity.NORMAL, cause);
     }
     
     class FeedbackPostingThread extends Thread {
-        
-        long lastFailureTimeOrMin = Long.MIN_VALUE;
-        
-        long lastEmptyQueueTimeOrMin = Long.MIN_VALUE;
         
         public FeedbackPostingThread() {
             setName(productName + " Bug Reporter");
@@ -187,56 +182,49 @@ public class FeedbackEngineImpl implements FeedbackEngine {
         
         @Override
         public void run() {
-            Object master = FeedbackEngineImpl.this;
+            scheduler.scheduleIn(Constants.STARTUP_DELAY);
             while (true) {
-                long now = System.currentTimeMillis();
-                long minCheckTime = lastFailureTimeOrMin + 60000;
-                if (now > minCheckTime) {
+                try {
+                    scheduler.waitForScheduledEvent(Constants.MAXIMUM_WAIT_TIME);
+                    Collection<ReportFile> reportsToRequeue = new ArrayList<ReportFile>();
                     try {
-                        PersistentReport report = storage.obtainReportToSend();
-                        if (report == null) {
-                            lastEmptyQueueTimeOrMin = now;
-                            System.out.println("No bug reports to send.");
-                        } else {
-                            lastEmptyQueueTimeOrMin = Long.MIN_VALUE;
+                        ReportFile report = storage.obtainReportToSend();
+                        for (; report != null; report = storage.obtainReportToSend()) {
                             try {
+                                String text = report.read().trim();
                                 try {
-                                    communicator.sendReport(clientInfoManager.get(), "[" + report.read()
-                                            + "]");
+                                    communicator.sendReport(clientCredentialsManager.get(), "[" + text + "]");
                                     System.out.println("Report sent!");
                                     report.delete();
-                                    lastFailureTimeOrMin = Long.MIN_VALUE;
-                                } catch (DesignatedCommunicationFailure e) {
+                                } catch (ServerInitiatedError e) {
                                     handleDesignatedFailure(e);
+                                    scheduler.scheduleIn(Constants.FAILED_DELIVERY_RETRY_DELAY);
                                 }
                             } catch (IOException e) {
-                                report.requeue();
+                                scheduler.scheduleIn(Constants.FAILED_DELIVERY_RETRY_DELAY);
+                                reportsToRequeue.add(report);
                                 System.out.println("Failed sending bug report: " + e.getMessage());
-                                lastFailureTimeOrMin = now;
                             }
                         }
                     } catch (Throwable e) {
                         e.printStackTrace(System.err);
                     }
-                }
-                long nextCheck = Math.max(lastFailureTimeOrMin + 60000, Math.max(now,
-                    lastEmptyQueueTimeOrMin + 60000));
-                long delay = nextCheck - now;
-                if (delay > 0)
-                    synchronized (master) {
+                    for (ReportFile rf : reportsToRequeue)
                         try {
-                            master.wait(delay);
-                        } catch (InterruptedException e) {
+                            rf.requeue();
+                        } catch (Throwable e) {
+                            e.printStackTrace(System.err);
                         }
-                    }
+                } catch (InterruptedException e1) {
+                }
             }
         }
         
     }
     
-    public void handleDesignatedFailure(DesignatedCommunicationFailure e) {
+    public void handleDesignatedFailure(ServerInitiatedError e) {
         if (e.is("invalid-client-id"))
-            clientInfoManager.reset();
+            clientCredentialsManager.reset();
     }
     
     private static String simpleNameOf(Class<?> klass) {

@@ -1,7 +1,8 @@
-package com.yoursway.feedback;
+package com.yoursway.feedback.internal;
 
 import java.util.Map;
 
+import com.yoursway.feedback.FeedbackProduct;
 import com.yoursway.feedback.exceptions.Failure;
 
 public class Detail {
@@ -24,7 +25,7 @@ public class Detail {
         this.valueCalculationError = throwable;
     }
     
-    public void addTo(FeedbackEngine engine, Map<String, String> data) {
+    public void addTo(FeedbackProduct engine, Map<String, String> data) {
         data.put(key, value);
         if (valueCalculationError != null)
             engine.bug(new Failure("Exception in toString() while processing another bug report",

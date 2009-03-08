@@ -1,6 +1,6 @@
 package com.yoursway.feedback;
 
-public interface FeedbackEngine {
+public interface FeedbackProduct {
     
     public void bug(Throwable cause);
     

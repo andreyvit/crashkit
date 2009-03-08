@@ -2,7 +2,7 @@ package com.yoursway.feedback;
 
 public class Feedback {
     
-    private static FeedbackEngine engine;
+    private static FeedbackProduct engine;
     
     public static void bug(Throwable throwable) {
         if (engine == null)
@@ -11,7 +11,7 @@ public class Feedback {
             engine.bug(throwable);
     }
     
-    static void setDefaultEngine(FeedbackEngine engine) {
+    static void setDefaultProduct(FeedbackProduct engine) {
         if (engine == null)
             throw new NullPointerException("engine is null");
         Feedback.engine = engine;

@@ -1,11 +1,11 @@
-package com.yoursway.feedback.internal;
+package com.yoursway.feedback.internal.model;
 
-public class ClientInfo {
+public class ClientCredentials {
 
 	private final String id;
 	private final String cookie;
 
-	public ClientInfo(String id, String cookie) {
+	public ClientCredentials(String id, String cookie) {
 		if (id == null)
 			throw new NullPointerException("id is null");
 		if (cookie == null)

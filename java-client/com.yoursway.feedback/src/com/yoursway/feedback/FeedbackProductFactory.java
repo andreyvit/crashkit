@@ -1,10 +1,10 @@
 package com.yoursway.feedback;
 
-import com.yoursway.feedback.internal.FeedbackCommunicator;
-import com.yoursway.feedback.internal.FeedbackEngineImpl;
-import com.yoursway.feedback.internal.FeedbackStorage;
+import com.yoursway.feedback.internal.ServerConnection;
+import com.yoursway.feedback.internal.FeedbackProductImpl;
+import com.yoursway.feedback.internal.model.Repository;
 
-public class FeedbackConfiguration {
+public class FeedbackProductFactory {
     
     private final String userFriendlyProductName;
     private final String feedbackServiceAccountName;
@@ -12,7 +12,7 @@ public class FeedbackConfiguration {
     private final String developerFriendlyProductVersion;
     private boolean useByDefault = false;
     
-    public FeedbackConfiguration(String userFriendlyProductName, String developerFriendlyProductVersion,
+    public FeedbackProductFactory(String userFriendlyProductName, String developerFriendlyProductVersion,
             String feedbackServiceAccountName, String feedbackServiceProductName) {
         if (userFriendlyProductName == null)
             throw new NullPointerException("userFriendlyProductName is null");
@@ -28,17 +28,17 @@ public class FeedbackConfiguration {
         this.feedbackServiceProductName = feedbackServiceProductName;
     }
     
-    public FeedbackConfiguration useByDefault() {
+    public FeedbackProductFactory useByDefault() {
         useByDefault = true;
         return this;
     }
     
-    public FeedbackEngine create() {
-        FeedbackEngineImpl engine = new FeedbackEngineImpl(userFriendlyProductName,
-                developerFriendlyProductVersion, new FeedbackStorage(userFriendlyProductName),
-                new FeedbackCommunicator(feedbackServiceAccountName, feedbackServiceProductName));
+    public FeedbackProduct create() {
+        FeedbackProductImpl engine = new FeedbackProductImpl(userFriendlyProductName,
+                developerFriendlyProductVersion, new Repository(userFriendlyProductName),
+                new ServerConnection(feedbackServiceAccountName, feedbackServiceProductName));
         if (useByDefault)
-            Feedback.setDefaultEngine(engine);
+            Feedback.setDefaultProduct(engine);
         return engine;
     }
     

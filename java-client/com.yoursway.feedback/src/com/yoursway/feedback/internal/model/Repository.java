@@ -1,22 +1,26 @@
-package com.yoursway.feedback.internal;
+package com.yoursway.feedback.internal.model;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.yoursway.feedback.internal.Constants;
+import com.yoursway.feedback.internal.utils.OS;
+import com.yoursway.feedback.internal.utils.RequestString;
+import com.yoursway.feedback.internal.utils.YsFileUtils;
+import com.yoursway.jyp.BeanEncoding;
+import com.yoursway.jyp.JSON;
+import com.yoursway.jyp.BeanEncoding.BeanificationException;
+import com.yoursway.jyp.JSON.SyntaxError;
 
-public class FeedbackStorage {
+public class Repository {
     
     private final File settingsFile;
     private final File reportsFolder;
     private final File inProgressReportsFolder;
     
-    public FeedbackStorage(String friendlyProductName) {
+    public Repository(String friendlyProductName) {
         if (friendlyProductName == null)
             throw new NullPointerException("friendlyProductName is null");
         File baseFolder = new File(OS.current.applicationDataFolder(friendlyProductName), "Feedback");
@@ -31,26 +35,26 @@ public class FeedbackStorage {
             return;
         long now = System.currentTimeMillis();
         for (File source : leftoverFiles) {
-            if (source.lastModified() < now - 10 * 60 * 1000) {
+            if (source.lastModified() < now - Constants.REQUEUE_IN_PROGRESS_REPORT_IN) {
                 requeue(source);
             }
         }
     }
     
-    public ClientInfo readClientInfo() {
+    public ClientCredentials readClientInfo() {
         try {
             Map<String, String> data = RequestString.decode(YsFileUtils.readAsString(settingsFile));
             String clientId = data.get("client_id");
             String clientCookie = data.get("client_cookie");
             if (clientId == null || clientCookie == null)
                 return null;
-            return new ClientInfo(clientId, clientCookie);
+            return new ClientCredentials(clientId, clientCookie);
         } catch (IOException e) {
             return null;
         }
     }
     
-    public void writeClientInfo(ClientInfo info) {
+    public void writeClientInfo(ClientCredentials info) {
         HashMap<String, String> data = new HashMap<String, String>();
         data.put("client_id", info.id());
         data.put("client_cookie", info.cookie());
@@ -62,56 +66,34 @@ public class FeedbackStorage {
         }
     }
     
-    public void addReport(Map<String, String> info, List<ExceptionInfo> exceptions, Map<String, String> data,
-            Map<String, String> env, String role) {
-        String hash = YsDigest.sha1(RequestString.encode(info) + "|" + RequestString.encode(data) + "|"
-                + RequestString.encode(env));
-        JSONObject json = encodeInfo(info, exceptions, data, env);
-        json.put("role", role);
-        json.put("hash", hash);
-        merge(json);
+    public void addReport(Report report) {
+        merge(report);
     }
     
-    private JSONObject encodeInfo(Map<String, String> info, List<ExceptionInfo> exceptions,
-            Map<String, String> data, Map<String, String> env) throws JSONException {
-        JSONObject obj = encode(info);
-        obj.put("data", encode(data));
-        obj.put("env", encode(env));
-        JSONArray exc = new JSONArray();
-        for (ExceptionInfo ex : exceptions)
-            exc.put(ex.encodeAsJson());
-        obj.put("exceptions", exc);
-        obj.put("userActionOrScreenNameOrBackgroundProcess", "");
-        return obj;
-    }
-    
-    private JSONObject encode(Map<String, String> data) throws JSONException {
-        JSONObject obj = new JSONObject();
-        for (Map.Entry<String, String> entry : data.entrySet())
-            obj.put(entry.getKey(), entry.getValue());
-        return obj;
-    }
-    
-    private synchronized void merge(JSONObject obj) {
-        File file = new File(reportsFolder, obj.get("hash") + ".json");
+    private synchronized void merge(Report obj) {
+        File file = new File(reportsFolder, obj.getHash() + ".json");
         try {
             file.getParentFile().mkdirs();
             if (!file.createNewFile()) {
-                JSONObject existing = new JSONObject(YsFileUtils.readAsString(file));
-                obj.put("count", Integer.toString(Integer.parseInt(existing.getString("count"))
-                        + Integer.parseInt(obj.getString("count"))));
+                Report existing = load(file);
+                obj.setCount(obj.getCount() + existing.getCount());
             }
-        } catch (NumberFormatException e) {
         } catch (IOException e) {
+        } catch (BeanificationException e) {
+        } catch (SyntaxError e) {
         }
         try {
-            YsFileUtils.writeString(file, obj.toString());
+            YsFileUtils.writeString(file, JSON.encode(BeanEncoding.simplify(obj)));
         } catch (IOException e) {
             e.printStackTrace(System.err);
         }
     }
     
-    public synchronized PersistentReport obtainReportToSend() {
+    private Report load(File file) throws BeanificationException, SyntaxError, IOException {
+        return BeanEncoding.beanify(JSON.decode(YsFileUtils.readAsString(file)), Report.class);
+    }
+    
+    public synchronized ReportFile obtainReportToSend() {
         requeueAbandonedFiles();
         File[] files = reportsFolder.listFiles();
         if (files == null || files.length == 0)
@@ -123,16 +105,20 @@ public class FeedbackStorage {
                 continue;
             source.setLastModified(System.currentTimeMillis());
             source.renameTo(target);
-            return new PersistentReport(target, this);
+            return new ReportFile(target, this);
         }
         return null;
     }
     
     void requeue(File source) {
         try {
-            JSONObject data = new JSONObject(YsFileUtils.readAsString(source));
-            merge(data);
+            merge(load(source));
         } catch (IOException e) {
+            e.printStackTrace(System.err);
+        } catch (BeanificationException e) {
+            e.printStackTrace(System.err);
+        } catch (SyntaxError e) {
+            e.printStackTrace(System.err);
         }
         source.delete();
     }

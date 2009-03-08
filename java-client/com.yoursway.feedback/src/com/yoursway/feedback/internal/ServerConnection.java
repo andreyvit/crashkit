@@ -8,17 +8,25 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
-public class FeedbackCommunicator {
+import com.yoursway.feedback.internal.model.ClientCredentials;
+import com.yoursway.feedback.internal.utils.RequestString;
+import com.yoursway.feedback.internal.utils.YsFileUtils;
+
+public class ServerConnection {
     
     private final String host;
     
     private final int port;
     
+    @SuppressWarnings("unused")
     private final String productName;
     
+    @SuppressWarnings("unused")
     private final String accountName;
     
-    public FeedbackCommunicator(String accountName, String productName) {
+    private final String productUrl;
+    
+    public ServerConnection(String accountName, String productName) {
         if (accountName == null)
             throw new NullPointerException("accountName is null");
         if (productName == null)
@@ -34,20 +42,21 @@ public class FeedbackCommunicator {
         }
         this.accountName = accountName;
         this.productName = productName;
+        this.productUrl = "/" + accountName + "/products/" + productName;
     }
     
-    public ClientInfo obtainNewClientIdAndCookie() throws IOException {
+    public ClientCredentials obtainNewClientIdAndCookie() throws IOException {
         Map<String, String> result = get(obtainClientInfoUrl());
         String id = result.get("client_id");
         String cookie = result.get("client_cookie");
         if (id == null || cookie == null)
             throw new IOException("Invalid response: missing id and/or cookie");
-        return new ClientInfo(id, cookie);
+        return new ClientCredentials(id, cookie);
     }
     
-    public void sendReport(ClientInfo clientInfo, String payload) throws IOException {
+    public void sendReport(ClientCredentials clientCredentials, String payload) throws IOException {
         System.out.println("Trying to send bug report to " + host + "...");
-        URL url = postReportUrl(clientInfo);
+        URL url = postReportUrl(clientCredentials);
         post(url, payload);
     }
     
@@ -72,7 +81,7 @@ public class FeedbackCommunicator {
     }
     
     private Map<String, String> interpretResponse(HttpURLConnection urlConn) throws IOException,
-            DesignatedCommunicationFailure {
+            ServerInitiatedError {
         int code = urlConn.getResponseCode();
         if (code < 200 || code >= 300) {
             InputStream in = urlConn.getErrorStream();
@@ -88,7 +97,7 @@ public class FeedbackCommunicator {
             if (response == null)
                 throw new IOException("Response indicated failure: code " + code);
             else
-                throw new DesignatedCommunicationFailure(response);
+                throw new ServerInitiatedError(response);
         } else {
             InputStream in = urlConn.getInputStream();
             String result = YsFileUtils.readAsString(in);
@@ -98,7 +107,7 @@ public class FeedbackCommunicator {
             if (response == null)
                 throw new IOException("Server returned code 200, but no API response");
             if (!response.equalsIgnoreCase("ok"))
-                throw new DesignatedCommunicationFailure(response);
+                throw new ServerInitiatedError(response);
             return data;
         }
     }
@@ -113,21 +122,21 @@ public class FeedbackCommunicator {
         if (override != null && override.trim().length() > 0)
             return override;
         else
-            return "feedback.yoursway.com";
+            return "crashkitapp.appspot.com";
     }
     
     public URL feedbackPageUrl() {
         try {
-            return new URL("http", host, port, productUrl() + "/feedback/");
+            return new URL("http", host, port, productUrl + "/feedback/");
         } catch (MalformedURLException e) {
             throw new AssertionError(e);
         }
     }
     
-    public URL postReportUrl(ClientInfo clientInfo) {
+    public URL postReportUrl(ClientCredentials clientCredentials) {
         try {
-            return new URL("http", host, port, productUrl() + "/post-report/" + clientInfo.id() + "/"
-                    + clientInfo.cookie());
+            return new URL("http", host, port, productUrl + "/post-report/" + clientCredentials.id() + "/"
+                    + clientCredentials.cookie());
         } catch (MalformedURLException e) {
             throw new AssertionError(e);
         }
@@ -135,14 +144,10 @@ public class FeedbackCommunicator {
     
     public URL obtainClientInfoUrl() {
         try {
-            return new URL("http", host, port, productUrl() + "/obtain-client-id");
+            return new URL("http", host, port, productUrl + "/obtain-client-id");
         } catch (MalformedURLException e) {
             throw new AssertionError(e);
         }
-    }
-    
-    private String productUrl() {
-        return "/" + accountName + "/products/" + productName;
     }
     
 }

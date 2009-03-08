@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.yoursway.feedback.internal;
+package com.yoursway.feedback.internal.utils;
 
 import java.io.IOException;
 import java.util.AbstractList;

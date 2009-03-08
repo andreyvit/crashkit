@@ -1,4 +1,4 @@
-package com.yoursway.feedback.internal;
+package com.yoursway.feedback.internal.model;
 
 public enum Severity {
     
@@ -8,10 +8,15 @@ public enum Severity {
 
     ;
     
-    final String apiName;
+    private final String apiName;
     
     private Severity(String apiName) {
         this.apiName = apiName;
+    }
+    
+    @Override
+    public String toString() {
+        return apiName;
     }
     
 }

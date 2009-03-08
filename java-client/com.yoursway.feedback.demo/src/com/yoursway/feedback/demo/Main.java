@@ -9,13 +9,13 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
-import com.yoursway.feedback.FeedbackConfiguration;
-import com.yoursway.feedback.FeedbackEngine;
+import com.yoursway.feedback.FeedbackProductFactory;
+import com.yoursway.feedback.FeedbackProduct;
 import com.yoursway.feedback.exceptions.Failure;
 
 public class Main {
 
-    public static final FeedbackEngine FEEDBACK = new FeedbackConfiguration(
+    public static final FeedbackProduct FEEDBACK = new FeedbackProductFactory(
 	    "FuckUpper", "0.99a.N20090216", "ys",
 	    "fuckupper").create();
 

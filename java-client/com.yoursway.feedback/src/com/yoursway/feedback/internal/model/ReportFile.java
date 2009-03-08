@@ -1,14 +1,16 @@
-package com.yoursway.feedback.internal;
+package com.yoursway.feedback.internal.model;
 
 import java.io.File;
 import java.io.IOException;
 
-public class PersistentReport {
+import com.yoursway.feedback.internal.utils.YsFileUtils;
+
+public class ReportFile {
     
     private final File file;
-    private final FeedbackStorage storage;
+    private final Repository storage;
     
-    public PersistentReport(File file, FeedbackStorage storage) {
+    public ReportFile(File file, Repository storage) {
         if (file == null)
             throw new NullPointerException("file is null");
         if (storage == null)
