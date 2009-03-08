@@ -45,4 +45,9 @@ public class ExceptionInfo {
         return locations;
     }
     
+    public void claimPackages(ClaimedPackages claimedPackages) {
+        for (LocationInfo location : locations)
+            location.claimPackages(claimedPackages);
+    }
+    
 }

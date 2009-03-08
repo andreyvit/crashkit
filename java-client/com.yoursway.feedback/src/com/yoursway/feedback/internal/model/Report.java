@@ -93,4 +93,9 @@ public class Report {
         return hash;
     }
     
+    public void claimPackages(ClaimedPackages claimedPackages) {
+        for (ExceptionInfo ei : exceptions)
+            ei.claimPackages(claimedPackages);
+    }
+    
 }

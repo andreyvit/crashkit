@@ -9,6 +9,7 @@ public class LocationInfo {
     private final String methodName;
     private final int lineNumber;
     private final String packageName;
+    private boolean claimed;
     
     public LocationInfo(StackTraceElement element) {
         fileName = element.getFileName();
@@ -50,6 +51,19 @@ public class LocationInfo {
     
     public int getLine() {
         return lineNumber;
+    }
+    
+    public boolean isClaimed() {
+        return claimed;
+    }
+    
+    public void setClaimed(boolean claimed) {
+        this.claimed = claimed;
+    }
+    
+    public void claimPackages(ClaimedPackages claimedPackages) {
+        if (claimedPackages.isClaimed(packageName))
+            claimed = true;
     }
     
 }

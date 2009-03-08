@@ -14,8 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
-import com.yoursway.feedback.FeedbackProduct;
+import com.yoursway.feedback.CrashKit;
 import com.yoursway.feedback.exceptions.NullReportedExceptionFailure;
+import com.yoursway.feedback.internal.model.ClaimedPackages;
 import com.yoursway.feedback.internal.model.ExceptionInfo;
 import com.yoursway.feedback.internal.model.Report;
 import com.yoursway.feedback.internal.model.ReportFile;
@@ -24,7 +25,7 @@ import com.yoursway.feedback.internal.model.Severity;
 import com.yoursway.feedback.internal.utils.EventScheduler;
 import com.yoursway.feedback.internal.utils.YsFileUtils;
 
-public class FeedbackProductImpl implements FeedbackProduct {
+public final class CrashKitImpl extends CrashKit {
     
     private final Repository storage;
     private final ServerConnection communicator;
@@ -33,19 +34,23 @@ public class FeedbackProductImpl implements FeedbackProduct {
     private final String productVersion;
     private final String role;
     private final EventScheduler scheduler = new EventScheduler();
+    private final ClaimedPackages claimedPackages;
     
-    public FeedbackProductImpl(String productName, String productVersion, Repository storage,
-            ServerConnection communicator) {
+    public CrashKitImpl(String productName, String productVersion, String[] claimedPackages,
+            Repository storage, ServerConnection communicator) {
         if (productName == null)
             throw new NullPointerException("productName is null");
         if (productVersion == null)
             throw new NullPointerException("productVersion is null");
+        if (claimedPackages == null)
+            throw new NullPointerException("claimedPackages is null");
         if (storage == null)
             throw new NullPointerException("storage is null");
         if (communicator == null)
             throw new NullPointerException("communicator is null");
         this.productName = productName;
         this.productVersion = productVersion;
+        this.claimedPackages = new ClaimedPackages(claimedPackages);
         this.storage = storage;
         this.communicator = communicator;
         this.clientCredentialsManager = new ClientCredentialsManager(storage, communicator);
@@ -74,11 +79,12 @@ public class FeedbackProductImpl implements FeedbackProduct {
         return "customer";
     }
     
-    private void report(Severity severity, Throwable cause) {
+    protected void report(Severity severity, Throwable cause) {
         if (cause == null)
             cause = new NullReportedExceptionFailure();
         Report report = new Report(severity.toString(), today(), ".", collectExceptions(cause),
                 collectData(cause), collectEnvironmentInfo(), role);
+        report.claimPackages(claimedPackages);
         scheduler.scheduleIn(Constants.NEW_EXCEPTION_DELAY);
         storage.addReport(report);
     }
@@ -101,7 +107,7 @@ public class FeedbackProductImpl implements FeedbackProduct {
                     Map<String, Object> map = (Map<String, Object>) method.invoke(throwable);
                     if (map != null) {
                         for (Map.Entry<String, Object> entry : map.entrySet())
-                            new Detail(entry.getKey(), entry.getValue()).addTo(this, data);
+                            new Detail(entry.getKey(), entry.getValue()).addTo(data);
                     }
                 }
             } catch (Throwable e) {
@@ -163,14 +169,6 @@ public class FeedbackProductImpl implements FeedbackProduct {
         String value = System.getProperty(property);
         if (value != null && value.length() > 0)
             data.put(key, value);
-    }
-    
-    public void major(Throwable cause) {
-        report(Severity.MAJOR, cause);
-    }
-    
-    public void bug(Throwable cause) {
-        report(Severity.NORMAL, cause);
     }
     
     class FeedbackPostingThread extends Thread {

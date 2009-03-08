@@ -9,15 +9,14 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
-import com.yoursway.feedback.FeedbackProductFactory;
-import com.yoursway.feedback.FeedbackProduct;
+import com.yoursway.feedback.CrashKit;
 import com.yoursway.feedback.exceptions.Failure;
 
 public class Main {
 
-    public static final FeedbackProduct FEEDBACK = new FeedbackProductFactory(
-	    "FuckUpper", "0.99a.N20090216", "ys",
-	    "fuckupper").create();
+    public static final CrashKit crashKit = CrashKit.connectApplication(
+	    "FuckUpper", "0.99a.N20090216", "ys", "fuckupper",
+	    new String[] {"com.yoursway.feedback.demo"});
 
     static class HellsBrokeLoose extends Failure {
 	private static final long serialVersionUID = 1L;
@@ -62,17 +61,21 @@ public class Main {
 	button3.setText("Break all hells loose");
 	button3.addSelectionListener(new SelectionAdapter() {
 	    public void widgetSelected(SelectionEvent e) {
-		FEEDBACK.major(new HellsBrokeLoose());
+		new Thread() {
+		    public void run() {
+			throw new NullPointerException("Mua-ha-ha");
+		    }
+		}.start();
 	    }
 	});
-	
+
 	final Button button4 = new Button(shell, SWT.PUSH);
 	button4.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, false,
 		false));
 	button4.setText("Heyloo");
 	button4.addSelectionListener(new SelectionAdapter() {
 	    public void widgetSelected(SelectionEvent e) {
-		FEEDBACK.major(new IllegalArgumentException());
+		CrashKit.major(new IllegalArgumentException());
 	    }
 	});
 
@@ -86,7 +89,7 @@ public class Main {
 		double random = Math.random();
 		String foo = (random > 0.66 ? "A very very very very very long data"
 			: (random > 0.33 ? "2" : "1"));
-		FEEDBACK.bug(new UnhandledEventLoopException(e).add("foo", foo)
+		CrashKit.bug(new UnhandledEventLoopException(e).add("foo", foo)
 			.add("another_detail_2", e.hashCode() % 2).add(
 				"another_detail_3", e.hashCode() % 3).add(
 				"another_detail_5", e.hashCode() % 5).add(
