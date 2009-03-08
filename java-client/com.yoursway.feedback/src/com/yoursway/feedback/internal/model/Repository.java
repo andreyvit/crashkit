@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.yoursway.feedback.CrashKit;
 import com.yoursway.feedback.internal.Constants;
 import com.yoursway.feedback.internal.utils.OS;
 import com.yoursway.feedback.internal.utils.RequestString;
@@ -114,11 +115,13 @@ public class Repository {
         try {
             merge(load(source));
         } catch (IOException e) {
-            e.printStackTrace(System.err);
+            CrashKit.bug(e);
         } catch (BeanificationException e) {
-            e.printStackTrace(System.err);
+            CrashKit.bug(e);
         } catch (SyntaxError e) {
-            e.printStackTrace(System.err);
+            CrashKit.bug(e);
+        } catch (Throwable e) {
+            CrashKit.bug(e);
         }
         source.delete();
     }
