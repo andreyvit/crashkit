@@ -50,12 +50,14 @@ I bet it comes as no surprise for you that “%(name)s” is still buggy.
 
 %(descr)s
 """ % dict(name=report.product.friendly_name, descr=bugs_description)
-      emails = report.product.new_bug_notification_emails.split(',')
-      mail.send_mail('andreyvit@gmail.com', emails, '%s bugs summary' % report.product.friendly_name, body)
+      e = (report.product.new_bug_notification_emails or '').strip()
+      if len(e) > 0:
+        emails = e.split(',')
+        mail.send_mail('andreyvit@gmail.com', emails, '%s bugs summary' % report.product.friendly_name, body)
       
-      for bug in bugs_to_email:
-        bug.last_email_on = datetime.now().date()
-        bug.put()
+        for bug in bugs_to_email:
+          bug.last_email_on = datetime.now().date()
+          bug.put()
 
   except ApiError, e:
     report.error = "%s: %s" % (e.__class__.__name__, e.message)
