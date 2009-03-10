@@ -149,9 +149,9 @@ def create_or_update_occurrence(occurrence_hash, case, client, date, messages, d
     occurrence = Occurrence(key_name=key_name, case=case, client=client, date=date, count=count,
         role=role, exception_messages=repr(messages))
     for k, v in data.iteritems():
-      setattr(occurrence, 'data_%s' % k, db.Text(v))
+      setattr(occurrence, 'data_%s' % k, db.Text(unicode(v)))
     for k, v in env.iteritems():
-      setattr(occurrence, 'env_%s' % k, db.Text(v))
+      setattr(occurrence, 'env_%s' % k, db.Text(unicode(v)))
   else:
     occurrence.count += count
   occurrence.put()

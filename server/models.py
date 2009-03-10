@@ -171,11 +171,11 @@ class Bug(db.Model):
   
   created_at = db.DateTimeProperty(auto_now_add = True)
 
-  exception_name    = db.StringProperty(required=True)
-  exception_package = db.StringProperty(required=True)
-  exception_klass   = db.StringProperty(required=True)
-  exception_method  = db.StringProperty(required=True)
-  exception_line    = db.IntegerProperty(required=True)
+  exception_name    = db.StringProperty()
+  exception_package = db.StringProperty()
+  exception_klass   = db.StringProperty()
+  exception_method  = db.StringProperty()
+  exception_line    = db.IntegerProperty()
   
   max_severity        = db.IntegerProperty(required=True)
   occurrence_count    = db.IntegerProperty(required=True)
