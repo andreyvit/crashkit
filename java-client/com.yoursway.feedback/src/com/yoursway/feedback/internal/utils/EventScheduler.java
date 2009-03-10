@@ -1,5 +1,7 @@
 package com.yoursway.feedback.internal.utils;
 
+import com.yoursway.feedback.internal.Constants;
+
 /**
  * Schedules a single event in “X milliseconds from now” style.
  * 
@@ -36,6 +38,8 @@ public class EventScheduler {
             now = System.currentTimeMillis();
             timeoutThisTime = minTimeout(timeout(now), bailOut - now);
         }
+        if (Constants.DEBUG_SCHEDULING)
+            System.out.println("Event (or timeout) happened.");
         scheduledAt = NOT_SCHEDULED; // not really necessary, just for debugging/clarity
     }
     
@@ -78,6 +82,8 @@ public class EventScheduler {
             scheduledAt = now + timeout;
         else
             scheduledAt = Math.max(scheduledAt, now + timeout);
+        if (Constants.DEBUG_SCHEDULING)
+            System.out.println("Event scheduled.");
         notifyAll();
     }
 }

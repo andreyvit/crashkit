@@ -58,6 +58,20 @@ def errorspan(error):
   else:
     return ""
 
+def doformatvalue(v, product_path, maxlen):
+  if v.startswith('blob:'):
+    body_hash = v[5:]
+    return '<a target="_new" href="%s/blob/%s/">%s</a>' % (product_path, body_hash, body_hash[0:6] + u"…")
+  return escape(shorten(v, maxlen))
+
+@register.filter
+def formatvalue(v, product_path):
+  return doformatvalue(v, product_path, 1000)
+  
+@register.filter
+def formatshortenedvalue(v, product_path):
+  return doformatvalue(v, product_path, 15)
+    
 @register.filter
 def ifnone(value, subst = ''):
   if value == None:

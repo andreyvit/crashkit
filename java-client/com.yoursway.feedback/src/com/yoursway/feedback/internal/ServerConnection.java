@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 
 import com.yoursway.feedback.internal.model.ClientCredentials;
@@ -54,10 +56,22 @@ public class ServerConnection {
         return new ClientCredentials(id, cookie);
     }
     
-    public void sendReport(ClientCredentials clientCredentials, String payload) throws IOException {
+    public void sendReport(ClientCredentials clientCredentials, String payload, Collection<String> blobsToSend)
+            throws IOException {
         System.out.println("Trying to send bug report to " + host + "...");
         URL url = postReportUrl(clientCredentials);
-        post(url, payload);
+        Map<String, String> response = post(url, payload);
+        String blobs = response.get("blobs");
+        System.out.println("Report sent.");
+        if (blobs != null)
+            blobsToSend.addAll(Arrays.asList(blobs.split(",")));
+    }
+    
+    public void sendBlob(ClientCredentials clientCredentials, String blob, String body) throws IOException {
+        System.out.println("Trying to send an attachment to " + host + "...");
+        URL url = postBlobUrl(clientCredentials, blob);
+        post(url, body);
+        System.out.println("Attachment sent.");
     }
     
     private Map<String, String> get(URL url) throws IOException {
@@ -137,6 +151,15 @@ public class ServerConnection {
         try {
             return new URL("http", host, port, productUrl + "/post-report/" + clientCredentials.id() + "/"
                     + clientCredentials.cookie());
+        } catch (MalformedURLException e) {
+            throw new AssertionError(e);
+        }
+    }
+    
+    public URL postBlobUrl(ClientCredentials clientCredentials, String blob) {
+        try {
+            return new URL("http", host, port, productUrl + "/post-blob/" + clientCredentials.id() + "/"
+                    + clientCredentials.cookie() + "/" + blob);
         } catch (MalformedURLException e) {
             throw new AssertionError(e);
         }

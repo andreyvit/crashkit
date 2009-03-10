@@ -185,18 +185,53 @@ class PostBugReportHandler(BaseHandler):
 
   @prolog(fetch=['account_nocheck', 'product_nocheck', 'client', 'client_cookie'])
   def post(self):
-    body = (self.request.body or '').strip()
+    body = unicode((self.request.body or ''), 'utf-8').strip()
     if len(body) == 0:
       self.blow(400, 'json-payload-required')
     
     report = Report(product=self.product, client=self.client, remote_ip=self.request.remote_addr,
-        data=unicode(self.request.body, 'utf-8'))
+        data=body)
     report.put()
+    
+    all_blobs = re.findall('"blob:([a-zA-Z0-9]+)"', body)
+    existing_blobs = Attachment.get_by_key_name([Attachment.key_name_for(self.product.key(), b) for b in all_blobs])
+    blobs = sets.Set(all_blobs) - sets.Set([b.body_hash for b in existing_blobs if b])
+    logging.warn("BLOBS TO GET: %s,  all blobs: %s", ','.join(blobs), ','.join(all_blobs))
     
     process_report(report)
       
-    self.send_urlencoded_and_finish(response = 'ok', status = report.status, error = (report.error or 'none'))
+    self.send_urlencoded_and_finish(response = 'ok', status = report.status,
+        error = (report.error or 'none'), blobs=','.join(blobs))
   get=post
+
+class PostBlobHandler(BaseHandler):
+
+  @prolog(fetch=['account_nocheck', 'product_nocheck', 'client', 'client_cookie'])
+  def post(self, body_hash):
+    body = (unicode(self.request.body, 'utf-8') or u'')
+    def txn():
+      k = Attachment.key_name_for(self.product.key(), body_hash)
+      a = Attachment.get_by_key_name(k)
+      if not a:
+        a = Attachment(key_name=k, product=self.product, client=self.client, body=body,
+            body_hash=body_hash)
+        a.put()
+    db.run_in_transaction(txn)
+  
+    self.send_urlencoded_and_finish(response='ok')
+  get=post
+
+class ViewBlobHandler(BaseHandler):
+
+  @prolog(fetch=['account', 'product'])
+  def get(self, body_hash):
+    k = Attachment.key_name_for(self.product.key(), body_hash)
+    self.attachment = Attachment.get_by_key_name(k)
+    if self.attachment is None:
+      self.response.out.write("not found")
+    else:
+      self.response.headers['Content-Type'] = "text/plain"
+      self.response.out.write(self.attachment.body)
   
 class Temp(BaseHandler):
   @prolog(check=['is_server_management_allowed'])
@@ -321,6 +356,7 @@ url_mapping = [
   # per-project API
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/obtain-client-id', ObtainClientIdHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/post-report/([0-9]+)/([a-zA-Z0-9]+)', PostBugReportHandler),
+  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/post-blob/([0-9]+)/([a-zA-Z0-9]+)/([a-zA-Z0-9]+)', PostBlobHandler),
   # per-project (users)
   ('/([a-zA-Z0-9._-]+)/products/(new)/', ProductSettingsHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/', NewBugListHandler),
@@ -328,6 +364,7 @@ url_mapping = [
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/all', AllBugListHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/', BugHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/assign-ticket', AssignTicketToBugHandler),
+  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/blob/([a-zA-Z0-9]+)/', ViewBlobHandler),
 ]
 
 def main():

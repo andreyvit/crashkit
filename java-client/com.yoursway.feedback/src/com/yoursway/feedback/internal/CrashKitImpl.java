@@ -8,13 +8,16 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
 import com.yoursway.feedback.CrashKit;
+import com.yoursway.feedback.exceptions.Blob;
 import com.yoursway.feedback.exceptions.NullReportedExceptionFailure;
 import com.yoursway.feedback.internal.model.ClaimedPackages;
 import com.yoursway.feedback.internal.model.ExceptionInfo;
@@ -35,6 +38,7 @@ public final class CrashKitImpl extends CrashKit {
     private final String role;
     private final EventScheduler scheduler = new EventScheduler();
     private final ClaimedPackages claimedPackages;
+    private final Collection<String> blobsToSend = Collections.synchronizedList(new ArrayList<String>());
     
     public CrashKitImpl(String productName, String productVersion, String[] claimedPackages,
             Repository storage, ServerConnection communicator) {
@@ -82,11 +86,14 @@ public final class CrashKitImpl extends CrashKit {
     protected void report(Severity severity, Throwable cause) {
         if (cause == null)
             cause = new NullReportedExceptionFailure();
-        Report report = new Report(severity.toString(), today(), ".", collectExceptions(cause),
-                collectData(cause), collectEnvironmentInfo(), role);
+        Map<String, String> data = new HashMap<String, String>();
+        Collection<Blob> attachments = new ArrayList<Blob>();
+        collectData(cause, data, attachments);
+        Report report = new Report(severity.toString(), today(), ".", collectExceptions(cause), data,
+                collectEnvironmentInfo(), role);
         report.claimPackages(claimedPackages);
         scheduler.scheduleIn(Constants.NEW_EXCEPTION_DELAY);
-        storage.addReport(report);
+        storage.addReport(report, attachments);
     }
     
     private String today() {
@@ -97,8 +104,7 @@ public final class CrashKitImpl extends CrashKit {
     }
     
     @SuppressWarnings("unchecked")
-    private Map<String, String> collectData(Throwable cause) {
-        Map<String, String> data = new HashMap<String, String>();
+    private void collectData(Throwable cause, Map<String, String> data, Collection<Blob> attachments) {
         for (Throwable throwable = cause; throwable != null; throwable = throwable.getCause()) {
             try {
                 Method method = throwable.getClass().getMethod("feedbackDetails");
@@ -106,14 +112,21 @@ public final class CrashKitImpl extends CrashKit {
                         && Map.class.isAssignableFrom(method.getReturnType())) {
                     Map<String, Object> map = (Map<String, Object>) method.invoke(throwable);
                     if (map != null) {
-                        for (Map.Entry<String, Object> entry : map.entrySet())
-                            new Detail(entry.getKey(), entry.getValue()).addTo(data);
+                        for (Map.Entry<String, Object> entry : map.entrySet()) {
+                            String key = entry.getKey();
+                            Object value = entry.getValue();
+                            if (value instanceof Blob) {
+                                Blob blob = (Blob) value;
+                                attachments.add(blob);
+                                value = "blob:" + blob.getHash();
+                            }
+                            new Detail(key, value).addTo(data);
+                        }
                     }
                 }
             } catch (Throwable e) {
             }
         }
-        return data;
     }
     
     private List<ExceptionInfo> collectExceptions(Throwable cause) {
@@ -186,13 +199,13 @@ public final class CrashKitImpl extends CrashKit {
                     scheduler.waitForScheduledEvent(Constants.MAXIMUM_WAIT_TIME);
                     Collection<ReportFile> reportsToRequeue = new ArrayList<ReportFile>();
                     try {
-                        ReportFile report = storage.obtainReportToSend();
-                        for (; report != null; report = storage.obtainReportToSend()) {
+                        for (ReportFile report = storage.obtainReportToSend(); report != null; report = storage
+                                .obtainReportToSend()) {
                             try {
                                 String text = report.read().trim();
                                 try {
-                                    communicator.sendReport(clientCredentialsManager.get(), "[" + text + "]");
-                                    System.out.println("Report sent!");
+                                    communicator.sendReport(clientCredentialsManager.get(), "[" + text + "]",
+                                        blobsToSend);
                                     report.delete();
                                 } catch (ServerInitiatedError e) {
                                     handleDesignatedFailure(e);
@@ -203,6 +216,17 @@ public final class CrashKitImpl extends CrashKit {
                                 reportsToRequeue.add(report);
                                 System.out.println("Failed sending bug report: " + e.getMessage());
                             }
+                        }
+                        for (Iterator<String> iterator = blobsToSend.iterator(); iterator.hasNext();) {
+                            String blob = iterator.next();
+                            String body = storage.obtainBlob(blob);
+                            if (body != null)
+                                try {
+                                    communicator.sendBlob(clientCredentialsManager.get(), blob, body);
+                                    iterator.remove();
+                                } catch (IOException e) {
+                                    scheduler.scheduleIn(Constants.FAILED_DELIVERY_RETRY_DELAY);
+                                }
                         }
                     } catch (Throwable e) {
                         e.printStackTrace(System.err);
@@ -217,7 +241,6 @@ public final class CrashKitImpl extends CrashKit {
                 }
             }
         }
-        
     }
     
     public void handleDesignatedFailure(ServerInitiatedError e) {

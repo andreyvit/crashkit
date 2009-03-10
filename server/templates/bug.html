@@ -79,7 +79,7 @@
       {% for item in common_data_items %}
         <tr class="{% cycle odd,even %}">
           <td>{{item.0|strip_prefix:"data_"}}</td>
-          <td class="evencol">{% for v in item.1%}{% if not forloop.first %}, {% endif %}{{v|escape}}{%endfor%}</td>
+          <td class="evencol">{% for v in item.1%}{% if not forloop.first %}, {% endif %}{{v|formatvalue:product_path}}{%endfor%}</td>
         </tr>
       {% endfor %}
     </table>
@@ -100,7 +100,7 @@
       <tr class="{% cycle odd,even %}">
         <td class="oddcol"><big>{{occurrence.count}}</big> <span class="dim">{%ifequal occurrence.count 1%}occur.{%else%}occur.{%endifequal%}</span></td>
         <td class="date evencol">{{ occurrence.date|date:"N j, Y" }}</td>
-        {% for key in data_keys %}<td class="{% if forloop.counter|divisibleby:2 %}evencol{%else%}oddcol{% endif %}" title="{{ occurrence|kgetattr:key|unshortened_tooltip:15}}">{{ occurrence|kgetattr:key|shorten:15|escape }}</td>{% endfor %}
+        {% for key in data_keys %}<td class="{% if forloop.counter|divisibleby:2 %}evencol{%else%}oddcol{% endif %}" title="{{ occurrence|kgetattr:key|unshortened_tooltip:15}}">{{ occurrence|kgetattr:key|formatshortenedvalue:product_path }}</td>{% endfor %}
       </tr>
     {% endfor %}
   </table>

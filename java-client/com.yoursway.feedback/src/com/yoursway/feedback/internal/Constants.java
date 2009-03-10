@@ -5,6 +5,8 @@ public class Constants {
     // non-static so that Eclipse does not issue the stupid "dead code" warnings
     private static final boolean DEBUG = Boolean.parseBoolean("false");
     
+    public static final boolean DEBUG_SCHEDULING = DEBUG;
+    
     /**
      * The maximum time an exception waits in the queue since the last delivery
      * attempt (or since its initial addition) until a new delivery is

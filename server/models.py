@@ -145,6 +145,21 @@ class Context(db.Model):
   def key_name_for(product, name):
     return u'p-%s|c-%s' % (product.id_or_name(), name)
     
+class Attachment(db.Model):
+  product = db.ReferenceProperty(Product, required=True, collection_name='attachments')
+  client  = db.ReferenceProperty(Client, collection_name='attachments')
+  
+  created_at = db.DateTimeProperty(auto_now_add = True)
+  
+  body = db.TextProperty()
+  body_hash = db.TextProperty()
+  
+  @staticmethod
+  def key_name_for(product, blob_hash):
+    return 'P%s-B%s' % (product.id_or_name(), blob_hash)
+  
+  
+    
 class Bug(db.Model):
   product = db.ReferenceProperty(Product, required=True, collection_name='bugs')
   ticket  = db.ReferenceProperty(Ticket, collection_name = "bugs")

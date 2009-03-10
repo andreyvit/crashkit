@@ -2,10 +2,12 @@ package com.yoursway.feedback.internal.model;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.yoursway.feedback.CrashKit;
+import com.yoursway.feedback.exceptions.Blob;
 import com.yoursway.feedback.internal.Constants;
 import com.yoursway.feedback.internal.utils.OS;
 import com.yoursway.feedback.internal.utils.RequestString;
@@ -20,6 +22,7 @@ public class Repository {
     private final File settingsFile;
     private final File reportsFolder;
     private final File inProgressReportsFolder;
+    private final File attachmentsFolder;
     
     public Repository(String friendlyProductName) {
         if (friendlyProductName == null)
@@ -27,6 +30,7 @@ public class Repository {
         File baseFolder = new File(OS.current.applicationDataFolder(friendlyProductName), "Feedback");
         settingsFile = new File(baseFolder, "settings.dat");
         reportsFolder = new File(baseFolder, "Reports");
+        attachmentsFolder = new File(baseFolder, "Attachments");
         inProgressReportsFolder = new File(baseFolder, "Reports On The Way");
     }
     
@@ -67,8 +71,23 @@ public class Repository {
         }
     }
     
-    public void addReport(Report report) {
+    public void addReport(Report report, Collection<Blob> attachments) {
         merge(report);
+        for (Blob blob : attachments)
+            saveAttachment(blob);
+    }
+    
+    private void saveAttachment(Blob blob) {
+        File file = new File(attachmentsFolder, blob.getHash());
+        try {
+            attachmentsFolder.mkdirs();
+            if (!file.createNewFile())
+                return;
+            YsFileUtils.writeString(file, blob.getBody());
+        } catch (IOException e) {
+            e.printStackTrace(System.err);
+            file.delete();
+        }
     }
     
     private synchronized void merge(Report obj) {
@@ -128,6 +147,20 @@ public class Repository {
     
     public void deleteClientInfo() {
         settingsFile.delete();
+    }
+    
+    public String obtainBlob(String blobHash) {
+        File file = new File(attachmentsFolder, blobHash);
+        try {
+            Blob blob = new Blob(YsFileUtils.readAsString(file));
+            if (!blob.hashEquals(blobHash)) {
+                file.delete();
+                return null;
+            }
+            return blob.getBody();
+        } catch (IOException e) {
+            return null;
+        }
     }
     
 }
