@@ -188,6 +188,13 @@ class BaseHandler(webapp.RequestHandler):
     self.data.update(bug=self.bug)
     
   def fetch_client(self, client_id):
+    if client_id == '0':
+      k = 'P%s-anonymous' % self.product.key().id_or_name()
+      self.client = Client.get_by_key_name(k)
+      if not self.client:
+        self.client = Client.get_or_insert(k, product=self.product, cookie='0')
+      return
+
     self.client = Client.get_by_id(int(client_id))
     if self.client == None:
       logging.warn('Client ID requested but not found: "%s"' % client_id)
