@@ -154,6 +154,19 @@ def create_or_update_occurrence(occurrence_hash, case, client, date, messages, d
     occurrence.count += count
   occurrence.put()
   return occurrence
+  
+def parse_location(el):
+  f = el.get('file', '')
+  if f == '':
+    f = el.get('package', '')
+  k = el.get('class', '')
+  m = el.get('method', '')
+  if m == '':
+    m = el.get('function', '')
+  if k == '':
+    k = m
+    m = ''
+  return dict(package=f, klass=k, method=m, line=int(el.get('line', 0)))
 
 class ReportedOccurrence(object):
   
@@ -161,19 +174,18 @@ class ReportedOccurrence(object):
     self.product = product
     self.client = client
     self.date = date(*(time.strptime(data['date'], '%Y-%m-%d')[0:3]))
-    self.count = int(data['count'])
-    self.exception_messages = [e['message'] for e in data['exceptions']]
-    self.severity = (2 if data['severity'] == 'major' else 1)
-    self.context_name = (data['userActionOrScreenNameOrBackgroundProcess'] if len(data['userActionOrScreenNameOrBackgroundProcess'])>0 else 'unknown')
-    if 'role' in data:
-      self.role = data['role']
-    else:
-      self.role = 'customer'
-    self.env = (data['env'] or {})
-    self.data = (data['data'] or {})
+    self.count = int(data.get('count', 1))
+    self.exception_messages = [e.get('message', '') for e in data['exceptions']]
+    self.severity = (2 if data.get('severity', 'normal') == 'major' else 1)
+    self.context_name = data.get('userActionOrScreenNameOrBackgroundProcess', '')
+    if self.context_name == '':
+      self.context_name = 'unknown'
+    self.role = data.get('role', 'customer')
+    self.env = data.get('env', {})
+    self.data = data.get('data', {})
     self.exceptions = [
       dict(name=e['name'],
-        locations=[dict(package=el['package'], klass=el['class'], method=el['method'], line=int(el['line'])) for el in e['locations']])
+        locations=[parse_location(el) for el in e['locations']])
       for e in data['exceptions'] ]
    
   def submit(self):
