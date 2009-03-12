@@ -158,9 +158,9 @@ def create_or_update_occurrence(occurrence_hash, case, client, date, messages, d
   return occurrence
   
 def parse_location(el):
-  f = el.get('file', '')
+  f = el.get('package', '')
   if f == '':
-    f = el.get('package', '')
+    f = el.get('file', '')
   k = el.get('class', '')
   m = el.get('method', '')
   if m == '':
