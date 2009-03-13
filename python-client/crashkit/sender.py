@@ -4,6 +4,7 @@ __all__ = ['initialize_crashkit', 'send_exception']
 from jsonencoder import JSONEncoder
 from traceback import extract_tb
 from types import ClassType
+from datetime import date
 import sys
 
 enc = JSONEncoder()
@@ -19,7 +20,8 @@ class CrashKit:
   def send_exception(self, data = {}, env = {}):
     info = sys.exc_info()
     traceback = get_traceback(info[2])
-    from datetime import date
+    env = dict(**env)
+    env.update(**collect_platform_info())
     message = {
         "date": date.today().strftime("%Y-%m-%d"),
         "exceptions": [
@@ -113,4 +115,15 @@ def encode_exception_name(exc):
   else:
     return '%s.%s' % (m, c)
 
+def collect_platform_info():
+  import platform
+  env = {}
+  env['os_kernel_name'] = platform.system()
+  env['os_kernel_version'] = platform.release()
+  if 'Linux' == platform.system():
+    env['os_dist'] = ' '.join(platform.dist()).strip()
+  env['cpu_arch'] = platform.architecture()[0]
+  env['cpu_type'] = platform.processor()
+  env['python_version'] = platform.python_version()
+  return env
   
