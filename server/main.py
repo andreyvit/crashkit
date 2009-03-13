@@ -218,6 +218,9 @@ class PostBugReportHandler(BaseHandler):
         error = (report.error or 'none'), blobs=','.join(blobs))
   get=post
 
+  def handle_exception(self, exception, debug_mode):
+    return webapp.RequestHandler.handle_exception(self, exception, debug_mode)
+
 class PostBlobHandler(BaseHandler):
 
   @prolog(fetch=['account_nocheck', 'product_nocheck', 'client', 'client_cookie'])
@@ -302,6 +305,9 @@ class Temp(BaseHandler):
       return 20, Bug.all()
     item.ticket = None
     item.put()
+    
+  def raise_exception(self):
+    self.ppppp
     
   def convert_exception_messages(self, item):
     if item == None:

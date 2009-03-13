@@ -18,10 +18,12 @@ from django.utils import simplejson as json
 from models import *
 from processor import process_report, process_case
 from appengine_utilities.flash import Flash
+from crashkit import initialize_crashkit, send_exception
 
 template_path = os.path.join(os.path.dirname(__file__), '..', 'templates')
 template.register_template_library('myfilters')
 
+initialize_crashkit('ys', 'crashkit')
 
 class FinishRequest(Exception):
   pass
@@ -112,6 +114,10 @@ class BaseHandler(webapp.RequestHandler):
   def render_and_finish(self, *path_components):
     self.response.out.write(template.render(os.path.join(template_path, *path_components), self.data))
     raise FinishRequest
+    
+  def handle_exception(self, exception, debug_mode):
+    send_exception()
+    return webapp.RequestHandler.handle_exception(self, exception, debug_mode)
     
   def access_denied(self, message = "Sorry, you do not have access to this page.",
         attemp_login = True):
