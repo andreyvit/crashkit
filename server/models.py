@@ -185,7 +185,7 @@ Exception:  %(exception_name)s
 In:         %(exception_package)s.%(exception_klass)s.%(exception_method)s:%(exception_line)s
 Occurred:   %(occurrence_count)s time(s)
 Last time:  %(last_occurrence_on)s
-""" % dict(url='%s/bugs/%s' % (product_path, self.key()),
+""" % dict(url='%s/bugs/%s/' % (product_path, self.key().name()),
   exception_name=self.exception_name, exception_package=self.exception_package,
   exception_klass=self.exception_klass, exception_method=self.exception_method,
   exception_line=self.exception_line, occurrence_count=self.occurrence_count,

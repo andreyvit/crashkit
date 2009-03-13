@@ -41,7 +41,7 @@ def process_report(report):
     bugs_to_email = [b for b in bugs if b.should_spam()]
     if len(bugs_to_email) > 0:
       account = report.product.account
-      product_path = 'http://feedback.yoursway.com/%s/products/%s' % (account.permalink, report.product.unique_name)
+      product_path = 'http://crashkitapp.appspot.com/%s/products/%s' % (account.permalink, report.product.unique_name)
       bugs_description = "\n\n".join([b.describe_for_email(product_path) for b in bugs_to_email])
       body = u"""
 Ladies and gentelemen,
