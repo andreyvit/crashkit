@@ -30,7 +30,8 @@ class CrashKit:
             }
         ],
         "data": data,
-        "env": env
+        "env": env,
+        "language": "python",
     }
     payload = enc.encode([message]).replace('{', "\n{")
     from urllib2 import Request, urlopen, HTTPError, URLError

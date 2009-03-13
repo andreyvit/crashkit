@@ -149,6 +149,7 @@ class Bug(db.Model):
   product = db.ReferenceProperty(Product, required=True, collection_name='bugs')
   ticket  = db.ReferenceProperty(Ticket, collection_name = "bugs")
   # name    = db.StringProperty(required=True)
+  language = db.StringProperty()
   
   @staticmethod
   def key_name_for(product_id, location_hash):
@@ -196,7 +197,8 @@ class Case(db.Model):
   context = db.ReferenceProperty(Context, required=True, collection_name='cases')
   severity = db.IntegerProperty(required=True)
   
-  bug    = db.ReferenceProperty(Bug, default=None, collection_name='cases')
+  bug      = db.ReferenceProperty(Bug, default=None, collection_name='cases')
+  language = db.StringProperty()
   
   exceptions = db.TextProperty(required=True)
   

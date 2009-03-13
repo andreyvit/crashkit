@@ -71,7 +71,7 @@ def process_case(product, case, occurrence_count_delta):
   definitive_location = case.definitive_location(product)
   dummy_index, case.exception_name, case.exception_package, case.exception_klass, case.exception_method, case.exception_line = definitive_location
   
-  location_salt = "%s|%s|%s|%s|%d" % (case.exception_name, case.exception_package, case.exception_klass, case.exception_method, case.exception_line)
+  location_salt = "%s|%s|%s|%s|%s|%d" % (case.language, case.exception_name, case.exception_package, case.exception_klass, case.exception_method, case.exception_line)
   location_hash = hashlib.sha1(location_salt).hexdigest()
   
   def txn(product_key):
@@ -82,6 +82,7 @@ def process_case(product, case, occurrence_count_delta):
           exception_package=case.exception_package, exception_klass=case.exception_klass,
           exception_method=case.exception_method, exception_line=case.exception_line,
           max_severity=case.severity, occurrence_count=case.occurrence_count,
+          language=case.language,
           first_occurrence_on=case.first_occurrence_on, last_occurrence_on=case.last_occurrence_on,
           roles=case.roles, role_count=len(case.roles))
     else:
@@ -122,12 +123,12 @@ def process_case(product, case, occurrence_count_delta):
 #     return 'javalocation(%s, %s, %s, %s)' % (repr(self.package), repr(self.klass), repr(self.method), repr(self.line))
 
 @transaction
-def create_or_update_case(case_hash, product, severity, context, date, count, role, exceptions_json):
+def create_or_update_case(case_hash, product, severity, context, date, count, role, language, exceptions_json):
   key_name = Case.key_name_for(product.key(), case_hash)
   case = Case.get_by_key_name(key_name)
   if case == None:
     case = Case(key_name=key_name, product=product, context=context,
-      severity=severity, exceptions=exceptions_json,
+      severity=severity, language=language, exceptions=exceptions_json,
       occurrence_count=count, first_occurrence_on=date, last_occurrence_on=date,
       roles=[role])
   else:
@@ -147,7 +148,7 @@ def create_or_update_occurrence(occurrence_hash, case, client, date, messages, d
   occurrence = Occurrence.get_by_key_name(key_name)
   if occurrence == None:
     occurrence = Occurrence(key_name=key_name, case=case, client=client, date=date, count=count,
-        role=role, exception_messages=repr(messages))
+        role=role, exception_messages=messages)
     for k, v in data.iteritems():
       setattr(occurrence, 'data_%s' % k, db.Text(unicode(v)))
     for k, v in env.iteritems():
@@ -186,6 +187,7 @@ class ReportedOccurrence(object):
     self.role = data.get('role', 'customer')
     self.env = data.get('env', {})
     self.data = data.get('data', {})
+    self.language = data.get('language', 'unknown')
     self.exceptions = [
       dict(name=e['name'],
         locations=[parse_location(el) for el in e['locations']])
@@ -196,13 +198,13 @@ class ReportedOccurrence(object):
         product=self.product, name=self.context_name)
     
     exceptions_json = repr(self.exceptions)
-    case_salt = "%s|%s|%s" % (self.severity, self.context_name, exceptions_json)
+    case_salt = "%s|%s|%s|%s" % (self.severity, self.context_name, self.language, exceptions_json)
     case_hash = hashlib.sha1(case_salt).hexdigest()
     
     occurrence_salt = "%s|%s|%s|%s|%s|%s" % (case_hash, repr(self.exception_messages), repr(self.env), repr(self.data), self.date, self.role)
     occurrence_hash = hashlib.sha1(occurrence_salt).hexdigest()
     
-    case = create_or_update_case(case_hash, self.product, self.severity, context, self.date, self.count, self.role, exceptions_json)
+    case = create_or_update_case(case_hash, self.product, self.severity, context, self.date, self.count, self.role, self.language, exceptions_json)
     occurrence = create_or_update_occurrence(occurrence_hash, case, self.client, self.date,
         self.exception_messages, self.data, self.env, self.count, self.role)
     occurrence.count_this_time = self.count
