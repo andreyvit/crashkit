@@ -24,6 +24,21 @@ def index(func, iterable):
     for i in iterable:
         result[func(i)] = i
     return result
+  
+def flatten(l, ltypes=(list, tuple)):
+  ltype = type(l)
+  l = list(l)
+  i = 0
+  while i < len(l):
+    while isinstance(l[i], ltypes):
+      if not l[i]:
+        l.pop(i)
+        i -= 1
+        break
+      else:
+        l[i:i + 1] = l[i]
+    i += 1
+  return ltype(l)
 
 # def group(seq):
 #     '''seq is a sequence of tuple containing (item_to_be_categorized, category)'''

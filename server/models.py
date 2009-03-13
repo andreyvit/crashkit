@@ -13,21 +13,6 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 from django.utils import simplejson as json
 from commons import *
-  
-def flatten(l, ltypes=(list, tuple)):
-  ltype = type(l)
-  l = list(l)
-  i = 0
-  while i < len(l):
-    while isinstance(l[i], ltypes):
-      if not l[i]:
-        l.pop(i)
-        i -= 1
-        break
-      else:
-        l[i:i + 1] = l[i]
-    i += 1
-  return ltype(l)
 
 # models
 
@@ -280,7 +265,6 @@ class Occurrence(db.Expando):
   client = db.ReferenceProperty(Client, collection_name = 'occurrences')
   created_at = db.DateTimeProperty(auto_now_add = True)
   
-  exception_messages = db.TextProperty(required=True)
   date = db.DateProperty(required=True)
   count = db.IntegerProperty()
   role = db.StringProperty(required=True, default='customer')

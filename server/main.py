@@ -20,6 +20,7 @@ from controllers.base import *
 from controllers.product import *
 from controllers.account import *
 from controllers.invites import *
+from commons import *
 
 class HomeHandler(BaseHandler):
   
@@ -117,6 +118,19 @@ class BugHandler(BaseHandler):
     cases = self.bug.cases.order('-occurrence_count').fetch(100)
     occurrences = Occurrence.all().filter('case IN', cases).order('-count').fetch(100)
     clients = Client.get([o.client.key() for o in occurrences])
+    
+    messages = []
+    for o in occurrences:
+      mm = o.exception_messages
+      if not isinstance(mm, list):
+        mm = [mm]
+      for m in mm:
+        messages.append(m)
+    messages = list(sets.Set(messages))
+    cover_message = None
+    for message in messages:
+      if cover_message is None or len(message) < len(cover_message):
+        cover_message = message
 
     common_map = dict()
     for key in sets.Set(flatten([ [k for k in o.dynamic_properties() if k.startswith('env_') or k.startswith('data_')] for o in occurrences ])):
@@ -142,7 +156,7 @@ class BugHandler(BaseHandler):
     self.data.update(tabid = 'bug-tab', bug_id=True,
         cases=cases, cover_case=cover_case,
         occurrences = occurrences, env_items = env_items, common_data_items = common_data_items,
-        data_keys = data_keys)
+        data_keys = data_keys, cover_message=cover_message)
     self.render_and_finish('bug.html')
 
 class AssignTicketToBugHandler(BaseHandler):
@@ -288,6 +302,14 @@ class Temp(BaseHandler):
       return 20, Bug.all()
     item.ticket = None
     item.put()
+    
+  def convert_exception_messages(self, item):
+    if item == None:
+      return 40, Occurrence.all()
+    mm = item.exception_messages
+    if isinstance(mm, unicode):
+      item.exception_messages = [db.Text(x) for x in eval(mm)]
+      item.put()
       
   def delete_all_cases(self, item):
     if item == None:

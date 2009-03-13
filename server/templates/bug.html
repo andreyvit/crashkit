@@ -10,7 +10,7 @@
       <span class="caption">{% ifequal bug.occurrence_count 1 %}occurrence{% else %}occurrences{%endifequal%}</span>
     </div>
       <h2>
-          {{ bug.exception_name|escape }}
+          {{ bug.exception_name|escape }}: <span class="dim" title="{{ cover_message|escape|unshortened_tooltip:30 }}">{{ cover_message|escape|smartshorten:30 }}</span>
       </h2>
       <p>{{ bug.exception_package|escape }}<br>
       {{ bug.exception_klass|escape }}<span class="dim">.{{ bug.exception_method|escape }} {{ bug.exception_line }}</span></p>

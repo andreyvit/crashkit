@@ -177,7 +177,8 @@ class ReportedOccurrence(object):
     self.client = client
     self.date = date(*(time.strptime(data['date'], '%Y-%m-%d')[0:3]))
     self.count = int(data.get('count', 1))
-    self.exception_messages = [e.get('message', '') for e in data['exceptions']]
+    mm = [e.get('message', '') for e in data['exceptions']]
+    self.exception_messages = [db.Text(x) for x in mm if len(x) > 0]
     self.severity = (2 if data.get('severity', 'normal') == 'major' else 1)
     self.context_name = data.get('userActionOrScreenNameOrBackgroundProcess', '')
     if self.context_name == '':
