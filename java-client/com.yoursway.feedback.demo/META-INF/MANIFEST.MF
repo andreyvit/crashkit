@@ -1,9 +1,0 @@
-Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: YourSway Feedback Demo Application
-Bundle-SymbolicName: com.yoursway.feedback.demo
-Bundle-Version: 1.0.0
-Bundle-Vendor: YourSway
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
-Require-Bundle: com.yoursway.feedback;bundle-version="1.0.0",
- org.eclipse.swt;bundle-version="3.5.0"
