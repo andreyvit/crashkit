@@ -78,6 +78,7 @@ class BaseHandler(webapp.RequestHandler):
     else:
       self.person = AnonymousPerson()
     self.data.update(user=self.user, person=self.person,
+      user_is_admin = users.is_current_user_admin(),
       signout_url=users.create_logout_url('/'),
       signin_url=users.create_login_url(self.request.url))
     
@@ -149,10 +150,6 @@ class BaseHandler(webapp.RequestHandler):
     if self.account == None:
       self.not_found("Account %s does not exist." % account_permalink)
     self.account_access = self.person.account_access_for(self.account)
-    if users.is_current_user_admin():
-      if not self.account_access.admin:
-        self.account_access.admin = True
-        self.account_access.put()
     self.account_path = '/%s' % self.account.permalink
     self.data.update(account=self.account, account_access=self.account_access, account_path=self.account_path)
   fetch_account_nocheck = fetch_account
@@ -212,6 +209,19 @@ class BaseHandler(webapp.RequestHandler):
       logging.warn('Client ID cookie invalid: "%s" / "%s"' % (client_id, client_cookie))
       self.blow(403, 'invalid-client-id')
       
+  def fetch_account_authorizations(self):
+    self.account_authorizations = self.person.account_authorizations.fetch(100)
+    keys_to_account_authorizations = index(lambda m: m._account, self.account_authorizations)
+    product_auth = self.person.product_authorizations.fetch(100)
+    keys_to_products = index(lambda m: m.key(), Product.get([a._product for a in product_auth]))
+    for product_key, authorizations in group(lambda p: p._product, product_auth).iteritems():
+      product = keys_to_products[product_key]
+      if product:
+        account = keys_to_account_authorizations[product._account]
+        if account:
+          account.product_authorizations = authorizations
+      
+      
   def invalid(self, key, message):
     error_key = '%s_error' % key
     if not error_key in self.data:
@@ -228,7 +238,7 @@ class BaseHandler(webapp.RequestHandler):
   
   def valid_string(self, key, required=True, use_none=True, min_len=None, max_len=None,
         required_message = DEFAULT_REQUIRED_MESSAGE,
-        min_len_message = "Must be at least %(min)d characters long.",
+        min_len_message = "Please enter at least %(min)d characters.",
         max_len_message = "Cannot be longer that %(max)d characters."):
     value = self.request.get(key)
     data = dict(value=value, key=key, min=min_len, max=max_len, len=(0 if value==None else len(value)))
@@ -272,7 +282,7 @@ class BaseHandler(webapp.RequestHandler):
     
   def check_is_server_management_allowed(self):
     if not users.is_current_user_admin():
-      self.access_denied("You cannot access server-wide management unless you are a developer of YourSway Feedback Kit.")
+      self.access_denied("You cannot access server-wide management unless you are a developer of YourSway CrashKit.")
       
   def check_is_account_admin_allowed(self):
     if not self.account_access.is_admin_allowed():

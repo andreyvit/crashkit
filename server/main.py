@@ -21,6 +21,8 @@ from controllers.product import *
 from controllers.account import *
 from controllers.invites import *
 from commons import *
+from controllers.user import *
+from controllers.admin import *
 
 class HomeHandler(BaseHandler):
   
@@ -249,131 +251,17 @@ class ViewBlobHandler(BaseHandler):
     else:
       self.response.headers['Content-Type'] = "text/plain"
       self.response.out.write(self.attachment.body)
-  
-class Temp(BaseHandler):
-  @prolog(check=['is_server_management_allowed'])
-  def get(self):
-    func_name = self.request.get('func')
-    func = None
-    if func_name:
-      try:
-        func = getattr(self, func_name.replace('-', '_'))
-      except AttributeError:
-        pass
-        
-    if func:
-      batch_size, items = func(None)
-      if self.request.get('batchsize'):
-        batch_size = int(self.request.get('batchsize'))
-        
-      start_key = self.request.get('key')
-      if start_key:
-        items = items.filter('__key__ >', db.Key(start_key))
-        
-      items = items.order('__key__').fetch(batch_size)
-      for item in items:
-        func(item)
-        
-      total_processed = len(items)
-      if self.request.get('total'):
-        total_processed += int(self.request.get('total'))
-      self.response.out.write("<p>%d items this time, %d items total.<br>" % (len(items), total_processed))
-      
-      last_key = None if len(items) < batch_size else str(items[-1].key())
-      if last_key:
-        self.response.out.write("""<h2>Continue %s</h2>\n""" % func_name);
-        self.response.out.write("""<form action="/iterate" method="GET">\n""");
-        self.response.out.write("""<input type="hidden" name="func" value="%s">\n""" % func_name);
-        self.response.out.write("""<input type="hidden" name="total" value="%d">\n""" % total_processed);
-        self.response.out.write("""<input type="hidden" name="key" value="%s">\n""" % last_key);
-        self.response.out.write("""<p>Batch size: <input type="text" name="batchsize" size="5" value="%d">\n""" % batch_size);
-        self.response.out.write("""<input type="submit" value="Continue %s">\n""" % func_name);
-        self.response.out.write("""</form>\n""");
-      else:
-        self.response.out.write("""<h2>%s done</h2>\n""" % func_name);
-      
-    self.response.out.write("""<h2>Start iteration</h2>\n""");
-    self.response.out.write("""<p><a href="/iterate">Refresh list of methods</a></p>\n""");
-    self.response.out.write("""<form action="/iterate" method="GET">\n""");
-    for func in filter(lambda f: not(f.startswith('__') or f == 'get'), self.__class__.__dict__.keys()):
-      self.response.out.write("""<input type="submit" name="func" value="%s">\n""" % func.replace('_', '-'));
-    self.response.out.write("""</form>\n""");
-      
-    
-  def temp(self, item):
-    if item == None:
-      return 20, Bug.all()
-    item.ticket = None
-    item.put()
-    
-  def raise_exception(self):
-    self.ppppp
-    
-  def convert_exception_messages(self, item):
-    if item == None:
-      return 40, Occurrence.all()
-    mm = item.exception_messages
-    if isinstance(mm, unicode):
-      item.exception_messages = [db.Text(x) for x in eval(mm)]
-      item.put()
-      
-  def delete_all_cases(self, item):
-    if item == None:
-      return 40, Case.all()
-    item.delete()
-      
-  def delete_all_bugs(self, item):
-    if item == None:
-      return 40, Bug.all()
-    item.delete()
-      
-  def zero_all_bugs_stats(self, item):
-    if item == None:
-      return 40, Bug.all()
-    item.occurrence_count = 0
-    item.roles = []
-    item.put()
-      
-  def delete_all_occurrences(self, item):
-    if item == None:
-      return 100, Occurrence.all()
-    item.delete()
-    
-  def clear_bugs_from_cases(self, item):
-    if item == None:
-      return 20, Case.all().filter('bug !=', None)
-    item.bug = None
-    item.put()
-    
-  def assign_bugs_to_cases_without_bugs(self, item):
-    if item == None:
-      return 20, Case.all().filter('bug =', None)
-    process_case(item.product, item, item.occurrence_count)
-      
-  def requeue_all_reports(self, item):
-    if item == None:
-      return 40, Report.all().filter('status =', 1)
-    item.status = 0
-    item.put()
-
-  def process_pending_reports(self, item):
-    if item == None:
-      return 40, Report.all().filter('status =', 0)
-    try:
-      process_report(item)
-    except Exception, e:
-      item.status = 2
-      item.put()
-      self.response.out.write("""<div>Error: %s %s</div>""" % (e.__class__.__name__, e.message));
 
 url_mapping = [
   ('/', HomeHandler),
   ('/signup/([a-zA-Z0-9]*)', SignupHandler),
   ('/betasignup/', SignUpForLimitedBetaHandler),
-  ('/beta/', LimitedBetaCandidateListHandler),
-  ('/beta/accept', LimitedBetaAcceptCandidateHandler),
-  ('/beta/reject', LimitedBetaRejectCandidateHandler),
+  ('/admin/', AdminHandler),
+  ('/admin/beta/', LimitedBetaCandidateListHandler),
+  ('/admin/beta/accept', LimitedBetaAcceptCandidateHandler),
+  ('/admin/beta/reject', LimitedBetaRejectCandidateHandler),
   ('/iterate', Temp),
+  ('/profile/', ProfileHandler),
   # per-account
   ('/([a-zA-Z0-9._-]+)/', AccountDashboardHandler),
   ('/([a-zA-Z0-9._-]+)/people/', AccountPeopleHandler),

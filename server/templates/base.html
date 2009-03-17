@@ -6,38 +6,45 @@
     {% if account_path %}
       {{ account.name }}
     {% else %}
-      YourSway Feedback Kit
+      CrashKit
     {% endif %}
   {% endif %}
 {% endblock %}
 
 {% block tabnav %}
+  {% if product_path %}
+    <div style="position: absolute; left: 0px; top: -2em; width: 400px; height: 1em;">
+      <a href="{{account_path}}/">« Dashboard</a>
+    </div>
+  {% endif %}
   <ul id="tabnav">
-    {% if account_path %}
-    	<li class="dashboard-tab"><a href="{{account_path}}/">Account Dashboard</a></li>
-    	{% if product_path %}
-    	  {% if product_access.is_admin_allowed %}
-        	<li class="product-tab"><a href="{{product_path}}/settings">Product Settings</a></li>
-        {% endif %}
-      	<li class="new-tab"><a href="{{product_path}}/">New Bugs</a></li>
-      	<li class="all-tab"><a href="{{product_path}}/all">All Bugs</a></li>
-      	{% if bug_id %}
-      	<li class="bug-tab"><a href="{{product_path}}/all">{% if case.ticket %}Assigned{%else%}Unassigned{%endif%} Bug</a></li>
-        {% endif %}
-      {% else %}
+  	{% if product_path %}
+    	<li class="new-tab"><a href="{{product_path}}/">New Bugs</a></li>
+    	<li class="all-tab"><a href="{{product_path}}/all">All Bugs</a></li>
+    	{% if bug_id %}
+    	<li class="bug-tab"><a href="{{product_path}}/all">{% if case.ticket %}Assigned{%else%}Unassigned{%endif%} Bug</a></li>
+      {% endif %}
+  	  {% if product_access.is_admin_allowed %}
+      	<li class="product-tab"><a href="{{product_path}}/settings">Settings</a></li>
+      {% endif %}
+    {% else %}
+      {% if account_path %}
+      	<li class="dashboard-tab"><a href="{{account_path}}/">Dashboard</a></li>
         {% ifequal tabid "product-tab" %}
         	<li class="product-tab"><a href="{{account_path}}/products/new">Add Product</a></li>
         {% else %}
           {% if account_access.is_admin_allowed %}
-          	<li class="account-settings-tab"><a href="{{account_path}}/settings/">Account Settings</a></li>
+          	<li class="account-settings-tab"><a href="{{account_path}}/settings/">Settings</a></li>
           {% endif %}
           {% if account_access.is_managing_people_allowed %}
           	<li class="people-tab"><a href="{{account_path}}/people/">People & Permissions</a></li>
           {% endif %}
         {% endifequal %}
+      {% else %}
+        {% if not account_authorizations %}
+        	<li class="account-settings-tab"><a href="/signup/">Sign up for CrashKit</a></li>
+        {% endif %}
       {% endif %}
-    {% else %}
-    	<li class="account-settings-tab"><a href="/signup/">Sign up</a></li>
     {% endif %}
   </ul>
 {% endblock %}

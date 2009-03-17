@@ -277,6 +277,7 @@ class Occurrence(db.Expando):
     
 class Person(db.Model):
   user = db.UserProperty(required=True)
+  created_at = db.DateTimeProperty(auto_now_add = True)
   
   def account_access_for(self, account):
     if not self.is_saved():
@@ -316,10 +317,10 @@ class AccountAccess(db.Model):
     return access
 
   def is_managing_people_allowed(self):
-    return self.admin
+    return self.admin or users.is_current_user_admin()
     
   def is_admin_allowed(self):
-    return self.admin
+    return self.admin or users.is_current_user_admin()
   
   @staticmethod
   def key_for(person_key, account_key):
@@ -332,9 +333,9 @@ class AnonymousAccountAccess(db.Model):
   def product_access_for(self, product):
     return PublicProductAccess(product)
   def is_managing_people_allowed(self):
-    return False
+    return False or users.is_current_user_admin()
   def is_admin_allowed(self):
-    return False
+    return False or users.is_current_user_admin()
     
 
 ACCESS_NONE = 0
@@ -343,18 +344,18 @@ ACCESS_WRITE = 2
 ACCESS_ADMIN = 3
 
 class ProductAccess(db.Model):
-  person = db.ReferenceProperty(Person, required=True)
+  person = db.ReferenceProperty(Person, required=True, collection_name='product_authorizations')
   product = db.ReferenceProperty(Product, required=True)
   level = db.IntegerProperty(choices=[ACCESS_NONE,ACCESS_READ,ACCESS_WRITE,ACCESS_ADMIN])
     
   def is_listing_allowed(self):
-    return self.level > ACCESS_NONE
+    return self.level > ACCESS_NONE or users.is_current_user_admin()
   def is_viewing_allowed(self):
-    return self.product.public_access or self.level > ACCESS_NONE
+    return self.product.public_access or self.level > ACCESS_NONE or users.is_current_user_admin()
   def is_write_allowed(self):
-    return self.level >= ACCESS_WRITE
+    return self.level >= ACCESS_WRITE or users.is_current_user_admin()
   def is_admin_allowed(self):
-    return self.level >= ACCESS_ADMIN
+    return self.level >= ACCESS_ADMIN or users.is_current_user_admin()
   
   @staticmethod
   def key_for(person_key, product_key):
@@ -366,13 +367,13 @@ class PublicProductAccess(object):
     self.product = product
     
   def is_listing_allowed(self):
-    return self.product.public_access
+    return self.product.public_access or users.is_current_user_admin()
   def is_viewing_allowed(self):
-    return self.product.public_access
+    return self.product.public_access or users.is_current_user_admin()
   def is_write_allowed(self):
-    return False
+    return False or users.is_current_user_admin()
   def is_admin_allowed(self):
-    return False
+    return False or users.is_current_user_admin()
 
 class FullProductAccess(object):
   

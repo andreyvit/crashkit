@@ -34,12 +34,14 @@ class SignUpForLimitedBetaHandler(BaseHandler):
     body = """
 Hey buddies,
 
-Another lucky person has signed up for our Feedback Kit limited beta program.
+CrashKit limited beta program signup:
 
-His/her e-mail address:  %s
-He/she is interested in: %s
-""" % (email, tech)
-    mail.send_mail_to_admins('andreyvit@gmail.com', '[Feedback Kit] New Limited Beta User', body)
+His/her e-mail address:  %(email)s
+He/she is interested in: %(tech)s
+
+Please visit http://%(host)s/admin/beta/ to invite this user.
+""" % dict(email=candidate.email, host=self.request.host, tech=candidate.tech)
+    mail.send_mail_to_admins('crashkit@yoursway.com', '[CrK] New Limited Beta User', body)
     
     self.response.out.write("Thanks a lot! We'll e-mail you an invitation code soon.")
 
@@ -62,7 +64,7 @@ class LimitedBetaAcceptCandidateHandler(BaseHandler):
 Dear %(email)s,
 
 Once upon a time you have left us your e-mail address asking
-to participate in the limited beta program of YourSway Feedback Kit. 
+to participate in the limited beta program of YourSway CrashKit. 
 
 We are glad to accept you today!
 
@@ -72,9 +74,9 @@ Please use the following link to sign up for an account.
     
 """ % dict(email=candidate.email, host=self.request.host, code=candidate.invitation_code)
 
-    mail.send_mail('andreyvit@gmail.com', candidate.email, 'YourSway Feedback Kit limited beta', body)
+    mail.send_mail('crashkit@yoursway.com', candidate.email, 'CrashKit limited beta invitation', body)
     
-    self.redirect_and_finish('/beta/', flash = "Accepted %s." % candidate.email)
+    self.redirect_and_finish('/admin/beta/', flash = "Accepted %s, his invite code is %s." % (candidate.email, candidate.invitation_code))
 
 class LimitedBetaRejectCandidateHandler(BaseHandler):
   @prolog(check = ['is_server_management_allowed'])
@@ -83,4 +85,4 @@ class LimitedBetaRejectCandidateHandler(BaseHandler):
     candidate = LimitedBetaCandidate.get(key)
     candidate.rejected = True
     candidate.put()
-    self.redirect_and_finish('/beta/', flash = "Rejected %s." % candidate.email)
+    self.redirect_and_finish('/admin/beta/', flash = "Rejected %s." % candidate.email)

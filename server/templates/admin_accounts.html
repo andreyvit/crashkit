@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}CrashKit accounts{% endblock %}
+{% block content %}
+
+<div class="long-container clearfix">
+  <h2>All Accounts</h2>
+  {% for account in accounts %}
+    <p>
+      <a href="/{{account.permalink|escape}}/">{{ account.permalink|escape }}</a> — {{ account.name|escape }}
+    </p>
+    <div style="margin-left: 1em;">
+      {% for product in account.all_products %}
+        <p><a href="/{{account.permalink|escape}}/products/{{product.unique_name|escape}}/">{{ account.permalink|escape }}/{{ product.unique_name }}</a> — {{ product.friendly_name|escape }}</p>
+      {% endfor %}
+    </div>
+  {% endfor %}
+  
+  <h2>All People</h2>
+  {% for person in people %}
+    <p>{{ person.user.email }}</p>
+  {% endfor %}
+</div>
+
+{% endblock %}

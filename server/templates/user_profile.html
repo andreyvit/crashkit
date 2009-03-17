@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}CrashKit accounts{% endblock %}
+{% block content %}
+
+<div class="long-container clearfix">
+  {% if user_is_admin %}
+  <p>You are a CrashKit developer, so you have access to the <a href="/admin/">admin page</a>.</p>
+  {% endif %}
+  
+  <h2>Your Accounts</h2>
+  {% for account_authorization in account_authorizations %}
+    {% set account account_authorization.account %}
+    <p>
+      <a href="/{{account.permalink|escape}}/">{{ account.permalink|escape }}</a> — {{ account.name|escape }}
+    </p>
+    <div style="margin-left: 1em;">
+      {% for product_authorization in account_authorization.product_authorizations %}
+        {% set product product_authorization.product %}
+        <p><a href="/{{account.permalink|escape}}/products/{{product.unique_name|escape}}/">{{ account.permalink|escape }}/{{ product.unique_name }}</a> — {{ product.friendly_name|escape }}</p>
+      {% endfor %}
+    </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

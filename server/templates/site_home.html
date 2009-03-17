@@ -199,12 +199,22 @@
     </div>
 
     <div class="screen" style="width: 500px; padding-top: 3em;" id="signup">
-      <h2><a name="signup">Sign up?</a></h2>
-      <p>
-        We are only running a&nbsp;limited beta at&nbsp;the moment.
-        But we promise to&nbsp;invite you within&nbsp;a&nbsp;month.
-      </p>
+      {% if user %}
+        <h2><a name="signup">Existing customer?</a></h2>
+        <p>
+          Welcome back, {{user.nickname}}!
+          Please proceed to&nbsp;<a href="/profile/">your profile page</a>
+          to&nbsp;see your accounts and projects.
+        </p>
+      {% else %}
+        <h2><a name="signup">Sign up?</a></h2>
+        <p>
+          We are only running a&nbsp;limited beta at&nbsp;the moment.
+          But we promise to&nbsp;invite you within&nbsp;a&nbsp;month.
+        </p>
+      {% endif %}
       {% include "beta_signup_form.html" %}
+      
     </div>
     
   </div>
@@ -213,6 +223,11 @@
     <div id="links">
       <a href="http://blog.yoursway.com/">Blog</a>
       <a style="padding-left: 10px;" href="mailto:support@yoursway.com?subject=CrashKit">E-mail us</a>
+      {% if user %}
+        <span style="padding-left: 10px;">Welcome back, {{user.nickname}}! <a href="/profile/">Go to your profile page</a></span>
+      {% else %}
+        <span style="padding-left: 10px;">Existing customer? <a href="{{signin_url|escape}}">Sign in here</a></span>
+      {% endif %}
     </div>
     <a id="authors" href="http://www.yoursway.com/"><img src="/static/images/marketing/logo.png" /></a>
   </div>

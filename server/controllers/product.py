@@ -42,6 +42,17 @@ class ProductSettingsHandler(BaseHandler):
     self.product.new_bug_notification_emails = self.valid_string('new_bug_notification_emails', required=False, use_none=False)
     if self.product.is_saved():
       self.product.uninteresting_packages = self.valid_string('uninteresting_packages')
+      
+    if not re.match('^[a-zA-Z0-9-]*$', self.product.unique_name):
+      self.invalid('unique_name', "Only letters, numbers and dashes, please.")
+    if len(self.product.unique_name) < 4 and not users.is_current_user_admin():
+      self.invalid('unique_name', "Please enter at least 4 characters.")
+    if not re.match('^[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]$', self.product.unique_name):
+      self.invalid('unique_name', "Must start with a letter, cannot end with a dash.")
+    existing = self.account.products.filter('unique_name', self.product.unique_name).get()
+    if existing and existing.key().id_or_name() != self.product.key().id_or_name():
+      self.invalid('unique_name', "This name is already in use by another product in your account.")
+      
     if not self.is_valid():
       self.render_screen_and_finish()
     self.product.put()

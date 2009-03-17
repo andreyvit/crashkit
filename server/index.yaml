@@ -52,7 +52,7 @@ indexes:
   - name: roles
   - name: occurrence_count
 
-# Used 3 times in query history.
+# Used 12 times in query history.
 - kind: Bug
   properties:
   - name: product
@@ -114,7 +114,7 @@ indexes:
   - name: roles
   - name: ticket
 
-# Used 3 times in query history.
+# Used 36 times in query history.
 - kind: Bug
   properties:
   - name: product
@@ -140,7 +140,7 @@ indexes:
   - name: ticket
   - name: roles
 
-# Used 9 times in query history.
+# Used 22 times in query history.
 - kind: Bug
   properties:
   - name: product
@@ -163,7 +163,7 @@ indexes:
   - name: bug
   - name: __key__
 
-# Used once in query history.
+# Unused in query history -- copied from input.
 - kind: Case
   properties:
   - name: bug
@@ -185,14 +185,14 @@ indexes:
   - name: occurrence_count
     direction: desc
 
-# Used 2 times in query history.
+# Used 5 times in query history.
 - kind: LimitedBetaCandidate
   properties:
   - name: invitation_code
   - name: rejected
   - name: created_at
 
-# Used once in query history.
+# Unused in query history -- copied from input.
 - kind: Occurrence
   properties:
   - name: case
@@ -213,7 +213,7 @@ indexes:
   - name: occurrence_count
     direction: desc
 
-# Used 10 times in query history.
+# Used 41 times in query history.
 - kind: Product
   properties:
   - name: account

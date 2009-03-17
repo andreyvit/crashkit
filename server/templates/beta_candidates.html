@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}YourSway Feedback Kit Beta Program{% endblock %}
+{% block title %}YourSway CrashKit Beta Program{% endblock %}
 {% block content %}
 <div class="long-container">
   <table style="width: 80%">
@@ -8,8 +8,8 @@
         <td>{{ candidate.email|escape }}</td>
         <td>{{ candidate.tech|escape }}</td>
         <td>
-          <a href="/beta/accept?key={{candidate.key|escape}}">Accept this gentleman</a> |
-          <a href="/beta/reject?key={{candidate.key|escape}}">Reject</a>
+          <a href="/admin/beta/accept?key={{candidate.key|escape}}">Accept this gentleman</a> |
+          <a href="/admin/beta/reject?key={{candidate.key|escape}}">Reject</a>
         </td>
       </tr>
     {% endfor %}

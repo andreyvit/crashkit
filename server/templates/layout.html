@@ -7,12 +7,13 @@
 	<title>{% block title %}{% endblock %}</title>
 	<link rel="stylesheet" type="text/css" href="/static/stylesheets/ysfeedback.css" />
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.1/jquery.min.js"></script>
+	{% block head %}{% endblock %}
 </head>
 <body id="{{ tabid }}">
-  <div class="long-container clearfix">
+  <div class="long-container clearfix" style="position: relative;">
     <div class="userinfo">
       {% if user %}
-        <span id="userid">{{user.email}}</span> | <a href="{{signout_url|escape}}">Sign out</a>
+        <span id="userid">{{user.email}}</span> | <a href="/profile/">Your accounts</a> | <a href="{{signout_url|escape}}">Sign out</a>
       {% else %}
         <a href="{{signin_url|escape}}">Sign in with your Google account</a>
       {% endif %}

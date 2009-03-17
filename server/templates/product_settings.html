@@ -1,66 +1,134 @@
 {% extends 'base.html' %}
 {% block title %}{{ project.friendly_name}} Settings{% endblock %}
+{% block head %}<link rel="stylesheet" type="text/css" href="/static/stylesheets/wufoo.css" />{% endblock %}
 {% block content %}
 <div class="long-container">
-  <form method="POST">
-    <h2>Identification</h2>
-    <p>
-      <label for="unique_name">Permalink:</label>
-      <input id="unique_name" name="unique_name" value="{{product.unique_name|ifnone|escape}}" />
-      {{unique_name_error|errorspan}}
-    </p>
-    <p>
-      <label for="friendly_name">Name:</label>
-      <input id="friendly_name" name="friendly_name" value="{{product.friendly_name|ifnone|escape}}" />
-      {{friendly_name_error|errorspan}}
-    </p>
-    
-    <h2>New bug notifications</h2>
-    <p>One e-mail per bug per day. Similar reports are considered the same bug, so we won't spam you
-      with a thousand emails.</p>
-    <p>
-      <label for="new_bug_notification_emails">E-mails:</label>
-      <input id="new_bug_notification_emails" name="new_bug_notification_emails" size="80" value="{{product.new_bug_notification_emails|ifnone|escape}}" />
-      {{new_bug_notification_emails_error|errorspan}}
-    </p>
-    
-    <h2>Integrate with a bug tracker?</h2>
-    <p>YourSway Feedback Kit bugs can be associated with your bug tracker tickets.</p>
-    <p>
-      <label for="bug_tracker">Choose your bug tracker:</label>
-      <select id="bug_tracker" name="bug_tracker">
-        <option value="" {{product.bug_tracker|selectedifeq:"" }}>(none)</option>
-        {% for bt in bug_trackers %}
-        <option value="{{bt.0}}" {{product.bug_tracker|selectedifeq:bt.0 }}>{{bt.1.name}}</option>
-        {% endfor %}
-      </select>
-      {{bug_tracker_error|errorspan}}
-    </p>
-    <p>
-      <label for="bug_tracker_url">Project URL:</label>
-      <input id="bug_tracker_url" name="bug_tracker_url" value="{{product.bug_tracker_url|ifnone|escape}}" />
-      {{bug_tracker_url_error|errorspan}}
-    </p>
+  {% if not product.is_saved %}
+  <div class="info">
+    <h2>Product details</h2>
+  </div>
+  {% endif %}
+  
+  <form id="form2" name="form2" class="wufoo topLabel" autocomplete="off" enctype="multipart/form-data" method="post">
+    <ul>
+      <li class="{% if friendly_name_error %}error{% endif %}">
+        <label class="desc" for="friendly_name">
+          Product name
+          <span class="req">*</span>
+        </label>
+        <div>
+          <input id="friendly_name" name="friendly_name" class="field text medium" value="{{product.friendly_name|ifnone|escape}}" />
+        </div>
+        <p class="error">{{friendly_name_error|errorspan}}</p>
+      </li>
+
+      <li class="{% if unique_name_error %}error{% endif %}">
+        <label class="desc" for="unique_name">
+          Product URL
+          <span class="req">*</span>
+        </label>
+        <div>
+          http://crashkitapp.appspot.com/{{ account.permalink }}/products/<input id="unique_name" name="unique_name" class="field text short" value="{{product.unique_name|ifnone|escape}}" />/
+        </div>
+        <p class="error">{{unique_name_error|errorspan}}</p>
+      </li>
+      
+      <li class="section">
+        <h3>New bug notifications</h3>
+        <div>
+          We'll send one e-mail per bug per day.
+          Similar reports are grouped into a single bug,
+          so we won't spam you with a thousand emails.
+        </div>
+      </li>
+      
+      <li class="{% if new_bug_notification_emails_error %}error{% endif %}">
+        <label class="desc" for="new_bug_notification_emails">
+          List of e-mails (comma-separated)
+        </label>
+        <div>
+          <input id="new_bug_notification_emails" name="new_bug_notification_emails" class="field text large" value="{{product.new_bug_notification_emails|ifnone|escape}}" />
+        </div>
+        <p class="error">{{new_bug_notification_emails_error|errorspan}}</p>
+      </li>
+      
+      <li class="section">
+        <h3>Integrate with a bug tracker?</h3>
+        <div>
+          YourSway CrashKit bugs can be associated with your bug tracker tickets.
+        </div>
+      </li>
+      
+      <li class="{% if bug_tracker_error %}error{% endif %}">
+        <label class="desc" for="bug_tracker">
+          Choose your bug tracker
+        </label>
+        <div>
+          <select id="bug_tracker" name="bug_tracker" class="field select medium">
+            <option value="" {{product.bug_tracker|selectedifeq:"" }}>(none)</option>
+            {% for bt in bug_trackers %}
+            <option value="{{bt.0}}" {{product.bug_tracker|selectedifeq:bt.0 }}>{{bt.1.name}}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <p class="error">
+          {{bug_tracker_error|errorspan}}
+        </p>
+      </li>
+      
+      <li class="{% if bug_tracker_url_error %}error{% endif %}">
+        <label class="desc" for="bug_tracker_url">
+          Bug tracker project URL
+        </label>
+        <div>
+          <input id="bug_tracker_url" name="bug_tracker_url" class="field text large" value="{{product.bug_tracker_url|ifnone|escape}}" />
+        </div>
+        <p class="error">
+          {{bug_tracker_url_error|errorspan}}
+        </p>
+      </li>
     
     {% if product.is_saved %}
-    <h2>Ignored packages</h2>
-    <p>The packages listed below will be ignored when grouping exception reports into bugs.</p>
-    <p><label for="uninteresting_packages">Ignore packages:</label> <input id="uninteresting_packages" name="uninteresting_packages" value="{{product.uninteresting_packages|escape}}" size="60" /> {{uninteresting_packages_error|errorspan}}</p>
-    <p>(Changes to this setting only affect new exception reports.)</p>
+    
+      <li class="section">
+        <h3>Smart exception grouping</h3>
+        <div>
+          Java packages listed below will be ignored when grouping exception reports into bugs.
+          (Changes made to this setting will only affect new exception reports.)
+        </div>
+      </li>
+      
+      <li class="{% if uninteresting_packages_error %}error{% endif %}">
+        <label class="desc" for="uninteresting_packages">
+          Java packages to ignore
+        </label>
+        <div>
+          <input id="uninteresting_packages" name="uninteresting_packages" class="field text long" value="{{product.uninteresting_packages|escape}}" size="60" />
+        </div>
+        <p class="error">
+          {{uninteresting_packages_error|errorspan}}
+        </p>
+      </li>
     {% endif %}
     
-    <h2>Make this product public?</h2>
-    <p>
-      <input id="public_access" type="checkbox" name="public_access" {{product.public_access|checkediftrue}} /> <label for="public_access">Yes, make this product public so anyone in the world can see its bugs</label>
-    </p>
+    <li class="section">
+      <h3>Make this product public?</h3>
+    </li>
     
-    <h2>
+    <li>
+      <div class="column">
+        <input id="public_access" type="checkbox" class="field checkbox" name="public_access" {{product.public_access|checkediftrue}} />
+        <label class="choice" for="public_access">Yes, make this product public so anyone in the world can see its bugs</label>
+      </div>
+    </li>
+    
+    <li class="buttons">
       {% if product.is_saved %}
-        <input type="submit" value="Save Product Settings" />
+        <input type="submit" value="Save settings" />
       {% else %}
-        <input type="submit" value="Add Product" />
+        <input type="submit" value="Okay, add this product to my account" />
       {% endif %}
-    </h2>
+    </li>
   </form>
 </div>
 

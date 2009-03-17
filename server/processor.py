@@ -53,7 +53,7 @@ I bet it comes as no surprise for you that “%(name)s” is still buggy.
       e = (report.product.new_bug_notification_emails or '').strip()
       if len(e) > 0:
         emails = e.split(',')
-        mail.send_mail('andreyvit@gmail.com', emails, '%s bugs summary' % report.product.friendly_name, body)
+        mail.send_mail('crashkit@yoursway.com', emails, '%s bugs summary' % report.product.friendly_name, body)
       
         for bug in bugs_to_email:
           bug.last_email_on = datetime.now().date()

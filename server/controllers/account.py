@@ -120,6 +120,14 @@ class AccountPeopleHandler(BaseHandler):
     self.data.update(tabid = 'people-tab', people=self.people, products=self.products)
     self.render_and_finish('account_people.html')
 
+def validate_account(self):
+  if not re.match('^[a-zA-Z0-9-]*$', self.account.permalink):
+    self.invalid('permalink', "Only letters, numbers and dashes, please.")
+  if len(self.account.permalink) < 4 and not users.is_current_user_admin():
+    self.invalid('permalink', "Please enter at least 4 characters.")
+  if not re.match('^[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]$', self.account.permalink):
+    self.invalid('permalink', "Must start with a letter, cannot end with a dash.")
+
 
 class AccountSettingsHandler(BaseHandler):
 
@@ -135,6 +143,12 @@ class AccountSettingsHandler(BaseHandler):
   def post(self):
     self.account.permalink = self.valid_string('permalink')
     self.account.name = self.valid_string('name')
+    
+    validate_account(self)
+    existing_account = Account.all().filter('permalink', self.account.permalink).get()
+    if existing_account and existing_account.key().id_or_name() != self.account.key().id_or_name():
+      self.invalid('permalink', "This name is already taken.")
+    
     if not self.is_valid():
       self.render_screen_and_finish()
     self.account.put()
@@ -147,11 +161,12 @@ class SignupHandler(BaseHandler):
   @prolog(fetch=['new_account'])
   def get(self, invitation_code):
     self.data.update(invitation_code=invitation_code, tabid='account-settings-tab')
-    if invitation_code == None or len(invitation_code.strip()) == 0:
-      self.render_and_finish('account_signup_nocode.html')
-    candidate = LimitedBetaCandidate.all().filter('invitation_code', invitation_code).get()
-    if candidate == None:
-      self.render_and_finish('account_signup_badcode.html')
+    if not users.is_current_user_admin():
+      if invitation_code == None or len(invitation_code.strip()) == 0:
+        self.render_and_finish('account_signup_nocode.html')
+      candidate = LimitedBetaCandidate.all().filter('invitation_code', invitation_code).get()
+      if candidate == None:
+        self.render_and_finish('account_signup_badcode.html')
     if not self.user:
       self.render_and_finish('account_signup_googlenotice.html')
     self.render_screen_and_finish()
@@ -162,20 +177,27 @@ class SignupHandler(BaseHandler):
 
   @prolog(fetch=['new_account'], check=['is_signup_allowed'])
   def post(self, invitation_code):
-    candidate = LimitedBetaCandidate.all().filter('invitation_code', invitation_code).get()
-    if candidate == None:
-      self.redirect_and_finish('/signup/%s' % invitation_code)
+    if not users.is_current_user_admin():
+      candidate = LimitedBetaCandidate.all().filter('invitation_code', invitation_code).get()
+      if candidate == None:
+        self.redirect_and_finish('/signup/%s' % invitation_code)
     
     self.account.permalink = self.valid_string('permalink')
     self.account.name = self.valid_string('name')
+    
+    validate_account(self)
+    existing_account = Account.all().filter('permalink', self.account.permalink).get()
+    if existing_account:
+      self.invalid('permalink', "This name is already taken.")
+      
     if not self.is_valid():
       self.render_screen_and_finish()
     self.account.put()
     self.account_access = AccountAccess(key_name=AccountAccess.key_for(self.person.key(), self.account.key()).name(),
         person=self.person, account=self.account, admin=True)
     self.account_access.put()
-    self.redirect_and_finish(u'/%s/' % self.account.permalink,
-      flash = u"Congratulations! Your account “%s” has been created." % self.account.name)
+    self.redirect_and_finish(u'/%s/products/new/' % self.account.permalink,
+      flash = u"Your account has been created. You can add your first product now." % self.account.name)
     # else:
     #   if not self.person.is_saved():
     #     self.person.put()
