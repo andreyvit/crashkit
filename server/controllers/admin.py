@@ -177,3 +177,9 @@ class Temp(BaseHandler):
       item.status = 2
       item.put()
       self.response.out.write("""<div>Error: %s %s</div>""" % (e.__class__.__name__, e.message));
+
+class AdminFuckUpHandler(BaseHandler):
+
+  @prolog(fetch=[], check=['is_server_management_allowed'])
+  def get(self):
+    1 / 0

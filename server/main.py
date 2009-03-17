@@ -259,6 +259,7 @@ url_mapping = [
   ('/admin/beta/', LimitedBetaCandidateListHandler),
   ('/admin/beta/accept', LimitedBetaAcceptCandidateHandler),
   ('/admin/beta/reject', LimitedBetaRejectCandidateHandler),
+  ('/admin/fuckup/', AdminFuckUpHandler),
   ('/iterate', Temp),
   ('/profile/', ProfileHandler),
   # per-account
