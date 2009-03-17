@@ -28,8 +28,8 @@ class SignUpForLimitedBetaHandler(BaseHandler):
     tech  = self.request.get('tech')
     if tech == None:
       tech = ''
-    pers = LimitedBetaCandidate(email=email, tech=tech)
-    pers.put()
+    candidate = LimitedBetaCandidate(email=email, tech=tech)
+    candidate.put()
     
     body = """
 Hey buddies,
