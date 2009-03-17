@@ -193,11 +193,13 @@ class SignupHandler(BaseHandler):
     if not self.is_valid():
       self.render_screen_and_finish()
     self.account.put()
+    if not self.person.is_saved():
+      self.person.put()
     self.account_access = AccountAccess(key_name=AccountAccess.key_for(self.person.key(), self.account.key()).name(),
         person=self.person, account=self.account, admin=True)
     self.account_access.put()
     self.redirect_and_finish(u'/%s/products/new/' % self.account.permalink,
-      flash = u"Your account has been created. You can add your first product now." % self.account.name)
+      flash = u"Your account has been created. You can add your first product now.")
     # else:
     #   if not self.person.is_saved():
     #     self.person.put()
