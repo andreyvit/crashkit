@@ -148,7 +148,9 @@ def create_or_update_occurrence(occurrence_hash, case, client, date, messages, d
   occurrence = Occurrence.get_by_key_name(key_name)
   if occurrence == None:
     occurrence = Occurrence(key_name=key_name, case=case, client=client, date=date, count=count,
-        role=role, exception_messages=messages)
+        role=role)
+    if messages:
+      occurrence.exception_messages = messages
     for k, v in data.iteritems():
       setattr(occurrence, 'data_%s' % k, db.Text(unicode(v)))
     for k, v in env.iteritems():
