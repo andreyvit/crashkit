@@ -18,6 +18,9 @@ class CrashKit:
         self.account_name, self.product_name)
 
   def send_exception(self, data = {}, env = {}):
+    if os.environ['SERVER_SOFTWARE'].startswith('Dev'):
+      return # Google App Engine development server, do not report errors
+      
     info = sys.exc_info()
     traceback = get_traceback(info[2])
     env = dict(**env)
