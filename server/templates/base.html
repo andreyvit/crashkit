@@ -30,15 +30,14 @@
     {% else %}
       {% if account_path %}
       	<li class="dashboard-tab"><a href="{{account_path}}/">Dashboard</a></li>
+        {% if account_access.is_admin_allowed %}
+        	<li class="account-settings-tab"><a href="{{account_path}}/settings/">Settings</a></li>
+        {% endif %}
+        {% if account_access.is_managing_people_allowed %}
+        	<li class="people-tab"><a href="{{account_path}}/people/">People & Permissions</a></li>
+        {% endif %}
         {% ifequal tabid "product-tab" %}
         	<li class="product-tab"><a href="{{account_path}}/products/new">Add Product</a></li>
-        {% else %}
-          {% if account_access.is_admin_allowed %}
-          	<li class="account-settings-tab"><a href="{{account_path}}/settings/">Settings</a></li>
-          {% endif %}
-          {% if account_access.is_managing_people_allowed %}
-          	<li class="people-tab"><a href="{{account_path}}/people/">People & Permissions</a></li>
-          {% endif %}
         {% endifequal %}
       {% else %}
         {% if not account_authorizations %}
