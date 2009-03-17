@@ -116,6 +116,12 @@ class AccountPeopleHandler(BaseHandler):
       
     self.products = self.account.products.fetch(100)
     
+    for person in self.people:
+      for product in self.products:
+        if not product.key() in person.product_authorization:
+          person.product_authorization[product.key()] = ProductAccess(key_name=ProductAccess.key_for(person.key(), product.key()).name(),
+            person=person, product=product, level=(ACCESS_READ if product.public_access else ACCESS_NONE))
+    
   def render_screen_and_finish(self):
     self.data.update(tabid = 'people-tab', people=self.people, products=self.products)
     self.render_and_finish('account_people.html')
