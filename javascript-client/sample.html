@@ -1,0 +1,8 @@
+<html>
+<head>
+  <script src="http://crashkitapp.appspot.com/static/javascript/crashkit-js-api.js?test/js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<a href="http://myhomepage.com" onClick="xxx('hi'); return false;">Link test</a>
+<input type="button" value="Button test!" onclick="try { foobarbozzzz(); } catch(e) { CrashKit.report(e); }">
+</html>

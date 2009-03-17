@@ -1,14 +1,7 @@
-//Warning: IE has problems with caching.
-//To be able to submit multiple bugs in older IE versions, use the following code:
-//<meta http-equiv="Pragma" content="no-cache" />
-//<meta http-equiv="Expires" content="-1" />
-
-CrashKit = {
-  URL: "http://crashkitapp.appspot.com/test/products/js/post-report/0/0",
+var CrashKit = {
+  URL: null,
   Action: "",
 };
-// Edit these options in your code like this: 
-// CrashKit.URL = http://crashkitapp.appspot.com/vasya/products/myproject/post-report/0/0
 
 // Provide the XMLHttpRequest class for IE 5.x-6.x:
 if( typeof XMLHttpRequest == "undefined" ) XMLHttpRequest = function() {
@@ -18,6 +11,22 @@ if( typeof XMLHttpRequest == "undefined" ) XMLHttpRequest = function() {
   try { return new ActiveXObject("Microsoft.XMLHTTP") } catch(e) {}
   throw new Error( "This browser does not support XMLHttpRequest." )
 };
+
+CrashKit.report = function(ex) {
+  CrashKit.handleErrors( ex.message, ex.fileName, ex.lineNumber );
+}
+
+CrashKit.initialize = function() {
+  var els = document.getElementsByTagName("SCRIPT");
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    var src = el.src;
+    if (src && src.indexOf("crashkit-js-api.js?") >= 0) {
+      var x = src.substring(src.indexOf("?") + 1).split("/");
+      CrashKit.URL = "http://crashkitapp.appspot.com/" + x[0] + "/products/" + x[1] + "/post-report/0/0";
+    }
+  }
+}
 
 CrashKit.Browser = {
 	init: function () {
@@ -241,10 +250,11 @@ CrashKit.pack_error = function (error, url, line) {
           "data": {
           },
           "env": {
-              "Browser OS": CrashKit.Browser.OS,
-              "Browser Name": CrashKit.Browser.browser,
-              "Browser Version": CrashKit.Browser.version
-          }
+              "browser_os": CrashKit.Browser.OS,
+              "browser_name": CrashKit.Browser.browser,
+              "browser_version": CrashKit.Browser.version
+          },
+          "language": "javascript"
       }
   ]);
 }
@@ -252,6 +262,10 @@ CrashKit.pack_error = function (error, url, line) {
 
 
 CrashKit.handleErrors =  function(error, url, line)  {
+    if (CrashKit.URL == null)
+        CrashKit.initialize();
+    if (CrashKit.URL == null)
+        return;
     // EnableMe: CrashKit.getStackTrace();
     var err = CrashKit.pack_error(error, url, line);
     CrashKit.send_error(err);
@@ -294,7 +308,7 @@ if(typeof(jQuery) != 'undefined'){
         }
         catch ( ex )
         {
-          handleErrors( ex.message, ex.fileName, ex.lineNumber );
+          CrashKit.report(ex);
           // re-throw ex iff error should propogate
           // throw ex;
          }
