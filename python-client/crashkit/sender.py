@@ -6,6 +6,7 @@ from traceback import extract_tb
 from types import ClassType
 from datetime import date
 import sys
+import os
 
 enc = JSONEncoder()
 
@@ -79,7 +80,10 @@ def get_class_name(frame):
     first = code.co_varnames[0]
     self = frame.f_locals[first]
     for key in dir(self):
-      attr = getattr(self, key, None)
+      try:
+        attr = getattr(self, key, None)
+      except Exception:
+        attr = None
       if attr is not None:
         try:
           fc = attr.im_func.func_code
