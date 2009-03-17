@@ -20,7 +20,7 @@
           <span class="req">*</span>
         </label>
         <div>
-          <input id="name" name="name" type="text" class="field text medium" value="{{account.name|ifnone|escape}}" maxlength="255" tabindex="2" />
+          <input id="name" name="name" type="text" class="field text medium" value="{{account.name|ifnone|escape}}" maxlength="255" tabindex="1" />
         </div>
         <p class="error">{{ name_error|escape }}</p>
       </li>
@@ -31,7 +31,7 @@
           <span class="req">*</span>
         </label>
         <div>
-          http://crashkitapp.appspot.com/<input id="permalink" name="permalink" type="text" class="field text short" value="{{account.permalink|ifnone|escape}}" maxlength="255" tabindex="1" />/
+          http://crashkitapp.appspot.com/<input id="permalink" name="permalink" type="text" class="field text short" value="{{account.permalink|ifnone|escape}}" maxlength="255" tabindex="2" />/
         </div>
         <p class="error">{{ permalink_error|escape }}</p>
       </li>
