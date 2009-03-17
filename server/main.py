@@ -212,7 +212,6 @@ class PostBugReportHandler(BaseHandler):
     all_blobs = re.findall('"blob:([a-zA-Z0-9]+)"', body)
     existing_blobs = Attachment.get_by_key_name([Attachment.key_name_for(self.product.key(), b) for b in all_blobs])
     blobs = sets.Set(all_blobs) - sets.Set([b.body_hash for b in existing_blobs if b])
-    logging.warn("BLOBS TO GET: %s,  all blobs: %s", ','.join(blobs), ','.join(all_blobs))
     
     process_report(report)
       
