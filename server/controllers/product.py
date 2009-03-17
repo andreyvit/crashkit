@@ -67,3 +67,10 @@ class ProductSettingsHandler(BaseHandler):
       self.product_access.put()
       self.redirect_and_finish(u'%s/products/%s/all' % (self.account_path, self.product.unique_name),
         flash = u"“%s” has been created." % self.product.friendly_name)
+
+class ProductHelpHandler(BaseHandler):
+
+  @prolog(fetch=['account', 'product'])
+  def get(self):
+    self.data.update(tabid = 'product-help-tab')
+    self.render_and_finish('product_integration_help.html')

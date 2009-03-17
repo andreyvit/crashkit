@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.friendly_name}} Integration Help{% endblock %}
+{% block content %}
+<div class="long-container">
+  <h2>Integrating into Java applications</h2>
+  <p><a href="http://download.yoursway.com/crashkit-java-1.0.3.zip">Download Java client 1.0.3</a></p>
+  <p>
+    See com.yoursway.crashkit.demo.Main.java in com.yoursway.crashkit.demo for usage.
+    (Note that com.yoursway.crashkit can be used both in plain Java and in OSGi environment.)
+  </p>
+  
+  <h2>Integrating into Python applications</h2>
+  <p><a href="http://download.yoursway.com/crashkit-python-1.0.3.zip">Download Python client 1.0.3</a></p>
+  <p>
+    See sample.py for usage.
+  </p>
+  
+  <h2>Integrating into HTML/JavaScript code</h2>
+  <p>Just drop the following SCRIPT tag into your HTML page:</p>
+  <pre><code>&lt;script src="http://crashkitapp.appspot.com/static/javascript/crashkit-js-api.js?{{account.permalink|escape}}/{{product.unique_name|escape}}" type="text/javascript" charset="utf-8"&gt;&lt;/script&gt;</code></pre>
+  
+  <p>
+    After this, IE and Firefox will report all occurred exceptions automatically.
+    Unfortunately, Safari and Google Chrome won't.
+  </p>
+  
+  <p>
+    To also support Safari and Chrome, you need to manually catch all exceptions and feed them into
+    CrashKit using <code>CrashKit.report(exception)</code> method:
+  </p>
+  <pre><code>try { ...code here.. } catch(e) { CrashKit.report(e); }</code></pre>
+  
+  <p>
+    If you are using jQuery, CrashKit automatically wraps all your event handlers into try-catch
+    blocks.
+  </p>
+</div>
+
+{% endblock %}
