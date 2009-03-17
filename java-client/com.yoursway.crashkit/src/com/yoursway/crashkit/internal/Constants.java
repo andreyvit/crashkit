@@ -7,6 +7,16 @@ public class Constants {
     
     public static final boolean DEBUG_SCHEDULING = DEBUG;
     
+    private static final String JAVA_CLIENT_VERSION_BUILDSUBST = "{{ver}}";
+    private static final String JAVA_CLIENT_MAJOR_VERSION = "1.0";
+    public static final String JAVA_CLIENT_VERSION;
+    static {
+        if (JAVA_CLIENT_VERSION_BUILDSUBST.endsWith("}}"))
+            JAVA_CLIENT_VERSION = JAVA_CLIENT_MAJOR_VERSION + ".dev";
+        else
+            JAVA_CLIENT_VERSION = JAVA_CLIENT_VERSION_BUILDSUBST;
+    }
+    
     /**
      * The maximum time an exception waits in the queue since the last delivery
      * attempt (or since its initial addition) until a new delivery is

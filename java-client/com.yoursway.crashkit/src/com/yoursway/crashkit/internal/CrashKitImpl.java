@@ -90,7 +90,7 @@ public final class CrashKitImpl extends CrashKit {
         Collection<Blob> attachments = new ArrayList<Blob>();
         collectData(cause, data, attachments);
         Report report = new Report(severity.toString(), today(), ".", collectExceptions(cause), data,
-                collectEnvironmentInfo(), role);
+                collectEnvironmentInfo(), role, "java", Constants.JAVA_CLIENT_VERSION);
         report.claimPackages(claimedPackages);
         scheduler.scheduleIn(Constants.NEW_EXCEPTION_DELAY);
         storage.addReport(report, attachments);

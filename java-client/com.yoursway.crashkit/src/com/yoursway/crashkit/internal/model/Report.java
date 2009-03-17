@@ -18,6 +18,8 @@ public class Report {
     private final String hash;
     private final String date;
     private int count = 1;
+    private final String language;
+    private final String clientVersion;
     
     public Report(
             @BeanEncoding.Property("severity") String severity,
@@ -25,7 +27,9 @@ public class Report {
             @BeanEncoding.Property("userActionOrScreenNameOrBackgroundProcess") String userActionOrScreenNameOrBackgroundProcess,
             @BeanEncoding.Property("exceptions") List<ExceptionInfo> exceptions,
             @BeanEncoding.Property("data") Map<String, String> data,
-            @BeanEncoding.Property("env") Map<String, String> env, @BeanEncoding.Property("role") String role) {
+            @BeanEncoding.Property("env") Map<String, String> env,
+            @BeanEncoding.Property("role") String role, @BeanEncoding.Property("language") String language,
+            @BeanEncoding.Property("client_version") String clientVersion) {
         if (severity == null)
             throw new NullPointerException("severity is null");
         if (date == null)
@@ -47,9 +51,11 @@ public class Report {
         this.data = data;
         this.env = env;
         this.role = role;
+        this.language = language;
+        this.clientVersion = clientVersion;
         this.hash = YsDigest.sha1(severity + date + userActionOrScreenNameOrBackgroundProcess
                 + JSON.encode(BeanEncoding.simplify(exceptions)) + JSON.encode(BeanEncoding.simplify(data))
-                + JSON.encode(BeanEncoding.simplify(env)) + role);
+                + JSON.encode(BeanEncoding.simplify(env)) + role + language + clientVersion);
     }
     
     public String getSeverity() {
@@ -86,6 +92,14 @@ public class Report {
     
     public String getRole() {
         return role;
+    }
+    
+    public String getLanguage() {
+        return language;
+    }
+    
+    public String getClientVersion() {
+        return clientVersion;
     }
     
     @BeanEncoding.Transient
