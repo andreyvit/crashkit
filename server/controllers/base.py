@@ -211,6 +211,8 @@ class BaseHandler(webapp.RequestHandler):
       
   def fetch_account_authorizations(self):
     self.account_authorizations = self.person.account_authorizations.fetch(100)
+    for account in self.account_authorizations:
+      account.product_authorizations = []
     keys_to_account_authorizations = index(lambda m: m._account, self.account_authorizations)
     product_auth = self.person.product_authorizations.fetch(100)
     keys_to_products = index(lambda m: m.key(), Product.get([a._product for a in product_auth]))
@@ -219,7 +221,7 @@ class BaseHandler(webapp.RequestHandler):
       if product:
         account = keys_to_account_authorizations[product._account]
         if account:
-          account.product_authorizations = authorizations
+          account.product_authorizations += authorizations
       
       
   def invalid(self, key, message):
