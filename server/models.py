@@ -270,6 +270,8 @@ class Occurrence(db.Expando):
   date = db.DateProperty(required=True)
   count = db.IntegerProperty()
   role = db.StringProperty(required=True, default='customer')
+  
+  exception_messages = db.ListProperty(db.Text)
     
   @staticmethod
   def key_name_for(case_key_name, client_key_name, occurrence_hash):
