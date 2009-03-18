@@ -147,4 +147,15 @@ ul#tabnav a:hover { /* settings for hover effect */
 	background: #fff; /* set desired hover color */
 }
 
+pre {
+    padding: 4px;
+    margin: 0.5em 0px;
+    border: 1px dotted #777;
+    line-height: 1;
+}
+
+pre, code {
+    font: 100% monospace;
+}
+
 /* end css tabs */

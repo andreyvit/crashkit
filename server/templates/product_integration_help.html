@@ -9,6 +9,25 @@
     (Note that com.yoursway.crashkit can be used both in plain Java and in OSGi environment.)
   </p>
   
+  <h2>Integrating into PHP applications</h2>
+  <p><a href="http://download.yoursway.com/crashkit-php-1.0.7.zip">Download PHP client 1.0.7</a> (includes crashkit.php and a demo application)</p>
+  <p>Step 1. Drop “crashkit.php” into your project.</p>
+  <p>Step 2. Copy and paste the following text into the beginning of your main PHP file(s):</p>
+  <pre>
+&lt;?php
+  define('CRASHKIT_PRODUCT', '{{account.permalink|escape}}/{{product.unique_name|escape}}');
+  define('CRASHKIT_DIE_MESSAGE',
+    '&lt;title&gt;Server error&lt;/title&gt;' .
+    '&lt;div style="width: 600px; margin: 50px auto 0px auto; font: 14px Verdana, sans-serif;"&gt;' .
+    '&lt;b style="color: red;"&gt;Server error&lt;/b&gt;' .
+    '&lt;p&gt;Sorry, we have failed to process your request now. Please try again later.' .
+    '&lt;p&gt;Our developers have just been notified about this error.' .
+    '&lt;p&gt;If you need help immediately, please e-mail &lt;a href="mailto:{{user.email}}"&gt;{{user.email}}&lt;/a&gt;.' .
+    '&lt;/div&gt;');
+  require_once 'crashkit.php';
+?&gt;</pre>
+  <p>You can customize the error message if you don't like the default one.</p>
+
   <h2>Integrating into Python applications</h2>
   <p><a href="http://download.yoursway.com/crashkit-python-1.0.3.zip">Download Python client 1.0.3</a></p>
   <p>
