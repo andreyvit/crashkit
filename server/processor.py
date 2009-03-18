@@ -162,23 +162,31 @@ def create_or_update_occurrence(occurrence_hash, case, client, date, messages, d
   
 def parse_location(el):
   f = el.get('package', '')
-  if f == '':
+  if f == '' or f is None:
     f = el.get('file', '')
+    if f is None:
+      f = ''
   k = el.get('class', '')
   m = el.get('method', '')
   if m == '':
     m = el.get('function', '')
-  if k == '':
+  if k == '' or k is None:
     k = m
     m = ''
-  return dict(package=f, klass=k, method=m, line=int(el.get('line', 0)))
+  lineno = el.get('line', 0)
+  if lineno is None:
+    lineno = 0
+  return dict(package=f, klass=k, method=m, line=int(lineno))
 
 class ReportedOccurrence(object):
   
   def __init__(self, product, client, data):
     self.product = product
     self.client = client
-    self.date = date(*(time.strptime(data['date'], '%Y-%m-%d')[0:3]))
+    if 'date' in data:
+      self.date = date(*(time.strptime(data['date'], '%Y-%m-%d')[0:3]))
+    else:
+      self.date = date.today()
     self.count = int(data.get('count', 1))
     mm = [e.get('message', '') for e in data['exceptions']]
     self.exception_messages = [db.Text(x) for x in mm if len(x) > 0]
@@ -188,7 +196,11 @@ class ReportedOccurrence(object):
       self.context_name = 'unknown'
     self.role = data.get('role', 'customer')
     self.env = data.get('env', {})
+    if isinstance(self.env, list):
+      self.env = {} # fuck you, PHP
     self.data = data.get('data', {})
+    if isinstance(self.data, list):
+      self.data = {} # fuck you again
     self.language = data.get('language', 'unknown')
     self.exceptions = [
       dict(name=e['name'],
