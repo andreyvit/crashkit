@@ -71,7 +71,10 @@ We are glad to accept you today!
 Please use the following link to sign up for an account.
 
   http://%(host)s/signup/%(code)s
-    
+
+If (or when) you find a bug or have something else to say,
+just reply this e-mail. Any feedback is greatly appreciated.
+
 """ % dict(email=candidate.email, host=self.request.host, code=candidate.invitation_code)
 
     mail.send_mail('crashkit@yoursway.com', candidate.email, 'CrashKit limited beta invitation', body)
