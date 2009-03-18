@@ -235,8 +235,6 @@ CrashKit.pack_error = function (error, url, line) {
   CrashKit.Browser.init();
   return JSON.encode([
       {
-          "date": new Date(),
-          "count": 1,
           "userActionOrScreenNameOrBackgroundProcess": CrashKit.Action,
           "severity": "major",
           "exceptions": [
