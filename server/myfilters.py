@@ -162,7 +162,9 @@ def smartshorten(s, target_len):
       return re.sub('(?:^|[A-Z])[a-z]*', repl2, o)
     else:
       return shorten_fragment(o)
-      
+    
+  if s is None:
+    return ''
   if len(s) <= target_len:
     return s
   result = re.sub('[a-zA-Z]+', repl, s)
