@@ -8,10 +8,12 @@ VERSION	crashkit.cur	crashkit	heads/master
 
 NEWDIR	java.dir	temp	%-java	-
 NEWDIR	python.dir	temp	%-python	-
+NEWDIR	php.dir	temp	%-php	-
 
 NEWFILE	crashkit-java.zip	featured	crashkit-java-[ver].zip	CrashKit Java [ver]
 NEWFILE	crashkit-python.zip	featured	crashkit-python-[ver].zip	CrashKit Python [ver]
 NEWFILE	crashkit-js.zip	featured	crashkit-javascript-[ver].zip	CrashKit JavaScript [ver]
+NEWFILE	crashkit-php.zip	featured	crashkit-php-[ver].zip	CrashKit PHP [ver]
 
 
 COPYTO	[java.dir]
@@ -20,7 +22,7 @@ COPYTO	[java.dir]
 SUBSTVARS	[java.dir<alter>]/com.yoursway.crashkit/src/com/yoursway/crashkit/internal/Constants.java	{{}}
 
 ZIP	[crashkit-java.zip]
-	INTO	/	[java.dir]
+	INTO	crashkit-java-[ver]	[java.dir]
 
 
 COPYTO	[python.dir]
@@ -29,15 +31,25 @@ COPYTO	[python.dir]
 SUBSTVARS	[python.dir<alter>]/crashkit.py	{{}}
 
 ZIP	[crashkit-python.zip]
-	INTO	/	[python.dir]
+	INTO	crashkit-python-[ver]	[python.dir]
+
+
+COPYTO	[php.dir]
+	INTO	/	[crashkit.cur]/php-client
+	
+SUBSTVARS	[php.dir<alter>]/crashkit.php	{{}}
+
+ZIP	[crashkit-php.zip]
+	INTO	crashkit-php-[ver]	[php.dir]
 
 
 ZIP	[crashkit-js.zip]
-	INTO	/	[crashkit.cur]/javascript-client
+	INTO	crashkit-javascript-[ver]	[crashkit.cur]/javascript-client
 
 
 PUT	s3-builds	crashkit-java.zip
 PUT	s3-builds	crashkit-python.zip
 PUT	s3-builds	crashkit-js.zip
+PUT	s3-builds	crashkit-php.zip
 PUT	s3-builds	build.log
 
