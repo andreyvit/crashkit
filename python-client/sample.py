@@ -1,8 +1,8 @@
 
-from crashkit import *
-import re
+import crashkit
+crashkit.initialize_crashkit('test', 'py')
 
-initialize_crashkit('test', 'py')
+import re
 
 def zoo(self, a, b):
   return a(b)

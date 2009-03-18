@@ -5,9 +5,31 @@
   <h2>Integrating into Java applications</h2>
   <p><a href="http://download.yoursway.com/crashkit-java-1.0.3.zip">Download Java client 1.0.3</a></p>
   <p>
-    See com.yoursway.crashkit.demo.Main.java in com.yoursway.crashkit.demo for usage.
-    (Note that com.yoursway.crashkit can be used both in plain Java and in OSGi environment.)
+    Step 1. Add “com.yoursway.crashkit.jar” into your classpath
+    (or, if you prefer, you can simply add “com.yoursway.crashkit/src” as a source folder).
+    It can be used as OSGi bundle.
   </p>
+  <p>Step 2. Copy and paste the following code into a method that executes at startup:</p>
+  <pre>
+CrashKit crashKit = CrashKit.connectApplication(
+  "{{product.friendly_name|escape}}", "1.0.0", "{{account.permalink|escape}}", "{{product.unique_name|escape}}",
+  new String[] {"com.example.myproduct", "com.foo.anotherpackage"});</pre>
+  <p>
+    The last argument lists the packages that belong to your application; everything else will be considered a library.
+    The second argument is your application's version number.
+  </p>
+  <p>Step 3. Catch all exceptions and send them to CrashKit:</p>
+  <pre>
+try {
+  // run event loop, process request, whatever
+} catch (Throwable e) {
+  CrashKit.bug(e);
+}</pre>
+  <p>Optional step 4. To report warnings and other custom messages, just define and create corresponding exception classes, e.g.:</p>
+  <pre>CrashKit.bug(new UnhandledEventLoopException(e));
+CrashKit.bug(new IgnoringEmptyCommandException("Some command"));</pre>
+  <p>If you derive your custom exceptions from <code>Failure</code>, you'll be able to pass additional information:</p>
+  <pre>CrashKit.bug(new UnhandledEventLoopException(e).add("some_additional_data", "42");</pre>
   
   <h2>Integrating into PHP applications</h2>
   <p><a href="http://download.yoursway.com/crashkit-php-1.0.7.zip">Download PHP client 1.0.7</a> (includes crashkit.php and a demo application)</p>
@@ -29,30 +51,33 @@
   <p>You can customize the error message if you don't like the default one.</p>
 
   <h2>Integrating into Python applications</h2>
-  <p><a href="http://download.yoursway.com/crashkit-python-1.0.3.zip">Download Python client 1.0.3</a></p>
-  <p>
-    See sample.py for usage.
-  </p>
+  <p><a href="http://download.yoursway.com/crashkit-python-1.0.3.zip">Download Python client 1.0.3</a> (includes crashkit.py and a sample application)</p>
+  <p>Step 1. Drop “crashkit.py” into your project.</p>
+  <p>Step 2. Copy and paste the following text into the beginning of your main Python file(s):</p>
+  <pre>
+import crashkit
+crashkit.initialize_crashkit('{{account.permalink|escape}}', '{{product.unique_name|escape}}')</pre>
+  <p>Step 3. Catch all exceptions and send them to CrashKit:</p>
+  <pre>
+try:
+  # do something here
+except:
+  crashkit.send_exception()</pre>
   
   <h2>Integrating into HTML/JavaScript code</h2>
-  <p>Just drop the following SCRIPT tag into your HTML page:</p>
-  <pre><code>&lt;script src="http://crashkitapp.appspot.com/static/javascript/crashkit-js-api.js?{{account.permalink|escape}}/{{product.unique_name|escape}}" type="text/javascript" charset="utf-8"&gt;&lt;/script&gt;</code></pre>
+  <p>Step 1.Drop the following SCRIPT tag into your HTML page:</p>
+  <pre>
+&lt;script src="http://crashkitapp.appspot.com/static/javascript/crashkit-js-api.js?{{account.permalink|escape}}/{{product.unique_name|escape}}"
+        type="text/javascript" charset="utf-8"&gt;&lt;/script&gt;</pre>
   
   <p>
-    After this, IE and Firefox will report all occurred exceptions automatically.
-    Unfortunately, Safari and Google Chrome won't.
-  </p>
-  
-  <p>
-    To also support Safari and Chrome, you need to manually catch all exceptions and feed them into
-    CrashKit using <code>CrashKit.report(exception)</code> method:
+    Step 2. Catch all exceptions and send them to CrashKit using <code>CrashKit.report(ex)</code> method:
   </p>
   <pre><code>try { ...code here.. } catch(e) { CrashKit.report(e); }</code></pre>
   
-  <p>
-    If you are using jQuery, CrashKit automatically wraps all your event handlers into try-catch
-    blocks.
-  </p>
+  <p>If you are using jQuery, CrashKit automatically wraps all your event handlers into try-catch blocks,
+    so you only need to deal with top-level code.</p>
+  <p>If you are only targeting IE and Firefox, step 2 is optional.</p>
 </div>
 
 {% endblock %}
