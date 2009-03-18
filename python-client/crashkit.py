@@ -7,11 +7,7 @@ from datetime import date
 import sys
 import os
 
-VERSION_BUILDSUBST = "{{ver}}"
-if VERSION_BUILDSUBST[-1] == '}':
-  CRASHKIT_VERSION = '1.0.dev'
-else:
-  CRASHKIT_VERSION = VERSION_BUILDSUBST
+CRASHKIT_VERSION = '{{ver}}'
 
 class CrashKit:
   
@@ -30,7 +26,6 @@ class CrashKit:
     env = dict(**env)
     env.update(**collect_platform_info())
     message = {
-        "date": date.today().strftime("%Y-%m-%d"),
         "exceptions": [
             {
                 "name": encode_exception_name(info[0]),
@@ -41,7 +36,7 @@ class CrashKit:
         "data": data,
         "env": env,
         "language": "python",
-        "client_language": CRASHKIT_VERSION
+        "client_version": CRASHKIT_VERSION
     }
     payload = JSONEncoder().encode([message])
     from urllib2 import Request, urlopen, HTTPError, URLError
