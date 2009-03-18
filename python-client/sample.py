@@ -53,6 +53,6 @@ def main():
   try:
     Moo.cmoo(Moo().moo, re)
   except Exception, e:
-    send_exception()
+    crashkit.send_exception()
   
 main()
