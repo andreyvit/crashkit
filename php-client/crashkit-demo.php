@@ -8,7 +8,7 @@
     '<p>Our developers have just been notified about this error.' .
     '<p>If you need help immediately, please e-mail <a href="mailto:test@example.com">test@example.com</a>.' .
     '</div>');
-  require_once 'crashkit.php';
+  require_once 'crashkit.inc.php';
 ?>
 <?
   include 'crashkit-demo-included.php';

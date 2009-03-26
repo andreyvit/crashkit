@@ -1,4 +1,8 @@
 <?php
+# Include this file to use CrashKit for bug reporting in your application.
+# Visit http://crashkitapp.appspot.com/ for details.
+# The author dedicates any and all copyright interest in this code to the public domain.
+
 define('CRASHKIT_VERSION', '{{ver}}');
 
 if (!defined('CRASHKIT_PRODUCT')) {
@@ -23,7 +27,6 @@ function crashkit_error_handler($errno, $errmsg, $filename, $linenum, $vars) {
   if (error_reporting() == 0)
     return;
     
-  // in reality the only entries we should consider are E_WARNING, E_NOTICE, E_USER_ERROR, E_USER_WARNING and E_USER_NOTICE
   $errortype = array (
     E_ERROR              => 'Error',
     E_WARNING            => 'Warning',
@@ -40,8 +43,17 @@ function crashkit_error_handler($errno, $errmsg, $filename, $linenum, $vars) {
     E_RECOVERABLE_ERROR  => 'Catchable Fatal Error'
   );
     
-  // set of errors for which a var trace will be saved
   $user_errors = array(E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE);
+  
+  $include_path = explode(PATH_SEPARATOR, get_include_path());
+  foreach($include_path as &$dir) {
+    if ($dir == ".")
+      $dir = getcwd();
+    $trailer = $dir[strlen($dir)-1];
+    if ($trailer != DIRECTORY_SEPARATOR && $trailer != '/') {
+      $dir .= DIRECTORY_SEPARATOR;
+    }
+  }
   
   $locations = array();
   $backtrace = debug_backtrace(false);
@@ -50,8 +62,15 @@ function crashkit_error_handler($errno, $errmsg, $filename, $linenum, $vars) {
   else if ($backtrace[0]["function"] == "crashkit_error_handler")
     $backtrace[0]["function"] = null;
   foreach($backtrace as $location) {
+    $file = $location["file"];
+    $dir = dirname($file) . DIRECTORY_SEPARATOR;
+    foreach ($include_path as $path)
+      if (strpos($path, $dir) === 0) {
+        $file = substr($file, strlen($path));
+        break;
+      }
     $locations[] = array(
-      "file" => $location["file"],
+      "file" => $file,
       "class" => $location["class"],
       "function" => $location["function"],
       "line" => $location["line"]
