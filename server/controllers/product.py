@@ -55,6 +55,8 @@ class ProductSettingsHandler(BaseHandler):
       
     if not self.is_valid():
       self.render_screen_and_finish()
+    if not is_saved:
+      self.product.client_admin_password = random_string()
     self.product.put()
     if is_saved:
       self.redirect_and_finish(u'%s/products/%s/settings' % (self.account_path, self.product.unique_name),
@@ -72,5 +74,5 @@ class ProductHelpHandler(BaseHandler):
 
   @prolog(fetch=['account', 'product'])
   def get(self):
-    self.data.update(tabid = 'product-help-tab')
+    self.data.update(tabid = 'product-help-tab', client_admin_cookie=self.product.client_admin_password)
     self.render_and_finish('product_integration_help.html')

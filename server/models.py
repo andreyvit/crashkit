@@ -53,6 +53,8 @@ class Product(db.Model):
   bug_tracker     = db.StringProperty()
   bug_tracker_url = db.StringProperty()
   
+  client_admin_password = db.TextProperty()
+  
   new_bug_notification_emails = db.TextProperty(default='')
   
   public_access = db.BooleanProperty()

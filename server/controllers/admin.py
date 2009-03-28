@@ -114,8 +114,8 @@ class Temp(BaseHandler):
     
   def temp(self, item):
     if item == None:
-      return 20, Bug.all()
-    item.ticket = None
+      return 20, Product.all()
+    item.client_admin_password = random_string()
     item.put()
     
   def raise_exception(self):
