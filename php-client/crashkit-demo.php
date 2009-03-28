@@ -1,5 +1,6 @@
 <?php
-  define('CRASHKIT_PRODUCT', 'test/php');
+  define('CRASHKIT_ACCOUNT_AND_PRODUCT', 'test/php');
+  define('CRASHKIT_ADMIN_PASSWORD', '12345');
   define('CRASHKIT_DIE_MESSAGE',
     '<title>Server error</title>' .
     '<div style="width: 600px; margin: 50px auto 0px auto; font: 14px Verdana, sans-serif;">' .
