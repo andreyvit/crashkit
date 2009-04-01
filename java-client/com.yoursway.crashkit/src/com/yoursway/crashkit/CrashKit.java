@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
 
 import com.yoursway.crashkit.internal.CrashKitImpl;
+import com.yoursway.crashkit.internal.DisabledCrashKitImpl;
 import com.yoursway.crashkit.internal.ServerConnection;
 import com.yoursway.crashkit.internal.model.Repository;
 import com.yoursway.crashkit.internal.model.Severity;
@@ -32,9 +33,13 @@ public abstract class CrashKit {
             String developerFriendlyProductVersion, String feedbackServiceAccountName,
             String feedbackServiceProductName, String[] claimedPackages) {
         String role = determineRole(feedbackServiceAccountName, feedbackServiceProductName);
-        CrashKit kit = new CrashKitImpl(userFriendlyProductName, developerFriendlyProductVersion,
-                claimedPackages, role, new Repository(userFriendlyProductName), new ServerConnection(
-                        feedbackServiceAccountName, feedbackServiceProductName));
+        final CrashKit kit;
+        if ("disabled".equalsIgnoreCase(role))
+            kit = new DisabledCrashKitImpl();
+        else
+            kit = new CrashKitImpl(userFriendlyProductName, developerFriendlyProductVersion, claimedPackages,
+                    role, new Repository(userFriendlyProductName), new ServerConnection(
+                            feedbackServiceAccountName, feedbackServiceProductName));
         applicationKit = kit;
         Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
             public void uncaughtException(Thread t, Throwable e) {
