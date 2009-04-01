@@ -37,7 +37,7 @@ ZIP	[crashkit-python.zip]
 COPYTO	[php.dir]
 	INTO	/	[crashkit.cur]/php-client
 	
-SUBSTVARS	[php.dir<alter>]/crashkit.php	{{}}
+SUBSTVARS	[php.dir<alter>]/crashkit.inc.php	{{}}
 
 ZIP	[crashkit-php.zip]
 	INTO	crashkit-php-[ver]	[php.dir]
