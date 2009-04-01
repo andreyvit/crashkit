@@ -61,7 +61,8 @@ public final class CrashKitImpl extends CrashKit {
         this.role = determineRole(productName);
         if (!"customer".equals(role))
             System.out.println(productName + " Feedback Role: " + role);
-        new FeedbackPostingThread().start();
+        if (!"disabled".equals(role))
+            new FeedbackPostingThread().start();
     }
     
     private static String determineRole(String productName) {
