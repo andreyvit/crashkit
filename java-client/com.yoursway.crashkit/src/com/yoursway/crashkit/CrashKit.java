@@ -62,6 +62,13 @@ public abstract class CrashKit {
                 return override;
         } catch (IOException e) {
         }
+        path = new File(new File(System.getProperty("user.home")), "." + unixStyleName + ".role");
+        try {
+            override = YsFileUtils.readAsString(path).trim();
+            if (override.length() > 0)
+                return override;
+        } catch (IOException e) {
+        }
         return "customer";
     }
     
