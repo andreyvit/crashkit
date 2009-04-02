@@ -65,8 +65,14 @@ if (isset($_REQUEST['crashkitadmin'])) {
         <form method="POST">
           <input type="hidden" name="crashkitadmin" value="$pass" />
           <input type="hidden" name="crashkitaction" value="setrole" />
+          <input type="hidden" name="role" value="disabled" />
+          <input type="submit" value="Disable bug reporting" /> &mdash; set a disabling cookie. Bugs are not logged on CrashKit servers. Instead, developers get a detailed report in their web browser.
+        </form>
+        <form method="POST">
+          <input type="hidden" name="crashkitadmin" value="$pass" />
+          <input type="hidden" name="crashkitaction" value="setrole" />
           <input type="hidden" name="role" value="developer" />
-          <input type="submit" value="I am a developer" /> &mdash; set a developer cookie. Bugs from <em>developer</em> machines are not logged on CrashKit servers. Instead, developers get a detailed report in their web browser.
+          <input type="submit" value="I am a developer" /> &mdash; set a developer cookie. Bugs from developer machines are logged on CrashKit servers under a separate section. Additionally, developers get a detailed report in their web browser.
         </form>
         <form method="POST">
           <input type="hidden" name="crashkitadmin" value="$pass" />
@@ -99,8 +105,12 @@ $GLOBALS['crashkit_error_queue'] = array();
 register_shutdown_function('crashkit_send_errors');
 set_error_handler('crashkit_error_handler');
 
+function crashkit_is_disabled() {
+  return CRASHKIT_ROLE == 'disabled';
+}
+
 function crashkit_is_developer() {
-  return CRASHKIT_ROLE == 'developer';
+  return CRASHKIT_ROLE == 'developer' || CRASHKIT_ROLE == 'disabled';
 }
 
 function crashkit_is_tester() {
@@ -202,15 +212,10 @@ function crashkit_error_handler($errno, $errmsg, $filename, $linenum, $vars) {
     }
     print "</div>";
     print "</div>";
-    if (crashkit_is_developer())
-      if ($severe)
-        exit;
-      else
-        return;
   }
-  $GLOBALS['crashkit_error_queue'][] = $message;
+  if (!crashkit_is_disabled())
+    $GLOBALS['crashkit_error_queue'][] = $message;
   if ($severe) {
-    ob_end_clean();
     die(CRASHKIT_DIE_MESSAGE);
   }
 }
