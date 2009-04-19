@@ -16,6 +16,11 @@ from commons import *
 
 # models
 
+class ServerConfig(db.Model):
+    signup_email_text        = db.TextProperty()
+    signup_email_subject     = db.TextProperty()
+    signup_email_unused_text = db.TextProperty()
+
 def transaction(method):
   def decorate(*args, **kwds):
     return db.run_in_transaction(method, *args, **kwds)

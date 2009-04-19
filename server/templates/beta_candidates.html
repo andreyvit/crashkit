@@ -1,7 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}YourSway CrashKit Beta Program{% endblock %}
+{% block head %}<link rel="stylesheet" type="text/css" href="/static/stylesheets/wufoo.css" />{% endblock %}
 {% block content %}
 <div class="long-container">
+  
+  <h2>Candidates</h2>
   <table style="width: 80%">
     {% for candidate in candidates %}
       <tr>
@@ -14,6 +17,46 @@
       </tr>
     {% endfor %}
   </table>
+  
+  <h2>Invitation e-mail</h2>
+  
+  <form method="POST" class="wufoo topLabel">
+    <ul>
+      <li class="{% if signup_email_subject_error %}error{% endif %}">
+        <label class="desc" for="signup_email_subject">
+          Subject
+          <span class="req">*</span>
+        </label>
+        <div>
+          <input id="signup_email_subject" name="signup_email_subject" class="field text large" value="{{server_config.signup_email_subject|ifnone|escape}}" />
+        </div>
+        <p class="error">{{signup_email_subject_error|errorspan}}</p>
+      </li>
+      <li class="{% if signup_email_text_error %}error{% endif %}">
+        <label class="desc" for="signup_email_text">
+          Body
+          <span class="req">*</span>
+        </label>
+        <div>
+          <textarea id="signup_email_text" name="signup_email_text" class="field text large" rows="8" cols="80">{{server_config.signup_email_text|ifnone|escape}}</textarea>
+        </div>
+        <p class="error">{{signup_email_text_error|errorspan}}</p>
+      </li>
+      <li class="{% if signup_email_unused_text_error %}error{% endif %}">
+        <label class="desc" for="signup_email_unused_text">
+          Unused (you can keep alternate body variations here)
+        </label>
+        <div>
+          <textarea id="signup_email_unused_text" name="signup_email_unused_text" class="field text large" rows="8" cols="80">{{server_config.signup_email_unused_text|ifnone|escape}}</textarea>
+        </div>
+        <p class="error">{{signup_email_unused_text_error|errorspan}}</p>
+      </li>
+    </ul>
+    
+    <li class="buttons">
+      <input type="submit" value="Save settings" />
+    </li>
+  </form>
 </div>
 
 {% endblock %}
