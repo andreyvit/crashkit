@@ -3,6 +3,13 @@
 {% block content %}
 
 <div class="long-container">
+  <p>
+    <b>Want something in CrashKit?</b>
+    Do <a href="mailto:crashkit@yoursway.com">drop us a line</a>!<br>
+    What bug states do you want?<br>
+    Do you want all bugs to go into your bug tracker, or do you want to use CrashKit as a sole bug tracker for (some or all) bugs?<br>
+  </p>
+  
   {% for compartment in compartments %}
     {% if compartment.bugs %}
       <h2>{{ compartment.title }}</h2>
