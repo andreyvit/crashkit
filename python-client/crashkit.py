@@ -38,7 +38,7 @@ class CrashKit:
         "language": "python",
         "client_version": CRASHKIT_VERSION
     }
-    payload = JSONEncoder().encode([message])
+    payload = JSONDateEncoder().encode([message])
     from urllib2 import Request, urlopen, HTTPError, URLError
     try:
       response = urlopen(Request(self.post_url, payload))
@@ -565,3 +565,20 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr, _key_separ
                 del markers[markerid]
 
     return _iterencode
+
+#idea by https://mdp.cti.depaul.edu/web2py_wiki/default/wiki/JSONdatetime
+import datetime
+class JSONDateEncoder(JSONEncoder):
+   def default(self, obj):
+       if isinstance(obj, datetime.datetime):
+           return '**new Date(%i,%i,%i,%i,%i,%i)' % (obj.year,
+                                                     obj.month-1,
+                                                     obj.day,
+                                                     obj.hour,
+                                                     obj.minute,
+                                                     obj.second)
+       if isinstance(obj, datetime.date):
+           return '**new Date(%i,%i,%i)' % (obj.year,
+                                            obj.month-1,
+                                            obj.day)
+       return JSONEncoder.default(self, obj)
