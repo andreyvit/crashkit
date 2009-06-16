@@ -1,6 +1,12 @@
 import string
 from random import Random
 
+def decline(num, one, many, zero=None):
+  if   zero and num == 0:  fmt = zero
+  elif one  and num == 1:  fmt = one
+  else:                    fmt = many
+  return fmt.replace('#', unicode(num))
+
 def random_string(len = 12, chars = string.letters+string.digits):
   return ''.join(Random().sample(chars, 12))
 

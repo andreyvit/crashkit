@@ -38,24 +38,47 @@ def process_report(report):
     for case, case_occurrences in cases.iteritems():
       bugs.append(process_case(report.product, case, sum(map(lambda o: o.count_this_time, case_occurrences))))
     bugs = list(sets.Set(bugs))
+    
     bugs_to_email = [b for b in bugs if b.should_spam()]
     if len(bugs_to_email) > 0:
       account = report.product.account
       product_path = 'http://crashkitapp.appspot.com/%s/products/%s' % (account.permalink, report.product.unique_name)
-      bugs_description = "\n\n".join([b.describe_for_email(product_path) for b in bugs_to_email])
-      body = u"""
-Ladies and gentelemen,
-
-I bet it comes as no surprise for you that “%(name)s” is still buggy.
-
-%(descr)s
-""" % dict(name=report.product.friendly_name, descr=bugs_description)
+      
       e = (report.product.new_bug_notification_emails or '').strip()
       if len(e) > 0:
         emails = e.split(',')
-        mail.send_mail('crashkit@yoursway.com', emails, '%s bugs summary' % report.product.friendly_name, body)
-      
+        
         for bug in bugs_to_email:
+          subject_bug_descr = "%s in %s.%s.%s:%s" % (bug.exception_name, bug.exception_package,
+              bug.exception_klass, bug.exception_method, bug.exception_line)
+          if bug.last_email_on is None:
+            designator = 'NEW'
+            tagline = "The following bug has occurred for the first time:"
+          else:
+            designator = 'RECURRING'
+            tagline = "Just a friendly reminder that the following bug is still occurring:"
+          subject = "[CrK %s/%s] %s %s" % (account.permalink, report.product.unique_name, designator, subject_bug_descr)
+          
+          body = u"""
+  %(tagline)s
+
+  Bug:        %(url)s
+  Exception:  %(exception_name)s
+  In:         %(exception_package)s.%(exception_klass)s.%(exception_method)s:%(exception_line)s
+  Occurred:   %(occurrence_count)s
+  Last time:  %(last_occurrence_on)s
+              """ % dict(url='%s/bugs/%s/' % (product_path, bug.key().name()),
+              tagline=tagline,
+              exception_name=bug.exception_name,
+              exception_package=bug.exception_package,
+              exception_klass=bug.exception_klass,
+              exception_method=bug.exception_method,
+              exception_line=bug.exception_line,
+              occurrence_count=decline(bug.occurrence_count, 'once', '# times'),
+              last_occurrence_on=bug.last_occurrence_on)
+      
+          mail.send_mail('crashkit@yoursway.com', emails, subject, body)
+    
           bug.last_email_on = datetime.now().date()
           bug.put()
 
