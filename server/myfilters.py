@@ -115,6 +115,13 @@ def shorten(value, l):
     return value
   
 @register.filter
+def midshorten(value, l):
+  if len(value) > l:
+    return value[:l-l/2] + u"…" + value[-(l/2):]
+  else:
+    return value
+  
+@register.filter
 def unshortened_tooltip(value, l):
   if len(value) > l:
     return value
