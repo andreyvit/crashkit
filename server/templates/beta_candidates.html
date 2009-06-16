@@ -10,6 +10,7 @@
       <tr>
         <td>{{ candidate.email|escape }}</td>
         <td>{{ candidate.tech|escape }}</td>
+        <td>{{ candidate.created_at|timesince}} ago
         <td>
           <a href="/admin/beta/accept?key={{candidate.key|escape}}">Accept this gentleman</a> |
           <a href="/admin/beta/reject?key={{candidate.key|escape}}">Reject</a>
