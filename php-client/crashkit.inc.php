@@ -228,9 +228,11 @@ function crashkit_send_errors() {
   
   $account_name = CRASHKIT_ACCOUNT;
   $product_name = CRASHKIT_PRODUCT;
+  $host = "crashkitapp.appspot.com";
+  // $host = "localhost:5005";
   
   $ch = curl_init();
-  curl_setopt($ch, CURLOPT_URL, "http://crashkitapp.appspot.com/$account_name/products/$product_name/post-report/0/0");
+  curl_setopt($ch, CURLOPT_URL, "http://$host/$account_name/products/$product_name/post-report/0/0");
   curl_setopt($ch, CURLOPT_POST, 1);
   curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
   curl_setopt($ch, CURLOPT_HTTPHEADERS, array('Content-Type: application/json'));
