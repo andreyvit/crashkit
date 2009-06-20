@@ -102,28 +102,28 @@ def kgetattr(value, key):
   
 @register.filter
 def strip_prefix(value, prefix):
-  if value.startswith(prefix):
+  if value is not None and value.startswith(prefix):
     return value[len(prefix):]
   else:
     return value
   
 @register.filter
 def shorten(value, l):
-  if len(value) > l:
+  if value is not None and len(value) > l:
     return u"…" + value[-l+1:]
   else:
     return value
   
 @register.filter
 def midshorten(value, l):
-  if len(value) > l:
+  if value is not None and len(value) > l:
     return value[:l-l/2] + u"…" + value[-(l/2):]
   else:
     return value
   
 @register.filter
 def unshortened_tooltip(value, l):
-  if len(value) > l:
+  if value is not None and len(value) > l:
     return value
   else:
     return ''
