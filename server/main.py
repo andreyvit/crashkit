@@ -8,6 +8,10 @@ import string
 import urllib
 import sets
 from random import Random
+
+from google.appengine.dist import use_library
+use_library('django', '1.0')
+
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from google.appengine.api import users

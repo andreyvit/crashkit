@@ -193,7 +193,7 @@ def naturalday(value, fmt = '%A'):
       return 'tomorrow'
   elif value == today - delta:
       return 'yesterday'
-  return value.strftime(fmt.replace('_', ' '))
+  return value.strftime(str(fmt).replace('_', ' '))
 
 @register.filter
 def daysold(value):
