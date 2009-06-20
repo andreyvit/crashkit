@@ -1,5 +1,5 @@
 
-__all__ = ['CRASHKIT_VERSION', 'initialize_crashkit', 'send_exception']
+__all__ = ['CRASHKIT_VERSION', 'initialize_crashkit', 'send_exception', 'CrashKitDjangoMiddleware']
 
 from traceback import extract_tb
 from types import ClassType
@@ -9,18 +9,45 @@ import os
 
 CRASHKIT_VERSION = '{{ver}}'
 
+class CrashKitDjangoMiddleware(object):
+  def __init__(self):
+    from django.conf import settings
+    settings.CRASHKIT.setdefault('debug_mode', settings.DEBUG)
+    initialize_crashkit(**settings.CRASHKIT)
+    
+  def process_exception(self, request, exception):
+    """ Load exceptions into CrashKit """
+    try:
+      env = {}
+      data = {}
+      for key, value in request.META.iteritems():
+        if key.startswith('HTTP_') or key.startswith('SERVER_') or key.startswith('REMOTE_') or key in ('PATH_INFO', 'QUERY_STRING'):
+          env[key] = value
+        # else:
+        #   print key + " = " + unicode(value)
+      for k,v in request.GET.iteritems():  data["GET_"  + k] = v
+      for k,v in request.POST.iteritems(): data["POST_" + k] = v
+      crashkit.send_exception(data, env)
+    except Exception:
+      raise
+
 class CrashKit:
   
-  def __init__(self, account_name, product_name):
+  def __init__(self, account_name, product_name, debug_mode=False, deactivate_when_debugging=True):
     self.account_name = account_name
     self.product_name = product_name
-    self.post_url = "http://crashkitapp.appspot.com/%s/products/%s/post-report/0/0" % (
-        self.account_name, self.product_name)
+    host = 'crashkitapp.appspot.com'
+    # host = 'localhost:5005'
+    self.post_url = "http://%s/%s/products/%s/post-report/0/0" % (
+        host, self.account_name, self.product_name)
+    if os.environ.get('SERVER_SOFTWARE', '').startswith('Dev'):
+      debug_mode = True  # Google App Engine development server
+    self.active = not (debug_mode and deactivate_when_debugging)
 
   def send_exception(self, data = {}, env = {}):
-    if os.environ.get('SERVER_SOFTWARE', '').startswith('Dev'):
-      return # Google App Engine development server, do not report errors
-      
+    if not self.active:
+      return
+
     info = sys.exc_info()
     traceback = get_traceback(info[2])
     env = dict(**env)
@@ -57,9 +84,9 @@ class CrashKit:
  
 crashkit = None
 
-def initialize_crashkit(account_name, product_name):
+def initialize_crashkit(*args, **kw):
   global crashkit
-  crashkit = CrashKit(account_name, product_name)
+  crashkit = CrashKit(*args, **kw)
   
 def send_exception(data = {}, env = {}):
   crashkit.send_exception(data, env)

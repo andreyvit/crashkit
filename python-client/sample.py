@@ -1,5 +1,9 @@
 
-import crashkit
+# normally, you would do this:
+# import crashkit
+
+from crashkit_django import crashkit
+
 crashkit.initialize_crashkit('test', 'py')
 
 import re
