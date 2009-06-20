@@ -229,7 +229,7 @@
       {% if user %}
         <span style="padding-left: 10px;">Welcome back, {{user.nickname}}! <a href="/profile/">Go to your profile page</a></span>
       {% else %}
-        <span style="padding-left: 10px;">Existing customer? <a href="{{signin_url|escape}}">Sign in here</a></span>
+        <span style="padding-left: 10px;">Existing customer? <a href="{{signin_url}}">Sign in here</a></span>
       {% endif %}
     </div>
     <a id="authors" href="http://www.yoursway.com/"><img src="/static/images/marketing/logo.png" /></a>

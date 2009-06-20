@@ -13,9 +13,9 @@
   <div class="long-container clearfix" style="position: relative;">
     <div class="userinfo">
       {% if user %}
-        <span id="userid">{{user.email}}</span> | <a href="/profile/">Your accounts</a> | <a href="{{signout_url|escape}}">Sign out</a>
+        <span id="userid">{{user.email}}</span> | <a href="/profile/">Your accounts</a> | <a href="{{signout_url}}">Sign out</a>
       {% else %}
-        <a href="{{signin_url|escape}}">Sign in with your Google account</a>
+        <a href="{{signin_url}}">Sign in with your Google account</a>
       {% endif %}
     </div>
     <h1>{% block header %}{% endblock %}</h1>

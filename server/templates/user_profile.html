@@ -11,12 +11,12 @@
   {% for account_authorization in account_authorizations %}
     {% set account account_authorization.account %}
     <p>
-      <a href="/{{account.permalink|escape}}/">{{ account.permalink|escape }}</a> — {{ account.name|escape }}
+      <a href="/{{account.permalink}}/">{{ account.permalink }}</a> — {{ account.name }}
     </p>
     <div style="margin-left: 1em;">
       {% for product_authorization in account_authorization.product_authorizations %}
         {% set product product_authorization.product %}
-        <p><a href="/{{account.permalink|escape}}/products/{{product.unique_name|escape}}/">{{ account.permalink|escape }}/{{ product.unique_name }}</a> — {{ product.friendly_name|escape }}</p>
+        <p><a href="/{{account.permalink}}/products/{{product.unique_name}}/">{{ account.permalink }}/{{ product.unique_name }}</a> — {{ product.friendly_name }}</p>
       {% endfor %}
     </div>
   {% endfor %}

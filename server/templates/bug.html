@@ -6,14 +6,14 @@
   <div style="width: 80%; margin: 0px auto 2em auto; padding-left: 10%;">
   <div class="problem-box singlular sev{{ bug.max_severity }} clearfix">
     <div class="dropin" title="{{ bug.bug_name }}">
-      {{bug.occurrence_count|scalenum}}
+      {{bug.occurrence_count|scalenum|safe}}
       <span class="caption">{% ifequal bug.occurrence_count 1 %}occurrence{% else %}occurrences{%endifequal%}</span>
     </div>
       <h2>
-          {{ bug.exception_name|escape }}: <span class="dim">{{ cover_message|escape|midshorten:10000 }}</span>
+          {{ bug.exception_name }}: <span class="dim">{{ cover_message|midshorten:10000 }}</span>
       </h2>
-      <p>{{ bug.exception_package|escape }}<br>
-      {{ bug.exception_klass|escape }}<span class="dim">.{{ bug.exception_method|escape }} {{ bug.exception_line }}</span></p>
+      <p>{{ bug.exception_package }}<br>
+      {{ bug.exception_klass }}<span class="dim">.{{ bug.exception_method }} {{ bug.exception_line }}</span></p>
     <p class="date">
       {% ifequal bug.first_occurrence_on bug.last_occurrence_on %}Occurred {{ bug.first_occurrence_on|naturalday:"%b %d, %Y" }}{% else %}Occurring {{ bug.first_occurrence_on|naturalday:"%b %d, %Y" }} till {{ bug.last_occurrence_on|naturalday:"%b %d, %Y"}}{% endifequal %}
     </p>
@@ -51,9 +51,9 @@
     {% for exception in cover_case.exceptions_list %}
       {% for location in exception.locations %}
         <tr class="{% cycle odd,even %}">
-          <td>{% if forloop.first %}<small>{{ exception.name|escape }}</small>{% endif %}</td>
-          <td class="evencol" style="text-align: right">{{ location.package|escape }}</td>
-          <td>{{location.klass|escape}}<span class="dim">.{{location.method|escape}} {{location.line}}</span></td>
+          <td>{% if forloop.first %}<small>{{ exception.name }}</small>{% endif %}</td>
+          <td class="evencol" style="text-align: right">{{ location.package }}</td>
+          <td>{{location.klass}}<span class="dim">.{{location.method}} {{location.line}}</span></td>
         </tr>
       {% endfor %}
     {% endfor %}

@@ -17,7 +17,7 @@
           <span class="req">*</span>
         </label>
         <div>
-          <input id="friendly_name" name="friendly_name" class="field text medium" value="{{product.friendly_name|ifnone|escape}}" />
+          <input id="friendly_name" name="friendly_name" class="field text medium" value="{{product.friendly_name|ifnone}}" />
         </div>
         <p class="error">{{friendly_name_error|errorspan}}</p>
       </li>
@@ -28,7 +28,7 @@
           <span class="req">*</span>
         </label>
         <div>
-          http://crashkitapp.appspot.com/{{ account.permalink }}/products/<input id="unique_name" name="unique_name" class="field text short" value="{{product.unique_name|ifnone|escape}}" />/
+          http://crashkitapp.appspot.com/{{ account.permalink }}/products/<input id="unique_name" name="unique_name" class="field text short" value="{{product.unique_name|ifnone}}" />/
         </div>
         <p class="error">{{unique_name_error|errorspan}}</p>
       </li>
@@ -47,7 +47,7 @@
           List of e-mails (comma-separated)
         </label>
         <div>
-          <input id="new_bug_notification_emails" name="new_bug_notification_emails" class="field text large" value="{{product.new_bug_notification_emails|ifnone|escape}}" />
+          <input id="new_bug_notification_emails" name="new_bug_notification_emails" class="field text large" value="{{product.new_bug_notification_emails|ifnone}}" />
         </div>
         <p class="error">{{new_bug_notification_emails_error|errorspan}}</p>
       </li>
@@ -81,7 +81,7 @@
           Bug tracker project URL
         </label>
         <div>
-          <input id="bug_tracker_url" name="bug_tracker_url" class="field text large" value="{{product.bug_tracker_url|ifnone|escape}}" />
+          <input id="bug_tracker_url" name="bug_tracker_url" class="field text large" value="{{product.bug_tracker_url|ifnone}}" />
         </div>
         <p class="error">
           {{bug_tracker_url_error|errorspan}}
@@ -103,7 +103,7 @@
           Java packages to ignore
         </label>
         <div>
-          <input id="uninteresting_packages" name="uninteresting_packages" class="field text long" value="{{product.uninteresting_packages|escape}}" size="60" />
+          <input id="uninteresting_packages" name="uninteresting_packages" class="field text long" value="{{product.uninteresting_packages}}" size="60" />
         </div>
         <p class="error">
           {{uninteresting_packages_error|errorspan}}

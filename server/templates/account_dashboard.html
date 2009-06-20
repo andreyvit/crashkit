@@ -9,7 +9,7 @@
   {% for product in products %}
     <div class="product">
       <h2>
-        <a class="nav" href="{{account_path}}/products/{{ product.unique_name }}/">{{ product.friendly_name|escape }}</a>
+        <a class="nav" href="{{account_path}}/products/{{ product.unique_name }}/">{{ product.friendly_name }}</a>
         <span>({% if product.more_new_bugs %}many new bugs{% else %}{{ product.new_bug_count }} {% ifequal product.new_bug_count 1 %}new bug{% else %}new bugs{%endifequal%}{% endif %})</span>
       </h2>
       <div class="bugs clearfix">
@@ -20,10 +20,10 @@
               <span class="caption">{% ifequal bug.occurrence_count 1 %}occurrence{% else %}occurrences{%endifequal%}</span>
             </a>
               <h2><a href="{{account_path}}/products/{{ product.unique_name }}/bugs/{{ bug.key.name }}/">
-                  {{ bug.exception_name|escape }}
+                  {{ bug.exception_name }}
               </a></h2>
-              <p>{{ bug.exception_package|smartshorten:45|escape }}<br>
-              {{ bug.exception_klass|smartshorten:20|escape|split_klass }}<small>.{{ bug.exception_method|smartshorten:15|escape }}&nbsp;<span class="dim">{{ bug.exception_line }}</span></small></p>
+              <p>{{ bug.exception_package|smartshorten:45 }}<br>
+              {{ bug.exception_klass|smartshorten:20|split_klass }}<small>.{{ bug.exception_method|smartshorten:15 }}&nbsp;<span class="dim">{{ bug.exception_line }}</span></small></p>
             <p class="date">
               {% ifequal bug.first_occurrence_on bug.last_occurrence_on %}
                 Occurred {{ bug.first_occurrence_on|naturalday:"%b %d, %Y" }}

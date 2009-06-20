@@ -14,7 +14,7 @@
   <p>Step 2. Copy and paste the following code into a method that executes at startup:</p>
   <pre>
 CrashKit crashKit = CrashKit.connectApplication(
-  "{{product.friendly_name|escape}}", "1.0.0", "{{account.permalink|escape}}", "{{product.unique_name|escape}}",
+  "{{product.friendly_name}}", "1.0.0", "{{account.permalink}}", "{{product.unique_name}}",
   new String[] {"com.example.myproduct", "com.foo.anotherpackage"});</pre>
   <p>
     The last argument lists the packages that belong to your application; everything else will be considered a library.
@@ -39,7 +39,7 @@ CrashKit.bug(new IgnoringEmptyCommandException("Some command"));</pre>
   <p>Step 2. Copy and paste the following text into the beginning of your main PHP file(s):</p>
   <pre>
 &lt;?php
-  define('CRASHKIT_ACCOUNT_AND_PRODUCT', '{{account.permalink|escape}}/{{product.unique_name|escape}}');
+  define('CRASHKIT_ACCOUNT_AND_PRODUCT', '{{account.permalink}}/{{product.unique_name}}');
   define('CRASHKIT_ADMIN_PASSWORD', '{{client_admin_cookie}}');
   define('CRASHKIT_DIE_MESSAGE',
     '&lt;title&gt;Server error&lt;/title&gt;' .
@@ -63,13 +63,32 @@ CrashKit.bug(new IgnoringEmptyCommandException("Some command"));</pre>
     Have your testers do the same, and their bugs will be logged separately from
     real customer bugs.</p>
 
+  <h2>Integrating into Python/Django applications</h2>
+  <p><a href="http://download.yoursway.com/crashkit-python-1.0.9.zip">Download Python client 1.0.9</a> (includes crashkit.py and a sample application)</p>
+  <p>Step 1. Drop “crashkit.py” into your project.</p>
+  <p>Step 2. Add CrashKitDjangoMiddleware to your settings file:</p>
+<pre>MIDDLEWARE_CLASSES = (
+    'django.middleware.common.CommonMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    <b>'crashkit.CrashKitDjangoMiddleware',</b>
+)</pre>
+  <p>Step 3. Add the following to the bottom of your settings file:</p>
+<pre>CRASHKIT = {
+    'account_name': '{{account.permalink}}',
+    'product_name': '{{product.unique_name}}',
+    'deactivate_when_debugging': True, # change to False to collect bugs even when DEBUG is True
+}</pre>
+  <p>Please note the <code>deactivate_when_debugging</code> constant: when True (the default) and Django's <code>DEBUG</code> is also True (the default), exceptions will <b>not</b> be sent to CrashKit servers. If you want to test CrashKit in your development environment, you might want to flip that setting temporarily.</p>
+  
   <h2>Integrating into Python applications</h2>
   <p><a href="http://download.yoursway.com/crashkit-python-1.0.9.zip">Download Python client 1.0.9</a> (includes crashkit.py and a sample application)</p>
+  <p>(If you are using Django, see the Python/Django section above.)
   <p>Step 1. Drop “crashkit.py” into your project.</p>
   <p>Step 2. Copy and paste the following text into the beginning of your main Python file(s):</p>
   <pre>
 import crashkit
-crashkit.initialize_crashkit('{{account.permalink|escape}}', '{{product.unique_name|escape}}')</pre>
+crashkit.initialize_crashkit('{{account.permalink}}', '{{product.unique_name}}')</pre>
   <p>Step 3. Catch all exceptions and send them to CrashKit:</p>
   <pre>
 try:
@@ -84,7 +103,7 @@ except:
   <h2>Integrating into HTML/JavaScript code</h2>
   <p>Step 1.Drop the following SCRIPT tag into your HTML page:</p>
   <pre>
-&lt;script src="http://crashkitapp.appspot.com/static/javascript/crashkit-js-api.js?{{account.permalink|escape}}/{{product.unique_name|escape}}"
+&lt;script src="http://crashkitapp.appspot.com/static/javascript/crashkit-js-api.js?{{account.permalink}}/{{product.unique_name}}"
         type="text/javascript" charset="utf-8"&gt;&lt;/script&gt;</pre>
   
   <p>
