@@ -303,6 +303,22 @@ class Person(db.Model):
   def key_for(email):
     return db.Key.from_path('Person', 'u' + email)
 
+
+class Detail(db.Model):
+  values = db.StringListProperty()
+  frequencies = db.ListProperty(int)
+
+  def name(self):
+    return self.key().name()[1:]
+  
+  @staticmethod
+  def key_name_for(name):
+    return 'K' + name    
+    
+  @staticmethod
+  def key_for(name):
+    return db.Key(Detail.kind(), Detail.key_name_for(name))
+
 class AnonymousPerson(object):
   
   def account_access_for(self, account):

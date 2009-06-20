@@ -59,33 +59,109 @@
     {% endfor %}
   </table>
   
-  {% if env_items %}
+  {% if GET_details %}
+    <h2>GET</h2>
+    <table style="width: 80%">
+      <col width="230" />
+      {% for detail in GET_details %}
+      <tr class="{% cycle odd,even %}">
+        <td>{{ detail.name|strip_prefix:"data_GET_" }}</td>
+        <td class="evencol">
+          {% for value in detail.values %}
+            {{ value }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+  
+  {% if POST_details %}
+    <h2>POST</h2>
+    <table style="width: 80%">
+      <col width="230" />
+      {% for detail in POST_details %}
+      <tr class="{% cycle odd,even %}">
+        <td>{{ detail.name|strip_prefix:"data_POST_" }}</td>
+        <td class="evencol">
+          {% for value in detail.values %}
+            {{ value }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+  
+  {% if custom_details %}
+    <h2>Custom details</h2>
+    <table style="width: 80%">
+      <col width="230" />
+      {% for detail in custom_details %}
+      <tr class="{% cycle odd,even %}">
+        <td>{{ detail.name|strip_prefix:"data_" }}</td>
+        <td class="evencol">
+          {% for value in detail.values %}
+            {{ value }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+  
+  {% if REQUEST_details %}
+    <h2>Request</h2>
+    <table style="width: 80%">
+      <col width="230" />
+      {% for detail in REQUEST_details %}
+      <tr class="{% cycle odd,even %}">
+        <td>{{ detail.name|strip_prefix:"env_" }}</td>
+        <td class="evencol">
+          {% for value in detail.values %}
+            {{ value }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+  
+  {% if SERVER_details %}
+    <h2>Server</h2>
+    <table style="width: 80%">
+      <col width="230" />
+      {% for detail in SERVER_details %}
+      <tr class="{% cycle odd,even %}">
+        <td>{{ detail.name|strip_prefix:"env_" }}</td>
+        <td class="evencol">
+          {% for value in detail.values %}
+            {{ value }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+  
+  {% if env_details %}
     <h2>Environment</h2>
     <table style="width: 80%">
       <col width="230" />
-      {% for item in env_items %}
-        <tr class="{% cycle odd,even %}">
-          <td>{{item.0|strip_prefix:"env_"}}</td>
-          <td class="evencol">{% for v in item.1%}{% if not forloop.first %}, {% endif %}{{v|escape}}{%endfor%}</td>
-        </tr>
+      {% for detail in env_details %}
+      <tr class="{% cycle odd,even %}">
+        <td>{{ detail.name|strip_prefix:"env_" }}</td>
+        <td class="evencol">
+          {% for value in detail.values %}
+            {{ value }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+      </tr>
       {% endfor %}
     </table>
   {% endif %}
   
-  {% if common_data_items %}
-    <h2>Common to all occurrences</h2>
-    <table style="width: 80%">
-      <col width="230" />
-      {% for item in common_data_items %}
-        <tr class="{% cycle odd,even %}">
-          <td>{{item.0|strip_prefix:"data_"}}</td>
-          <td class="evencol">{% for v in item.1%}{% if not forloop.first %}, {% endif %}{{v|formatvalue:product_path}}{%endfor%}</td>
-        </tr>
-      {% endfor %}
-    </table>
-  {% endif %}
-  
-  <h2>Additional information</h2>
+  <h2>Occurrences</h2>
   
   <div class="table-scrolling-container">
   <table>

@@ -116,13 +116,22 @@ class RecentCaseListHandler(BaseHandler):
     bugs = self.product.bugs.order('-occurrence_count').fetch(100)
     self.data.update(bugs = bugs)
     self.render_and_finish('buglist.html')
+    
+SERVER_DETAIL_VARS = ['GATEWAY_INTERFACE', 'SERVER_NAME', 'SERVER_PORT', 'SERVER_SOFTWARE']
+ESSENTIAL_REQUEST_DETAILS = ['REQUEST_METHOD', 'CONTENT_TYPE']
+REQUEST_DETAIL_VARS = ['HTTP_ACCEPT', 'HTTP_ACCEPT_ENCODING', 'HTTP_ACCEPT_LANGUAGE',
+    'HTTP_HOST', 'HTTP_REFERER', 'HTTP_USER_AGENT', 'PATH_INFO', 'REMOTE_ADDR', 'REMOTE_HOST']
+IGNORED_VARS = ['hash', 'Apple_PubSub_Socket_Render', 'COMMAND_MODE', 'CONTENT_LENGTH', 'DISPLAY',
+    'DJANGO_SETTINGS_MODULE', 'HOME', 'HTTP_CONNECTION', 'HTTP_COOKIE', 'HTTP_ORIGIN', 'LC_CTYPE',
+    'LOGNAME', 'MANPATH', 'OLDPWD', 'PATH', 'PWD', 'QUERY_STRING', 'RUN_MAIN', 'SERVER_PROTOCOL',
+    'HTTP_CACHE_CONTROL']
 
 class BugHandler(BaseHandler):
 
   @prolog(fetch=['account', 'product', 'bug'])
   def get(self):
     cases = self.bug.cases.order('-occurrence_count').fetch(100)
-    occurrences = Occurrence.all().filter('case IN', cases).order('-count').fetch(100)
+    occurrences = Occurrence.all().filter('case IN', cases[:15]).order('-count').fetch(100)
     clients = Client.get([o.client.key() for o in occurrences])
     
     messages = []
@@ -137,32 +146,67 @@ class BugHandler(BaseHandler):
     for message in messages:
       if cover_message is None or len(message) < len(cover_message):
         cover_message = message
-
-    common_map = dict()
-    for key in sets.Set(flatten([ [k for k in o.dynamic_properties() if k.startswith('env_') or k.startswith('data_')] for o in occurrences ])):
-      set = sets.Set([s for s in [getattr(o, key) for o in occurrences if hasattr(o, key)] if s != None and len(s) > 0])
-      if len(set) > 0:
-        common_map[key] = set
-    if 'env_hash' in common_map:
-      del common_map['env_hash']
+        
+    details = {}
+    for occurrence in occurrences:
+      for k in occurrence.dynamic_properties():
+        detail = details.get(k)
+        if detail is None: details[k] = detail = Detail(key_name=Detail.key_name_for(k))
+        v = getattr(occurrence, k)
+        try:
+          detail.frequencies[detail.values.index(v)] += 1
+        except ValueError:
+          detail.values.append(v)
+          detail.frequencies.append(1)
+          
+    # keep it sorted
+    for detail in details.itervalues():
+      data = sorted(zip(detail.values, detail.frequencies), lambda a,b: 0 if a[1] == b[1] else (1 if a[1] < b[1] else -1))
+      detail.values      = [pair[0] for pair in data]
+      detail.frequencies = [pair[1] for pair in data]
       
+    # group
+    (GET_details, POST_details, custom_details, essential_REQUEST_details, REQUEST_details,
+      SERVER_details, env_details) = [], [], [], [], [], [], []
+    for k, detail in details.iteritems():
+      if k.startswith('data_GET_'):
+        GET_details.append(detail)
+      elif k.startswith('data_POST_'):
+        POST_details.append(detail)
+      elif k.startswith('env_'):
+        name = k[4:]
+        if name in IGNORED_VARS:
+          pass
+        elif name in SERVER_DETAIL_VARS:
+          SERVER_details.append(detail)
+        elif name in REQUEST_DETAIL_VARS:
+          REQUEST_details.append(detail)
+        elif name in ESSENTIAL_REQUEST_DETAILS:
+          essential_REQUEST_details.append(detail)
+        else:
+          env_details.append(detail)
+      else:
+        custom_details.append(detail)
+        
     cover_case = cases[0]
     for case in cases:
       if len(case.exceptions) < len(cover_case.exceptions):
         cover_case = case
-    
+        
     # data_keys contains all columns that differ across occurrences
-    data_keys = list(sets.Set(flatten([ [k for k in o.dynamic_properties() if k in common_map and len(common_map[k])>1] for o in occurrences ])))
+    data_keys = [] #list(sets.Set(flatten([ [k for k in o.dynamic_properties() if k in common_map and len(common_map[k])>1] for o in occurrences ])))
     data_keys.sort()
-    common_keys = list(sets.Set(common_map.keys()) - sets.Set(data_keys))
-    common_keys.sort()
-    env_items = [(k, common_map[k]) for k in common_keys if k.startswith('env_')]
-    common_data_items = [(k, common_map[k]) for k in common_keys if k.startswith('data_')]
+    common_keys = [] #list(sets.Set(common_map.keys()) - sets.Set(data_keys))
+    # common_keys.sort()
+    # env_items = [(k, common_map[k]) for k in common_keys if k.startswith('env_')]
+    # common_data_items = [(k, common_map[k]) for k in common_keys if k.startswith('data_')]
       
     self.data.update(tabid = 'bug-tab', bug_id=True,
         cases=cases, cover_case=cover_case,
-        occurrences = occurrences, env_items = env_items, common_data_items = common_data_items,
-        data_keys = data_keys, cover_message=cover_message)
+        occurrences = occurrences, data_keys = data_keys, cover_message=cover_message,
+        GET_details=GET_details, POST_details=POST_details, custom_details=custom_details,
+        essential_REQUEST_details=essential_REQUEST_details, REQUEST_details=REQUEST_details,
+        SERVER_details=SERVER_details, env_details=env_details)
     self.render_and_finish('bug.html')
 
 class AssignTicketToBugHandler(BaseHandler):
