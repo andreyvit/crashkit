@@ -166,13 +166,17 @@ class BugHandler(BaseHandler):
       detail.frequencies = [pair[1] for pair in data]
       
     # group
-    (GET_details, POST_details, custom_details, essential_REQUEST_details, REQUEST_details,
-      SERVER_details, env_details) = [], [], [], [], [], [], []
+    (GET_details, POST_details, COOKIE_details, SESSION_details, custom_details, essential_REQUEST_details, REQUEST_details,
+      SERVER_details, env_details) = [], [], [], [], [], [], [], [], []
     for k, detail in details.iteritems():
-      if k.startswith('data_GET_'):
+      if k.startswith('data_G_') or k.startswith('data_GET_'):
         GET_details.append(detail)
-      elif k.startswith('data_POST_'):
+      elif k.startswith('data_P_') or k.startswith('data_POST_'):
         POST_details.append(detail)
+      elif k.startswith('data_C_'):
+        COOKIE_details.append(detail)
+      elif k.startswith('data_S_'):
+        SESSION_details.append(detail)
       elif k.startswith('env_'):
         name = k[4:]
         if name in IGNORED_VARS:
@@ -204,7 +208,9 @@ class BugHandler(BaseHandler):
     self.data.update(tabid = 'bug-tab', bug_id=True,
         cases=cases, cover_case=cover_case,
         occurrences = occurrences, data_keys = data_keys, cover_message=cover_message,
-        GET_details=GET_details, POST_details=POST_details, custom_details=custom_details,
+        GET_details=GET_details, POST_details=POST_details,
+        COOKIE_details=COOKIE_details, SESSION_details=SESSION_details,
+        custom_details=custom_details,
         essential_REQUEST_details=essential_REQUEST_details, REQUEST_details=REQUEST_details,
         SERVER_details=SERVER_details, env_details=env_details)
     self.render_and_finish('bug.html')

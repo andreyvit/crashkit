@@ -25,8 +25,11 @@ class CrashKitDjangoMiddleware(object):
           env[key] = value
         # else:
         #   print key + " = " + unicode(value)
-      for k,v in request.GET.iteritems():  data["GET_"  + k] = v
-      for k,v in request.POST.iteritems(): data["POST_" + k] = v
+      for k,v in request.GET.iteritems():  data["G_"  + k] = v
+      for k,v in request.POST.iteritems(): data["P_" + k] = v
+      for k,v in request.COOKIES.iteritems(): data["C_" + k] = v
+      if hasattr(request, 'session'):
+        for k,v in request.session.iteritems(): data["S_" + k] = v
       crashkit.send_exception(data, env)
     except Exception:
       raise

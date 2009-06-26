@@ -65,7 +65,7 @@
       <col width="230" />
       {% for detail in GET_details %}
       <tr class="{% cycle odd,even %}">
-        <td>{{ detail.name|strip_prefix:"data_GET_" }}</td>
+        <td>{{ detail.name|strip_prefix:"data_G_" }}</td>
         <td class="evencol">
           {% for value in detail.values %}
             {{ value }}{% if not forloop.last %}, {% endif %}
@@ -82,7 +82,41 @@
       <col width="230" />
       {% for detail in POST_details %}
       <tr class="{% cycle odd,even %}">
-        <td>{{ detail.name|strip_prefix:"data_POST_" }}</td>
+        <td>{{ detail.name|strip_prefix:"data_P_" }}</td>
+        <td class="evencol">
+          {% for value in detail.values %}
+            {{ value }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+  
+  {% if COOKIE_details %}
+    <h2>Cookies</h2>
+    <table style="width: 80%">
+      <col width="230" />
+      {% for detail in COOKIE_details %}
+      <tr class="{% cycle odd,even %}">
+        <td>{{ detail.name|strip_prefix:"data_C_" }}</td>
+        <td class="evencol">
+          {% for value in detail.values %}
+            {{ value }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+  
+  {% if SESSION_details %}
+    <h2>Session</h2>
+    <table style="width: 80%">
+      <col width="230" />
+      {% for detail in SESSION_details %}
+      <tr class="{% cycle odd,even %}">
+        <td>{{ detail.name|strip_prefix:"data_S_" }}</td>
         <td class="evencol">
           {% for value in detail.values %}
             {{ value }}{% if not forloop.last %}, {% endif %}

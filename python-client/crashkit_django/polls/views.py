@@ -12,7 +12,10 @@ def detail(request, poll_id):
         p = get_object_or_404(Poll, pk=poll_id)
     except Poll.DoesNotExist:
         raise Http404
-    return render_to_response('polls/detail.html', {'poll': p})
+    r = render_to_response('polls/detail.html', {'poll': p})
+    r.set_cookie('mycookie', 'qwe123')
+    request.session['mysessvar'] = 'rty456'
+    return r
 
 def vote(request, poll_id):
     x = 2 / 0
