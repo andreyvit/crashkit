@@ -17,6 +17,7 @@ from google.appengine.ext.webapp import template
 from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.api import memcache
+from google.appengine.api.labs import taskqueue
 from django.utils import simplejson as json
 from models import *
 from processor import process_report, process_case
@@ -267,7 +268,7 @@ class PostBugReportHandler(BaseHandler):
     existing_blobs = Attachment.get_by_key_name([Attachment.key_name_for(self.product.key(), b) for b in all_blobs])
     blobs = sets.Set(all_blobs) - sets.Set([b.body_hash for b in existing_blobs if b])
     
-    process_report(report)
+    taskqueue.add(url = '/qworkers/process-report', params = {'key': report.key().id()})
       
     self.send_urlencoded_and_finish(response = 'ok', status = report.status,
         error = (report.error or 'none'), blobs=','.join(blobs))
@@ -275,6 +276,13 @@ class PostBugReportHandler(BaseHandler):
 
   def handle_exception(self, exception, debug_mode):
     return webapp.RequestHandler.handle_exception(self, exception, debug_mode)
+    
+class ProcessReportHandler(BaseHandler):
+  def post(self):
+    report = Report.get_by_id(int(self.request.get('key')))
+    if report.status != REPORT_NEW:
+      return
+    process_report(report)
 
 class PostBlobHandler(BaseHandler):
 
@@ -314,6 +322,7 @@ url_mapping = [
   ('/admin/beta/accept', LimitedBetaAcceptCandidateHandler),
   ('/admin/beta/reject', LimitedBetaRejectCandidateHandler),
   ('/admin/fuckup/', AdminFuckUpHandler),
+  ('/qworkers/process-report', ProcessReportHandler),
   ('/iterate', Temp),
   ('/profile/', ProfileHandler),
   # per-account
