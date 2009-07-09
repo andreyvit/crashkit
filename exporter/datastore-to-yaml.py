@@ -41,6 +41,9 @@ config.batch_size = 10
 config.sleep = 200
 config.limit = None
 config.only = None
+config.ref = ''
+config.text = ''
+config.test = False
 
 def Authenticate(self):
   """Invoke authentication if necessary."""
@@ -64,7 +67,10 @@ def provide_credentials():
     config.password = None
 
   return (config.email, config.password)
-  
+
+def define_model(kind):
+  return type(kind, (db.Expando,), {})
+
 def preprocess(v):
   if isinstance(v, long):
     v = int(v)
@@ -86,9 +92,59 @@ def convert(item):
   key = preprocess(item.key())
   return { key: data }
   
+def decode_key(key_str):
+  kind, id_or_name = key_str.split('/', 1)
+  try:
+    id_or_name = int(id_or_name)
+    id_or_name = 'IMP%d' % id_or_name
+  except ValueError:
+    pass
+  return db.Key.from_path(kind, id_or_name)
+  
+def decode_attrs(attrs):
+  result = {}
+  for key, value in attrs.iteritems():
+    if isinstance(value, str):
+      value = unicode(value, 'utf-8')
+    if key in config.ref:
+      value = decode_key(value)
+    elif key in config.text:
+      value = db.Text(value)
+    result[key] = value
+  return result
+  
+def run_upload_for_file(input_file, index, count, models):
+  print "Uploading %s (%d of %d)..." % (os.path.basename(input_file), index+1, count)
+  items = yaml.load(open(input_file).read())
+  for key_value_pair in items:
+    assert len(key_value_pair) == 1
+    for key, item in key_value_pair.iteritems():
+      key   = decode_key(key)
+      item  = decode_attrs(item)
+      kind  = str(key.kind())
+      model = models.get(kind)
+      if model is None:
+        models[kind] = model = define_model(kind)
+      
+      if config.test:
+        print repr(key)
+        for k, v in item.iteritems():
+          print '%-20s %s' % (k, v)
+        return
+      else:
+        # print dir(model)
+        # return
+        row = model(key_name=key.name(), parent=key.parent())
+        for k, v in item.iteritems():
+          setattr(row, k, v)
+        row.put()
+
 def run_upload(input_files):
-  items = yaml.load(input_file)
-  pass
+  models = {}
+  index = 0
+  for input_file in input_files:
+    run_upload_for_file(input_file, index, len(input_files), models)
+    index += 1
   
 class MultiFileOutput(object):
   def __init__(self, file_name, rows_per_file):
@@ -173,13 +229,14 @@ def usage():
   print '   --rows-per-file=1000           save output to multiple sequentially numbered files'
   print
   print 'Upload options:'
+  print '   --test                         output the first row of each file as it would be uploaded (no actual upload happens)'
   print '   --ref=foo,bar,boz              treat the given fields as references (otherwise will be uploaded as strings)'
   print '   --text=foo,bar,boz             treat the given fields as db.Text (otherwise will be uploaded as strings)'
   
   sys.exit(13)
 
 def main():
-  opts, unused_args = getopt.getopt(sys.argv[1:], 'h', ['passin', 'email=', 'appid=', 'batch-size=', 'sleep=', 'limit=', 'only=', 'ref=', 'text=', 'rows-per-file='])
+  opts, unused_args = getopt.getopt(sys.argv[1:], 'h', ['passin', 'email=', 'appid=', 'batch-size=', 'sleep=', 'limit=', 'only=', 'ref=', 'text=', 'test', 'rows-per-file='])
   if len(unused_args) < 3: usage()
   command        = unused_args.pop(0)
   remote_api_url = unused_args.pop(0)
@@ -188,7 +245,7 @@ def main():
   if command == 'download':
     output_file = unused_args.pop(0)
     entity_kinds = unused_args
-    models = [type(kind, (db.Expando,), {}) for kind in entity_kinds]
+    models = [define_model(kind) for kind in entity_kinds]
     def run_handler():
       run_download(output_file, models)
   else:
@@ -206,8 +263,8 @@ def main():
   (scheme, host_port, remote_api_path, unused_query, unused_fragment) = urlparse.urlsplit(remote_api_url)
   host = host_port.split(':')[0]
 
-  if 'appid' in opts:
-    appid = opts['appid']
+  if config.appid:
+    appid = config.appid
   elif host.endswith('.appspot.com'):
     appid = host.split('.')[-3]
   elif host.endswith('google.com'):
@@ -218,6 +275,9 @@ def main():
 
   remote_api_stub.ConfigureRemoteDatastore(appid, remote_api_path, provide_credentials,
       servername=host_port, secure=(scheme == 'https'))
+      
+  config.ref = config.ref.split(',')
+  config.text = config.text.split(',')
       
   config.host = host
   config.host_port = host_port
