@@ -90,25 +90,23 @@ class BugListHandler(BaseHandler):
     self.data.update(compartments=compartments)
     self.render_and_finish('buglist.html')
 
-class NewBugListHandler(BugListHandler):
-
   @prolog(fetch=['account', 'product'])
   def get(self):
-    self.data.update(tabid = 'new-tab')
-    self.show_bug_list(self.all_bugs)
-
-  def all_bugs(self):
-    return self.product.bugs.order('-occurrence_count').filter('ticket =', None)
-
-class AllBugListHandler(BugListHandler):
-
-  @prolog(fetch=['account', 'product'])
-  def get(self):
-    self.data.update(tabid = 'all-tab')
+    self.data.update(tabid = 'bugs-tab')
     self.show_bug_list(self.all_bugs)
 
   def all_bugs(self):
     return self.product.bugs.order('-occurrence_count')
+
+class ClosedBugListHandler(BugListHandler):
+
+  @prolog(fetch=['account', 'product'])
+  def get(self):
+    self.data.update(tabid = 'closed-bugs-tab')
+    self.show_bug_list(self.all_bugs)
+
+  def all_bugs(self):
+    return self.product.bugs.order('-occurrence_count').filter('ticker =', 0)
 
 class RecentCaseListHandler(BaseHandler):
 
@@ -339,9 +337,9 @@ url_mapping = [
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/post-blob/([0-9]+)/([a-zA-Z0-9]+)/([a-zA-Z0-9]+)', PostBlobHandler),
   # per-project (users)
   ('/([a-zA-Z0-9._-]+)/products/(new)/', ProductSettingsHandler),
-  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/', NewBugListHandler),
+  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/', BugListHandler),
+  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/closed', ClosedBugListHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/settings', ProductSettingsHandler),
-  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/all', AllBugListHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/', BugHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/assign-ticket', AssignTicketToBugHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/blob/([a-zA-Z0-9]+)/', ViewBlobHandler),
