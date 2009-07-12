@@ -321,6 +321,8 @@ url_mapping = [
   ('/admin/beta/reject', LimitedBetaRejectCandidateHandler),
   ('/admin/fuckup/', AdminFuckUpHandler),
   ('/qworkers/process-report', ProcessReportHandler),
+  ('/admin/migrate/', MigrateHandler),
+  ('/admin/migrate/worker', MigrateWorkerHandler),
   ('/iterate', Temp),
   ('/profile/', ProfileHandler),
   # per-account

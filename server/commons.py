@@ -1,6 +1,21 @@
 import string
 from random import Random
 
+import os
+from google.appengine.api import users
+
+def require_admin(handler_method):
+  """Decorator that requires the requesting user to be an admin."""
+  def decorate(myself, *args, **kwargs):
+    if ('HTTP_X_APPENGINE_TASKNAME' in os.environ
+        or users.is_current_user_admin()):
+      handler_method(myself, *args, **kwargs)
+    elif users.get_current_user() is None:
+      myself.redirect(users.create_login_url(myself.request.url))
+    else:
+      myself.response.set_status(401)
+  return decorate
+
 def decline(num, one, many, zero=None):
   if   zero and num == 0:  fmt = zero
   elif one  and num == 1:  fmt = one
