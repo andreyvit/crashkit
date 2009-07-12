@@ -66,6 +66,10 @@ class Product(db.Model):
   
   uninteresting_packages = db.TextProperty(default="java,javax,sun,org.eclipse,com.yoursway.utils.bugs")
   
+  def list_of_new_bug_notification_emails(self):
+    e = (self.new_bug_notification_emails or '').strip()
+    return list(set(e.split(','))) if len(e) > 0 else []
+  
   def is_interesting_package(self, name):
     for uninteresting_package in map(lambda s: s.strip(), self.uninteresting_packages.split(',')):
       if uninteresting_package[0] == '!':
@@ -228,36 +232,6 @@ class Case(db.Model):
     
   def exceptions_list(self):
     return eval(self.exceptions)
-  
-  def definitive_location(self, product):
-    exceptions = eval(self.exceptions)
-    index = 0
-    for exception in exceptions:
-      locations = exception['locations']
-      for location in locations:
-        package_name, class_name, method_name, line = location['package'], location['klass'], location['method'], location['line']
-        if product.is_interesting_package(package_name):
-          return (index, exception['name'], package_name, class_name, method_name, line)
-      index += 1
-    raise StandardError, "No exception info recorded for this case"
-  #   
-  # def exception_name(self):
-  #   return self.definitive_location()[1]
-  #   
-  # def exception_package(self):
-  #   return self.definitive_location()[2]
-  #   
-  # def exception_location(self):
-  #   return '%s.%s' % (self.definitive_location()[3], self.definitive_location()[4])
-  #   
-  # def exception_klass(self):
-  #   return self.definitive_location()[3]
-  #   
-  # def exception_method(self):
-  #   return self.definitive_location()[4]
-  #   
-  # def exception_line(self):
-  #   return self.definitive_location()[5]
     
   def bug_name(self):
     if self.severity == 1:
@@ -271,10 +245,12 @@ class Case(db.Model):
 
 class Occurrence(db.Expando):
   case = db.ReferenceProperty(Case, collection_name = 'occurrences')
+  bug  = db.ReferenceProperty(Bug, collection_name = 'occurrences')
   client = db.ReferenceProperty(Client, collection_name = 'occurrences')
   created_at = db.DateTimeProperty(auto_now_add = True)
   
   date = db.DateProperty(required=True)
+  week = db.IntegerProperty()
   count = db.IntegerProperty()
   role = db.StringProperty(required=True, default='customer')
   
@@ -283,6 +259,18 @@ class Occurrence(db.Expando):
   @staticmethod
   def key_name_for(case_key_name, client_key_name, occurrence_hash):
     return 'C%s-CL%s-O%s' % (case_key_name, client_key_name, occurrence_hash)
+
+class BugWeekStat(db.Model):
+  bug  = db.ReferenceProperty(Bug, collection_name = 'week_stats')
+  week = db.IntegerProperty(required=True)
+  
+  count = db.IntegerProperty(required=True, default=0)
+  first = db.DateProperty(required=True)
+  last  = db.DateProperty(required=True)
+  
+  @staticmethod
+  def key_name_for(bug_key, week):
+    return '%s-W%d' % (bug_key.name(), week)
     
 class Person(db.Model):
   user = db.UserProperty(required=True)

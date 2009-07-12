@@ -15,7 +15,6 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 from django.utils import simplejson as json
 from models import *
-from processor import process_report, process_case
 
 from controllers.base import *
 

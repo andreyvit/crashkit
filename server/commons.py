@@ -46,6 +46,10 @@ def flatten(l, ltypes=(list, tuple)):
     i += 1
   return ltype(l)
 
+def date_to_week(d):
+  iso_year, iso_week, iso_weekday = d.isocalendar()
+  return iso_year * 100 + iso_week
+
 # def group(seq):
 #     '''seq is a sequence of tuple containing (item_to_be_categorized, category)'''
 #     result = {}

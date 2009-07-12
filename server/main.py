@@ -20,7 +20,7 @@ from google.appengine.api import memcache
 from google.appengine.api.labs import taskqueue
 from django.utils import simplejson as json
 from models import *
-from processor import process_report, process_case
+from processor import process_report
 from controllers.base import *
 from controllers.product import *
 from controllers.account import *

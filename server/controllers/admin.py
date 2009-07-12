@@ -15,7 +15,7 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 from django.utils import simplejson as json
 from models import *
-from processor import process_report, process_case
+from processor import process_report
 
 from controllers.base import *
 from commons import *
@@ -156,11 +156,6 @@ class Temp(BaseHandler):
       return 20, Case.all().filter('bug !=', None)
     item.bug = None
     item.put()
-    
-  def assign_bugs_to_cases_without_bugs(self, item):
-    if item == None:
-      return 20, Case.all().filter('bug =', None)
-    process_case(item.product, item, item.occurrence_count)
       
   def requeue_all_reports(self, item):
     if item == None:

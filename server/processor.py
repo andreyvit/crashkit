@@ -19,68 +19,147 @@ from commons import *
 class ApiError(Exception):
   pass
   
+def send_email_notifications(bug, emails, account, product):
+  product_path = 'http://crashkitapp.appspot.com/%s/products/%s' % (account.permalink, product.unique_name)
+  subject_bug_descr = "%s in %s.%s.%s:%s" % (bug.exception_name, bug.exception_package,
+      bug.exception_klass, bug.exception_method, bug.exception_line)
+  if bug.last_email_on is None:
+    designator = 'NEW'
+    tagline = "The following bug has occurred for the first time:"
+  else:
+    designator = 'RECURRING'
+    tagline = "Just a friendly reminder that the following bug is still occurring:"
+  subject = "[CrK %s/%s] %s %s" % (account.permalink, product.unique_name, designator, subject_bug_descr)
+  
+  body = u"""
+%(tagline)s
+
+Bug:        %(url)s
+Exception:  %(exception_name)s
+In:         %(exception_package)s.%(exception_klass)s.%(exception_method)s:%(exception_line)s
+Occurred:   %(occurrence_count)s
+Last time:  %(last_occurrence_on)s
+      """ % dict(url='%s/bugs/%s/' % (product_path, bug.key().name()),
+      tagline=tagline,
+      exception_name=bug.exception_name,
+      exception_package=bug.exception_package,
+      exception_klass=bug.exception_klass,
+      exception_method=bug.exception_method,
+      exception_line=bug.exception_line,
+      occurrence_count=decline(bug.occurrence_count, 'once', '# times'),
+      last_occurrence_on=bug.last_occurrence_on)
+
+  mail.send_mail('crashkit@yoursway.com', emails, subject, body)
+
+  bug.last_email_on = datetime.now().date()
+  bug.put()
+  
+def process_incoming_occurrence(product, client, incoming_occurrence):
+  context = Context.get_or_insert(Context.key_name_for(product.key(), incoming_occurrence.context_name),
+      product=product, name=incoming_occurrence.context_name)
+      
+  dummy_index, exception_name, exception_package, exception_klass, exception_method, exception_line = incoming_occurrence.definitive_location
+
+  location_salt = "%s|%s|%s|%s|%s|%d" % (incoming_occurrence.language, exception_name, exception_package, exception_klass, exception_method, exception_line)
+  location_hash = hashlib.sha1(location_salt).hexdigest()
+
+  def bug_txn(key_name):
+    bug = Bug.get_by_key_name(key_name)
+    if bug is None:
+      bug = Bug(key_name=key_name, product=product, exception_name=exception_name,
+          exception_package=exception_package, exception_klass=exception_klass,
+          exception_method=exception_method, exception_line=exception_line,
+          max_severity=incoming_occurrence.severity, occurrence_count=incoming_occurrence.count,
+          language=incoming_occurrence.language,
+          first_occurrence_on=incoming_occurrence.date, last_occurrence_on=incoming_occurrence.date,
+          roles=[incoming_occurrence.role], role_count=1)
+    else:
+      bug.max_severity        = max(bug.max_severity, incoming_occurrence.severity)
+      bug.occurrence_count   += incoming_occurrence.count
+      bug.first_occurrence_on = min(bug.first_occurrence_on, incoming_occurrence.date)
+      bug.last_occurrence_on  = max(bug.last_occurrence_on, incoming_occurrence.date)
+      bug.roles               = list(set(bug.roles + [incoming_occurrence.role]))
+      bug.role_count          = len(bug.roles)
+    bug.put()
+    return bug
+  bug = db.run_in_transaction(bug_txn, Bug.key_name_for(product.key().id_or_name(), location_hash))
+
+  def case_txn(key_name):
+    case = Case.get_by_key_name(key_name)
+    if case is None:
+      case = Case(key_name=key_name, product=product, context=context, bug=bug,
+        severity=incoming_occurrence.severity, language=incoming_occurrence.language, exceptions=incoming_occurrence.exceptions_json,
+        occurrence_count=incoming_occurrence.count, first_occurrence_on=incoming_occurrence.date, last_occurrence_on=incoming_occurrence.date,
+        roles=[incoming_occurrence.role])
+    else:
+      if case._bug is None: case.bug = bug # XXX temporary, remove me when migration is done
+      case.occurrence_count   += incoming_occurrence.count
+      case.first_occurrence_on = min(case.first_occurrence_on, incoming_occurrence.date)
+      case.last_occurrence_on  = max(case.last_occurrence_on, incoming_occurrence.date)
+      case.roles               = list(set(case.roles + [incoming_occurrence.role]))
+    case.put()
+    return case
+  case = db.run_in_transaction(case_txn, Case.key_name_for(product.key(), incoming_occurrence.case_hash))
+
+  def occurrence_txn(key_name):
+    occurrence = Occurrence.get_by_key_name(key_name)
+    if occurrence is None:
+      occurrence = Occurrence(key_name=key_name, case=case, client=client, bug=bug, 
+          date=incoming_occurrence.date, count=incoming_occurrence.count,
+          role=incoming_occurrence.role, week=incoming_occurrence.week)
+      if incoming_occurrence.exception_messages:
+        occurrence.exception_messages = incoming_occurrence.exception_messages
+      for k, v in incoming_occurrence.data.iteritems():
+        setattr(occurrence, 'data_%s' % k, db.Text(unicode(v)))
+      for k, v in incoming_occurrence.env.iteritems():
+        setattr(occurrence, 'env_%s' % k, db.Text(unicode(v)))
+    else:
+      if occurrence._bug is None: occurrence.bug = bug # XXX temporary, remove me when migration is done
+      occurrence.count += incoming_occurrence.count
+    occurrence.put()
+    return occurrence
+  occurrence = db.run_in_transaction(occurrence_txn, Occurrence.key_name_for(case.key().id_or_name(), client.key().id_or_name(), incoming_occurrence.occurrence_hash))
+  
+  def week_txn(key_name):
+    stat = BugWeekStat.get_by_key_name(key_name)
+    if stat is None:
+      stat = BugWeekStat(key_name=key_name, bug=bug, week=incoming_occurrence.week,
+        count=incoming_occurrence.count, first=incoming_occurrence.date, last=incoming_occurrence.date)
+    else:
+      stat.count += incoming_occurrence.count
+      stat.first  = min(stat.first, incoming_occurrence.date)
+      stat.last   = max(stat.last, incoming_occurrence.date)
+    stat.put()
+  db.run_in_transaction(week_txn, BugWeekStat.key_name_for(bug.key(), incoming_occurrence.week))
+  
+  return bug, occurrence
+  
 def process_report(report):
   try:
     try:
       data = json.loads(report.data)
-      occurrences = [ReportedOccurrence(report.product, report.client, item) for item in data]
+      incoming_occurrences = [ReportedOccurrence(item, report.product) for item in data]
     except ValueError, e:
       raise ApiError, e
     except KeyError, e:
       raise ApiError, e
-    resulting_occurrences = []
-    for occurrence in occurrences:
-      resulting_occurrences.append(occurrence.submit())
-    report.occurrences = map(lambda o: o.key(), resulting_occurrences)
-    cases = group(lambda o: o.case, resulting_occurrences)
+      
+    product = report.product
+    client  = report.client
     
+    occurrences = []
     bugs = []
-    for case, case_occurrences in cases.iteritems():
-      bugs.append(process_case(report.product, case, sum(map(lambda o: o.count_this_time, case_occurrences))))
-    bugs = list(sets.Set(bugs))
+    
+    tuples = [process_incoming_occurrence(product, client, incoming_occurrence) for incoming_occurrence in incoming_occurrences]
+    report.occurrences =          [occurrence.key() for bug, occurrence in tuples]
+    bugs               = list(set([bug              for bug, occurrence in tuples]))
     
     bugs_to_email = [b for b in bugs if b.should_spam()]
-    if len(bugs_to_email) > 0:
-      account = report.product.account
-      product_path = 'http://crashkitapp.appspot.com/%s/products/%s' % (account.permalink, report.product.unique_name)
-      
-      e = (report.product.new_bug_notification_emails or '').strip()
-      if len(e) > 0:
-        emails = e.split(',')
-        
+    if bugs_to_email:
+      emails = product.list_of_new_bug_notification_emails()
+      if emails:
         for bug in bugs_to_email:
-          subject_bug_descr = "%s in %s.%s.%s:%s" % (bug.exception_name, bug.exception_package,
-              bug.exception_klass, bug.exception_method, bug.exception_line)
-          if bug.last_email_on is None:
-            designator = 'NEW'
-            tagline = "The following bug has occurred for the first time:"
-          else:
-            designator = 'RECURRING'
-            tagline = "Just a friendly reminder that the following bug is still occurring:"
-          subject = "[CrK %s/%s] %s %s" % (account.permalink, report.product.unique_name, designator, subject_bug_descr)
-          
-          body = u"""
-  %(tagline)s
-
-  Bug:        %(url)s
-  Exception:  %(exception_name)s
-  In:         %(exception_package)s.%(exception_klass)s.%(exception_method)s:%(exception_line)s
-  Occurred:   %(occurrence_count)s
-  Last time:  %(last_occurrence_on)s
-              """ % dict(url='%s/bugs/%s/' % (product_path, bug.key().name()),
-              tagline=tagline,
-              exception_name=bug.exception_name,
-              exception_package=bug.exception_package,
-              exception_klass=bug.exception_klass,
-              exception_method=bug.exception_method,
-              exception_line=bug.exception_line,
-              occurrence_count=decline(bug.occurrence_count, 'once', '# times'),
-              last_occurrence_on=bug.last_occurrence_on)
-      
-          mail.send_mail('crashkit@yoursway.com', emails, subject, body)
-    
-          bug.last_email_on = datetime.now().date()
-          bug.put()
+          send_email_notifications(bug, emails, product.account, product)
 
   except ApiError, e:
     report.error = "%s: %s" % (e.__class__.__name__, e.message)
@@ -89,43 +168,6 @@ def process_report(report):
     return
   report.status = REPORT_OK
   report.put()
-  
-def process_case(product, case, occurrence_count_delta):
-  definitive_location = case.definitive_location(product)
-  dummy_index, case.exception_name, case.exception_package, case.exception_klass, case.exception_method, case.exception_line = definitive_location
-  
-  location_salt = "%s|%s|%s|%s|%s|%d" % (case.language, case.exception_name, case.exception_package, case.exception_klass, case.exception_method, case.exception_line)
-  location_hash = hashlib.sha1(location_salt).hexdigest()
-  
-  def txn(product_key):
-    key_name = Bug.key_name_for(product_key.id_or_name(), location_hash)
-    bug = Bug.get_by_key_name(key_name)
-    if bug == None:
-      bug = Bug(key_name=key_name, product=case.product, exception_name=case.exception_name,
-          exception_package=case.exception_package, exception_klass=case.exception_klass,
-          exception_method=case.exception_method, exception_line=case.exception_line,
-          max_severity=case.severity, occurrence_count=case.occurrence_count,
-          language=case.language,
-          first_occurrence_on=case.first_occurrence_on, last_occurrence_on=case.last_occurrence_on,
-          roles=case.roles, role_count=len(case.roles))
-    else:
-      bug.max_severity        = max(bug.max_severity, case.severity)
-      bug.occurrence_count   += occurrence_count_delta
-      bug.first_occurrence_on = min(bug.first_occurrence_on, case.first_occurrence_on)
-      bug.last_occurrence_on  = max(bug.last_occurrence_on, case.last_occurrence_on)
-      bug.roles               = list(sets.Set(bug.roles + case.roles))
-      bug.role_count          = len(bug.roles)
-    bug.put()
-    return bug
-  bug = db.run_in_transaction(txn, case.product.key())
-  
-  def txn(key):
-    case = Case.get(key)
-    case.bug = bug
-    dummy_index, case.exception_name, case.exception_package, case.exception_klass, case.exception_method, case.exception_line = definitive_location
-    case.put()
-  db.run_in_transaction(txn, case.key())
-  return bug
 
 # class ExceptionInfo(object):
 #   def __init__(self, name, locations):
@@ -145,44 +187,7 @@ def process_case(product, case, occurrence_count_delta):
 #   def __repr__(self):
 #     return 'javalocation(%s, %s, %s, %s)' % (repr(self.package), repr(self.klass), repr(self.method), repr(self.line))
 
-@transaction
-def create_or_update_case(case_hash, product, severity, context, date, count, role, language, exceptions_json):
-  key_name = Case.key_name_for(product.key(), case_hash)
-  case = Case.get_by_key_name(key_name)
-  if case == None:
-    case = Case(key_name=key_name, product=product, context=context,
-      severity=severity, language=language, exceptions=exceptions_json,
-      occurrence_count=count, first_occurrence_on=date, last_occurrence_on=date,
-      roles=[role])
-  else:
-    case.occurrence_count += count
-    if date < case.first_occurrence_on:
-      case.first_occurrence_on = date
-    if date > case.last_occurrence_on:
-      case.last_occurrence_on = date
-    if not role in case.roles:
-      case.roles.append(role)
-  case.put()
-  return case
 
-@transaction
-def create_or_update_occurrence(occurrence_hash, case, client, date, messages, data, env, count, role):
-  key_name = Occurrence.key_name_for(case.key().id_or_name(), client.key().id_or_name(), occurrence_hash)
-  occurrence = Occurrence.get_by_key_name(key_name)
-  if occurrence == None:
-    occurrence = Occurrence(key_name=key_name, case=case, client=client, date=date, count=count,
-        role=role)
-    if messages:
-      occurrence.exception_messages = messages
-    for k, v in data.iteritems():
-      setattr(occurrence, 'data_%s' % k, db.Text(unicode(v)))
-    for k, v in env.iteritems():
-      setattr(occurrence, 'env_%s' % k, db.Text(unicode(v)))
-  else:
-    occurrence.count += count
-  occurrence.put()
-  return occurrence
-  
 def parse_location(el):
   f = el.get('package', '')
   if f == '' or f is None:
@@ -203,46 +208,59 @@ def parse_location(el):
 
 class ReportedOccurrence(object):
   
-  def __init__(self, product, client, data):
-    self.product = product
-    self.client = client
+  def __init__(self, data, product):
+
     if 'date' in data:
       self.date = date(*(time.strptime(data['date'], '%Y-%m-%d')[0:3]))
     else:
       self.date = date.today()
+    
     self.count = int(data.get('count', 1))
+    
     mm = [e.get('message', '') for e in data['exceptions']]
     self.exception_messages = [db.Text(x) for x in mm if len(x) > 0]
+    
     self.severity = (2 if data.get('severity', 'normal') == 'major' else 1)
+    
     self.context_name = data.get('userActionOrScreenNameOrBackgroundProcess', '')
     if self.context_name == '':
       self.context_name = 'unknown'
+    
     self.role = data.get('role', 'customer')
+    
     self.env = data.get('env', {})
     if isinstance(self.env, list):
       self.env = {} # fuck you, PHP
+    
     self.data = data.get('data', {})
     if isinstance(self.data, list):
       self.data = {} # fuck you again
+    
     self.language = data.get('language', 'unknown')
+    
     self.exceptions = [
       dict(name=e['name'],
         locations=[parse_location(el) for el in e['locations']])
       for e in data['exceptions'] ]
+
+    self.exceptions_json = repr(self.exceptions)
+
+    case_salt = "%s|%s|%s|%s" % (self.severity, self.context_name, self.language, self.exceptions_json)
+    self.case_hash = hashlib.sha1(case_salt).hexdigest()
+
+    occurrence_salt = "%s|%s|%s|%s|%s|%s" % (self.case_hash, repr(self.exception_messages), repr(self.env), repr(self.data), self.date, self.role)
+    self.occurrence_hash = hashlib.sha1(occurrence_salt).hexdigest()
+    
+    self.definitive_location = self._compute_definitive_location(product)
+    self.week = date_to_week(self.date)
    
-  def submit(self):
-    context = Context.get_or_insert(Context.key_name_for(self.product.key(), self.context_name),
-        product=self.product, name=self.context_name)
-    
-    exceptions_json = repr(self.exceptions)
-    case_salt = "%s|%s|%s|%s" % (self.severity, self.context_name, self.language, exceptions_json)
-    case_hash = hashlib.sha1(case_salt).hexdigest()
-    
-    occurrence_salt = "%s|%s|%s|%s|%s|%s" % (case_hash, repr(self.exception_messages), repr(self.env), repr(self.data), self.date, self.role)
-    occurrence_hash = hashlib.sha1(occurrence_salt).hexdigest()
-    
-    case = create_or_update_case(case_hash, self.product, self.severity, context, self.date, self.count, self.role, self.language, exceptions_json)
-    occurrence = create_or_update_occurrence(occurrence_hash, case, self.client, self.date,
-        self.exception_messages, self.data, self.env, self.count, self.role)
-    occurrence.count_this_time = self.count
-    return occurrence
+  def _compute_definitive_location(self, product):
+    index = 0
+    for exception in self.exceptions:
+      locations = exception['locations']
+      for location in locations:
+        package_name, class_name, method_name, line = location['package'], location['klass'], location['method'], location['line']
+        if product.is_interesting_package(package_name):
+          return (index, exception['name'], package_name, class_name, method_name, line)
+      index += 1
+    raise StandardError, "No exception info recorded for this case"
