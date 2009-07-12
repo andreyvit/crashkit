@@ -106,7 +106,7 @@ class ClosedBugListHandler(BugListHandler):
     self.show_bug_list(self.all_bugs)
 
   def all_bugs(self):
-    return self.product.bugs.order('-occurrence_count').filter('ticker =', 0)
+    return self.product.bugs.order('-occurrence_count').filter('ticket =', 0)
 
 class RecentCaseListHandler(BaseHandler):
 
