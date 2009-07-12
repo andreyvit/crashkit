@@ -169,25 +169,6 @@ def process_report(report):
   report.status = REPORT_OK
   report.put()
 
-# class ExceptionInfo(object):
-#   def __init__(self, name, locations):
-#     self.name = name
-#     self.locations = locations
-#     
-#   def __repr__(self):
-#     return 'ExceptionInfo(%s, %s)' % (repr(name), repr(locations))
-#   
-# class javalocation(object):
-#   def __init__(self, package, klass, method, line):
-#     self.package = package
-#     self.klass = klass
-#     self.method = method
-#     self.line = line
-#     
-#   def __repr__(self):
-#     return 'javalocation(%s, %s, %s, %s)' % (repr(self.package), repr(self.klass), repr(self.method), repr(self.line))
-
-
 def parse_location(el):
   f = el.get('package', '')
   if f == '' or f is None:
