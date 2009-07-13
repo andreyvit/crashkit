@@ -157,13 +157,21 @@ indexes:
   - name: occurrence_count
     direction: desc
 
+# Used 88 times in query history.
+- kind: BugWeekStat
+  properties:
+  - name: product
+  - name: week
+  - name: count
+    direction: desc
+
 # Unused in query history -- copied from input.
 - kind: Case
   properties:
   - name: bug
   - name: __key__
 
-# Unused in query history -- copied from input.
+# Used 6 times in query history.
 - kind: Case
   properties:
   - name: bug

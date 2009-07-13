@@ -261,12 +261,23 @@ class Occurrence(db.Expando):
     return 'C%s-CL%s-O%s' % (case_key_name, client_key_name, occurrence_hash)
 
 class BugWeekStat(db.Model):
+  product = db.ReferenceProperty(Product, collection_name = 'per_bug_week_stats')
   bug  = db.ReferenceProperty(Bug, collection_name = 'week_stats')
   week = db.IntegerProperty(required=True)
   
   count = db.IntegerProperty(required=True, default=0)
   first = db.DateProperty(required=True)
   last  = db.DateProperty(required=True)
+  
+  @staticmethod
+  def sum(*stats):
+    stats = flatten(stats)
+    result = BugWeekStat(product=stats[0].product, bug=stats[0].bug,
+      week =max(map(lambda s: s.week,  stats)),
+      count=sum(map(lambda s: s.count, stats)),
+      first=min(map(lambda s: s.first, stats)),
+      last =max(map(lambda s: s.last,  stats)))
+    return result
   
   @staticmethod
   def key_name_for(bug_key, week):

@@ -1,5 +1,5 @@
 # -*- coding: utf-8
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 import time
 import logging
 import wsgiref.handlers
@@ -75,38 +75,42 @@ class CompatObtainClientIdHandler(BaseHandler):
 
 class BugListHandler(BaseHandler):
 
-  def show_bug_list(self, all_bugs):
-    compartments = [
-      dict(
-        title = "Bugs experienced only by developers",
-        bugs  = filter(lambda b: not(u'customer' in b.roles or u'tester' in b.roles), all_bugs().filter('roles =', 'developer').fetch(100))),
-      dict(
-        title = "Bugs experienced only by developers and testers",
-        bugs  = filter(lambda b: not(u'customer' in b.roles), all_bugs().filter('roles =', 'tester').fetch(100))),
-      dict(
-        title = "Bugs experienced by customers",
-        bugs  = all_bugs().filter('roles =', 'customer').fetch(100))]
+  def show_bug_list(self, bugs_filter):
+    today = date.today()
+    weeks = [date_to_week(today - timedelta(days=7*i)) for i in range(4)]
+    week_bug_stats = group(lambda s : s._bug, flatten([BugWeekStat.all().filter('product', self.product).filter('week', week).order('-count').fetch(100) for week in weeks]))
     
-    self.data.update(compartments=compartments)
+    per_bug_stats = {}
+    for bug, stats in week_bug_stats.iteritems():
+      per_bug_stats[bug] = BugWeekStat.sum(stats)
+    
+    all_bugs = bugs_filter(Bug.get(per_bug_stats.keys()))
+    for bug in all_bugs:
+      bug.stats = per_bug_stats[bug.key()]
+    all_bugs.sort(lambda a,b: -signum(a.stats.count - b.stats.count))
+    
+    hot_bugs = all_bugs
+    
+    self.data.update(hot_bugs=hot_bugs)
     self.render_and_finish('buglist.html')
 
   @prolog(fetch=['account', 'product'])
   def get(self):
     self.data.update(tabid = 'bugs-tab')
-    self.show_bug_list(self.all_bugs)
+    self.show_bug_list(self.bugs_filter)
 
-  def all_bugs(self):
-    return self.product.bugs.order('-occurrence_count')
+  def bugs_filter(self, bugs):
+    return bugs
 
 class ClosedBugListHandler(BugListHandler):
 
   @prolog(fetch=['account', 'product'])
   def get(self):
     self.data.update(tabid = 'closed-bugs-tab')
-    self.show_bug_list(self.all_bugs)
+    self.show_bug_list(self.bugs_filter)
 
-  def all_bugs(self):
-    return self.product.bugs.order('-occurrence_count').filter('ticket =', 0)
+  def bugs_filter(self, bugs):
+    return filter(lambda b: b.ticket is None, bugs)
 
 class RecentCaseListHandler(BaseHandler):
 

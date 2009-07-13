@@ -65,6 +65,11 @@ def date_to_week(d):
   iso_year, iso_week, iso_weekday = d.isocalendar()
   return iso_year * 100 + iso_week
 
+def signum(int):
+  if(int < 0): return -1
+  elif(int > 0): return 1
+  else: return 0
+
 # def group(seq):
 #     '''seq is a sequence of tuple containing (item_to_be_categorized, category)'''
 #     result = {}

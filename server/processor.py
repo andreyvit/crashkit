@@ -123,7 +123,7 @@ def process_incoming_occurrence(product, client, incoming_occurrence):
   def week_txn(key_name):
     stat = BugWeekStat.get_by_key_name(key_name)
     if stat is None:
-      stat = BugWeekStat(key_name=key_name, bug=bug, week=incoming_occurrence.week,
+      stat = BugWeekStat(key_name=key_name, product=product, bug=bug, week=incoming_occurrence.week,
         count=incoming_occurrence.count, first=incoming_occurrence.date, last=incoming_occurrence.date)
     else:
       stat.count += incoming_occurrence.count
