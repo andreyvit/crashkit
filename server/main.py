@@ -97,12 +97,15 @@ class BugListHandler(BaseHandler):
     cutoff = today - timedelta(days=7*week_count)
     recently_opened_bugs = filter(lambda b: b.created_at.date() >= cutoff, recently_opened_bugs)
     
-    for bug in recently_opened_bugs:
+    recently_occurred_bugs = self.product.bugs.order('-last_occurrence_on').filter('last_occurrence_on >=', cutoff).fetch(100)
+
+    for bug in recently_occurred_bugs + recently_opened_bugs:
       bug.stats = per_bug_stats.get(bug.key())
       if bug.stats is None:
         bug.stats = BugWeekStat.sum(BugWeekStat.all().filter('bug', bug).filter('week >=', date_to_week(cutoff)).fetch(100))
     
-    self.data.update(hot_bugs=hot_bugs, recently_opened_bugs=recently_opened_bugs)
+    self.data.update(hot_bugs=hot_bugs, recently_opened_bugs=recently_opened_bugs,
+        recently_occurred_bugs=recently_occurred_bugs)
     self.render_and_finish('buglist.html')
 
   @prolog(fetch=['account', 'product'])
