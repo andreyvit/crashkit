@@ -76,8 +76,10 @@ class CompatObtainClientIdHandler(BaseHandler):
 class BugListHandler(BaseHandler):
 
   def show_bug_list(self, bugs_filter):
+    week_count = 4
+    
     today = date.today()
-    weeks = [date_to_week(today - timedelta(days=7*i)) for i in range(4)]
+    weeks = [date_to_week(today - timedelta(days=7*i)) for i in range(week_count)]
     week_bug_stats = group(lambda s : s._bug, flatten([BugWeekStat.all().filter('product', self.product).filter('week', week).order('-count').fetch(100) for week in weeks]))
     
     per_bug_stats = {}
@@ -91,7 +93,16 @@ class BugListHandler(BaseHandler):
     
     hot_bugs = all_bugs
     
-    self.data.update(hot_bugs=hot_bugs)
+    recently_opened_bugs = self.product.bugs.order('-created_at').fetch(20)
+    cutoff = today - timedelta(days=7*week_count)
+    recently_opened_bugs = filter(lambda b: b.created_at.date() >= cutoff, recently_opened_bugs)
+    
+    for bug in recently_opened_bugs:
+      bug.stats = per_bug_stats.get(bug.key())
+      if bug.stats is None:
+        bug.stats = BugWeekStat.sum(BugWeekStat.all().filter('bug', bug).filter('week >=', date_to_week(cutoff)).fetch(100))
+    
+    self.data.update(hot_bugs=hot_bugs, recently_opened_bugs=recently_opened_bugs)
     self.render_and_finish('buglist.html')
 
   @prolog(fetch=['account', 'product'])

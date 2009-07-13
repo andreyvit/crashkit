@@ -10,6 +10,13 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
+# Used 12 times in query history.
+- kind: Bug
+  properties:
+  - name: product
+  - name: created_at
+    direction: desc
+
 # Unused in query history -- copied from input.
 - kind: Bug
   properties:
@@ -157,7 +164,13 @@ indexes:
   - name: occurrence_count
     direction: desc
 
-# Used 88 times in query history.
+# Unused in query history -- copied from input.
+- kind: BugWeekStat
+  properties:
+  - name: bug
+  - name: week
+
+# Used 260 times in query history.
 - kind: BugWeekStat
   properties:
   - name: product

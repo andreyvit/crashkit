@@ -1,4 +1,4 @@
-<div class="problem-box sev{{ bug.max_severity }} clearfix">
+<div class="problem-box {%if smallbug %}smaller{%endif%} sev{{ bug.max_severity }} clearfix">
   <a class="dropin" title="{{ bug.bug_name }}" href="bugs/{{ bug.key.name }}/">
     {{bug.stats.count|scalenum|safe}}
     <span class="caption">{% ifequal bug.stats.count 1 %}occurrence{% else %}occurrences{%endifequal%}</span>

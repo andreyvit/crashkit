@@ -91,10 +91,10 @@ h1 .back, h1 a.back:visited { margin-left: -100px; width: 100px; float: left; fo
 h1 a.back { display: block; }
 h1 a.back, h1 a.back:visited { color: black; }
 
-.product .problem-box { width: 300px; line-height: 1; font-size: 0.8em; }
-.product .problem-box .dropin { width: 80px; font-size: 3em; height: 1.33em; padding: 0.2em 0em;}
-.product .problem-box h2, .product .problem-box p { margin-left: 90px; }
-.product .problem-box .dropin .caption { display: block; font-size: 0.27em; }
+.product .problem-box, .problem-box.smaller { width: 300px; line-height: 1; font-size: 0.8em; }
+.product .problem-box .dropin, .problem-box.smaller .dropin { width: 80px; font-size: 3em; height: 1.33em; padding: 0.2em 0em;}
+.product .problem-box h2, .product .problem-box p, .problem-box.smaller h2, .problem-box.smaller p{ margin-left: 90px; }
+.product .problem-box .dropin .caption, .problem-box.smaller .dropin .caption { display: block; font-size: 0.27em; }
 
 .flash { background: gold; padding: 4px 10px; }
 .flashbox { margin: -8px 0px -14px 0px; text-align: center; }

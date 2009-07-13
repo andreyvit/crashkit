@@ -3,8 +3,18 @@
 {% block content %}
 
 <div class="long-container">
+  {% if recently_opened_bugs %}
+    <h2>Recently opened bugs</h2>
+    {% set bugs recently_opened_bugs %}
+    {% set smallbug 1 %}
+    {% include 'buglist-list.html' %}
+  {% else %}
+    <h2>No recently opened bugs</h2>
+  {% endif %}
+  
   <h2>Hot bugs</h2>
   {% set bugs hot_bugs %}
+  {% set smallbug 0 %}
   {% include 'buglist-list.html' %}
 </div>
 
