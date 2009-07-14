@@ -102,7 +102,13 @@ class BugListHandler(BaseHandler):
     for bug in recently_occurred_bugs + recently_opened_bugs:
       bug.stats = per_bug_stats.get(bug.key())
       if bug.stats is None:
-        bug.stats = BugWeekStat.sum(BugWeekStat.all().filter('bug', bug).filter('week >=', date_to_week(cutoff)).fetch(100))
+        stats = BugWeekStat.all().filter('bug', bug).filter('week >=', date_to_week(cutoff)).fetch(100)
+        if stats:
+          bug.stats = BugWeekStat.sum(stats)
+        else:
+          logging.warn("Strange: no recent weekly stats for recently occurred bug %s" % bug.key().id_or_name())
+          bug.stats = BugWeekStat(bug=bug, product=self.product, week=date_to_week(today),
+              count=0, first=None, last=None)
     
     self.data.update(hot_bugs=hot_bugs, recently_opened_bugs=recently_opened_bugs,
         recently_occurred_bugs=recently_occurred_bugs)

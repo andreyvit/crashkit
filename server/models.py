@@ -266,8 +266,8 @@ class BugWeekStat(db.Model):
   week = db.IntegerProperty(required=True)
   
   count = db.IntegerProperty(required=True, default=0)
-  first = db.DateProperty(required=True)
-  last  = db.DateProperty(required=True)
+  first = db.DateProperty() # not marked as required because sometimes it's convenient to put None here (in memory)
+  last  = db.DateProperty() # ditto
   
   @staticmethod
   def sum(*stats):
