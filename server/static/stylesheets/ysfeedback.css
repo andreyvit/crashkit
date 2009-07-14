@@ -52,8 +52,8 @@ td, th { vertical-align: middle; white-space: nowrap; }
 table, table td { border-top: 1px solid #777; border-bottom: 1px solid #777; }
 table td, table th { padding-right: 10px; padding-left: 10px; }
 tr.header, tr.header td, tr.header th { background: #000; color: #eee; }
-tr.even, tr.even td { background: #e7e7e7; }
-td.evencol { background: #fff; }
+tr.even, tr.even td { background: #e8e8e8; }
+td.evencol { background: #f7f7f7; }
 tr.even td.evencol { background: #ededed !important; }
 
 .date, .dim { color: #777; }
@@ -103,6 +103,24 @@ h1 a.back, h1 a.back:visited { color: black; }
 .userinfo #userid { }
 .userinfo { color: #777; }
 .userinfo a, .userinfo a:visited, .userinfo a:hover { color: #333; }
+
+/* bug table */
+
+table.buglist { border-collapse: collapse; }
+.buglist col.blcheck { width: 8px; }
+.buglist col.blcount { width: 24px; }
+.buglist col.blname { width: 36ex; }
+.buglist col.blpackage { }
+.buglist col.blmethod { width: 24ex; }
+.buglist tr {  }
+.buglist tr.even { }
+.buglist td.blcount, .buglist td.bllast { text-align: center; }
+.buglist td.blage, .buglist td.bllast, .buglist td.blskip { color: #777; font-size: 80%; }
+.buglist td { border-bottom: none !important; }
+.buglist td.blage, .buglist td.bllast, .buglist td.blskip { border: none;  }
+.buglist tr.r1 td { line-height: 1; padding-top: 0.2em; padding-bottom: 0.2em; }
+.buglist tr.r2 td { line-height: 1; padding-bottom: 0.2em; }
+
 
 /* begin css tabs */
 
