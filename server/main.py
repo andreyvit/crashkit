@@ -75,72 +75,64 @@ class CompatObtainClientIdHandler(BaseHandler):
 
 class BugListHandler(BaseHandler):
 
-  def show_bug_list(self, bugs_filter):
+  def show_bug_list(self):
     week_count = 4
     
-    today = date.today()
-    weeks = [date_to_week(today - timedelta(days=7*i)) for i in range(week_count)]
-    week_bug_stats = group(lambda s : s._bug, flatten([BugWeekStat.all().filter('product', self.product).filter('week', week).order('-count').fetch(100) for week in weeks]))
+    bugs = self.bugs_query_filter(self.product.bugs).order('-last_occurrence_on').fetch(1000)
     
-    per_bug_stats = {}
-    for bug, stats in week_bug_stats.iteritems():
-      per_bug_stats[bug] = BugWeekStat.sum(stats)
+    interesting_stat_keys = []
+    for bug in bugs:
+      interesting_stat_keys += [BugWeekStat.key_name_for(bug.key(), date_to_week(bug.last_occurrence_on - timedelta(days=7*i))) for i in range(week_count)]
+    stats = BugWeekStat.get_by_key_name(interesting_stat_keys)
+    stats = filter(lambda s: s is not None, stats)
+    stats = dict([ (b, BugWeekStat.sum(ss)) for b,ss in group(lambda s: s._bug, stats).items() ])
     
-    all_bugs = bugs_filter(Bug.get(per_bug_stats.keys()))
-    for bug in all_bugs:
-      bug.stats = per_bug_stats[bug.key()]
-    all_bugs.sort(lambda a,b: -signum(a.stats.count - b.stats.count))
+    for bug in bugs:
+      bug.stats = stats.get(bug.key())
+    bugs = filter(lambda b: b.stats is not None, bugs)
     
-    hot_bugs = all_bugs
+    grouped_bugs = group(lambda bug: date_to_week(bug.last_occurrence_on), bugs).items()
+    grouped_bugs = sorted(grouped_bugs, lambda a,b: -signum(a[0]-b[0]))
     
-    recently_opened_bugs = bugs_filter(self.product.bugs.order('-created_at').fetch(20))
-    cutoff = today - timedelta(days=7*week_count)
-    recently_opened_bugs = filter(lambda b: b.created_at.date() >= cutoff, recently_opened_bugs)
-    
-    recently_occurred_bugs = bugs_filter(self.product.bugs.order('-last_occurrence_on').filter('last_occurrence_on >=', cutoff).fetch(100))
-
-    for bug in recently_occurred_bugs + recently_opened_bugs:
-      bug.stats = per_bug_stats.get(bug.key())
-      if bug.stats is None:
-        stats = BugWeekStat.all().filter('bug', bug).filter('week >=', date_to_week(cutoff)).fetch(100)
-        if stats:
-          bug.stats = BugWeekStat.sum(stats)
-        else:
-          logging.warn("Strange: no recent weekly stats for recently occurred bug %s" % bug.key().id_or_name())
-          bug.stats = BugWeekStat(bug=bug, product=self.product, week=date_to_week(today),
-              count=0, first=None, last=None)
-    
-    self.data.update(hot_bugs=hot_bugs, recently_opened_bugs=recently_opened_bugs,
-        recently_occurred_bugs=recently_occurred_bugs)
+    self.data.update(grouped_bugs=grouped_bugs)
     self.render_and_finish('buglist.html')
 
   @prolog(fetch=['account', 'product'])
   def get(self):
     self.data.update(tabid = 'bugs-tab')
-    self.show_bug_list(self.bugs_filter)
+    self.show_bug_list()
 
   def bugs_filter(self, bugs):
     return filter(lambda b: b.state == BUG_OPEN, bugs)
+
+  def bugs_query_filter(self, bugs):
+    return bugs.filter('state', BUG_OPEN)
 
 class ClosedBugListHandler(BugListHandler):
 
   @prolog(fetch=['account', 'product'])
   def get(self):
     self.data.update(tabid = 'closed-bugs-tab')
-    self.show_bug_list(self.bugs_filter)
+    self.show_bug_list()
 
   def bugs_filter(self, bugs):
     return filter(lambda b: b.state == BUG_CLOSED, bugs)
+
+  def bugs_query_filter(self, bugs):
+    return bugs.filter('state', BUG_CLOSED)
 
 class IgnoredBugListHandler(BugListHandler):
 
   @prolog(fetch=['account', 'product'])
   def get(self):
     self.data.update(tabid = 'ignored-bugs-tab')
-    self.show_bug_list(self.bugs_filter)
+    self.show_bug_list()
 
   def bugs_filter(self, bugs):
     return filter(lambda b: b.state == BUG_IGNORED, bugs)
+
+  def bugs_query_filter(self, bugs):
+    return bugs.filter('state', BUG_IGNORED)
 
 class RecentCaseListHandler(BaseHandler):
 

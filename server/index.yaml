@@ -154,7 +154,15 @@ indexes:
   - name: ticket
   - name: roles
 
-# Used 22 times in query history.
+# Used 3 times in query history.
+- kind: Bug
+  properties:
+  - name: product
+  - name: state
+  - name: last_occurrence_on
+    direction: desc
+
+# Used 15 times in query history.
 - kind: Bug
   properties:
   - name: product
