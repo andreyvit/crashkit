@@ -12,8 +12,21 @@
       <h2>
           {{ bug.exception_name }}: <span class="dim">{{ cover_message|midshorten:10000 }}</span>
       </h2>
-      <p>{{ bug.exception_package }}<br>
-      {{ bug.exception_klass }}<span class="dim">.{{ bug.exception_method }} {{ bug.exception_line }}</span></p>
+      <p>
+        {{ bug.exception_package }}<br>
+        {% if bug.exception_klass and bug.exception_method %}
+          {{ bug.exception_klass }}<span class="dim">.{{ bug.exception_method }} {{ bug.exception_line }}</span>
+        {% endif %}
+        {% if bug.exception_klass and not bug.exception_method %}
+          {{ bug.exception_klass }} <span class="dim">{{ bug.exception_line }}</span>
+        {% endif %}
+        {% if not bug.exception_klass and bug.exception_method %}
+          {{ bug.exception_method }} <span class="dim">{{ bug.exception_line }}</span>
+        {% endif %}
+        {% if not bug.exception_klass and not bug.exception_method %}
+          <span class="dim">{{ bug.exception_line }}</span>
+        {% endif %}
+      </p>
     <p class="date">
       {% ifequal bug.first_occurrence_on bug.last_occurrence_on %}Occurred {{ bug.first_occurrence_on|naturalday:"%b %d, %Y" }}{% else %}Occurring {{ bug.first_occurrence_on|naturalday:"%b %d, %Y" }} till {{ bug.last_occurrence_on|naturalday:"%b %d, %Y"}}{% endifequal %}
     </p>
@@ -53,7 +66,20 @@
         <tr class="{% cycle odd,even %}">
           <td>{% if forloop.first %}<small>{{ exception.name }}</small>{% endif %}</td>
           <td class="evencol" style="text-align: right">{{ location.package }}</td>
-          <td>{{location.klass}}<span class="dim">.{{location.method}} {{location.line}}</span></td>
+          <td>
+            {% if location.klass and location.method %}
+              {{ location.klass }}<span class="dim">.{{ location.method }} {{ location.line }}</span>
+            {% endif %}
+            {% if location.klass and not location.method %}
+              {{ location.klass }} <span class="dim">{{ location.line }}</span>
+            {% endif %}
+            {% if not location.klass and location.method %}
+              {{ location.method }} <span class="dim">{{ location.line }}</span>
+            {% endif %}
+            {% if not location.klass and not location.method %}
+              <span class="dim">{{ location.line }}</span>
+            {% endif %}
+          </td>
         </tr>
       {% endfor %}
     {% endfor %}

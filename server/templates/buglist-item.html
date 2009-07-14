@@ -2,8 +2,21 @@
   <td class="blcheck" rowspan="2"><input type="checkbox" /> </td>
   <td class="blcount evencol" rowspan="2">{{ bug.last_occurrence_on|naturaldate}}</td>
   <td class="blname"><a href="bugs/{{ bug.key.name }}/">{{ bug.exception_name }}</a></td>
-  <td class="blpackage evencol" rowspan="2" style="text-align: right;">{{ bug.exception_package|smartshorten:45 }}</td>
-  <td class="blmethod" rowspan="2">{{ bug.exception_klass|smartshorten:25|split_klass }}<small>.{{ bug.exception_method|smartshorten:20 }}&nbsp;<span class="dim">{{ bug.exception_line }}</span></small></td>
+  <td class="blpackage evencol" rowspan="2" style="text-align: right;">{{ bug.exception_package }}</td>
+  <td class="blmethod" rowspan="2">
+    {% if bug.exception_klass and bug.exception_method %}
+      {{ bug.exception_klass }}<small>.{{ bug.exception_method }} <span class="dim">{{ bug.exception_line }}</span></small>
+    {% endif %}
+    {% if bug.exception_klass and not bug.exception_method %}
+      {{ bug.exception_klass }} <small><span class="dim">{{ bug.exception_line }}</span></small>
+    {% endif %}
+    {% if not bug.exception_klass and bug.exception_method %}
+      {{ bug.exception_method }} <small><span class="dim">{{ bug.exception_line }}</span></small>
+    {% endif %}
+    {% if not bug.exception_klass and not bug.exception_method %}
+      <small><span class="dim">{{ bug.exception_line }}</span></small>
+    {% endif %}
+  </td>
   <td class="blcount evencol">
     {{bug.stats.count|scalenum|safe}}<span class="dim"><small>/mo</small></span>
   </td>
