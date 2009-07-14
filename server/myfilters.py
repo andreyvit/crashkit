@@ -180,7 +180,7 @@ def smartshorten(s, target_len):
   return result
 
 @register.filter
-def naturalday(value, fmt = '%A'):
+def naturalday(value, fmt = None):
   today = datetime.date.today()
   try:
     value = datetime.date(value.year, value.month, value.day)
@@ -193,7 +193,25 @@ def naturalday(value, fmt = '%A'):
       return 'tomorrow'
   elif value == today - delta:
       return 'yesterday'
+  elif fmt is None:
+    if value < today - datetime.timedelta(days=180) or value > today + datetime.timedelta(days=180):
+      fmt = "%b %d, %Y"
+    else:
+      fmt = "%b %d"
   return value.strftime(str(fmt).replace('_', ' '))
+
+@register.filter
+def naturaldate(value):
+  today = datetime.date.today()
+  try:
+    value = datetime.date(value.year, value.month, value.day)
+  except Exception, e:
+    return "%s" % e.__class__.__name__ 
+  if value < today - datetime.timedelta(days=180) or value > today + datetime.timedelta(days=180):
+    fmt = "%b %d, %Y"
+  else:
+    fmt = "%b %d"
+  return value.strftime(fmt)
 
 @register.filter
 def daysold(value):
@@ -206,6 +224,6 @@ def daysold(value):
     return 'yesterday'
   else:
     delta = today - value
-    return '%d days old' % delta
+    return '%d days old' % delta.days
   
 # register.filter(time_delta_in_words)
