@@ -1,5 +1,12 @@
 <div class="clearfix">
-{% for bug in bugs %}
-  {% include 'buglist-item.html' %}
-{% endfor %}
+  <table class="buglist" width="100%" cellspacing="0">
+    <col class="blcheck" />
+    <col class="blcount" />
+    <col class="blname" />
+    <col class="blpackage" />
+    <col class="blmethod" />
+    {% for bug in bugs %}
+      {% include 'buglist-item.html' %}
+    {% endfor %}
+  </table>
 </div>
