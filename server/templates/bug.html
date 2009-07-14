@@ -37,6 +37,27 @@
   <table style="width: 80%">
     <col width="230" />
     <tr>
+      <td>State</td>
+      <td>
+        {{ bug.state_name }}
+        {% if product_access.is_write_allowed %}
+          — 
+          <form id="state-form" action="change-state" method="POST" style="display: inline">
+            {% ifequal bug.state_name 'open' %}
+              <input type="submit" name="close" value="Close" />
+              <input type="submit" name="ignore" value="Ignore" />
+            {% endifequal %}
+            {% ifequal bug.state_name 'closed' %}
+              <input type="submit" name="open" value="Reopen" />
+            {% endifequal %}
+            {% ifequal bug.state_name 'ignored' %}
+              <input type="submit" name="open" value="Reopen" />
+            {% endifequal %}
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+    <tr>
       <td>{{ product.bug_tracker_name }} ticket id</td>
       <td>
         {% if bug.ticket %}

@@ -154,13 +154,23 @@ class Attachment(db.Model):
   def key_name_for(product, blob_hash):
     return 'P%s-B%s' % (product.id_or_name(), blob_hash)
   
-  
+BUG_OPEN = 0
+BUG_CLOSED = 1
+BUG_IGNORED = 2
+
+STATES_AND_NAMES = ((BUG_OPEN, 'open'), (BUG_CLOSED, 'closed'), (BUG_IGNORED, 'ignored'))
+STATES_TO_NAMES = dict(STATES_AND_NAMES)
     
 class Bug(db.Model):
   product = db.ReferenceProperty(Product, required=True, collection_name='bugs')
   ticket  = db.ReferenceProperty(Ticket, collection_name = "bugs")
   # name    = db.StringProperty(required=True)
   language = db.StringProperty()
+  
+  state = db.IntegerProperty(choices=[BUG_OPEN, BUG_CLOSED, BUG_IGNORED])
+  
+  def state_name(self):
+    return STATES_TO_NAMES[self.state]
   
   @staticmethod
   def key_name_for(product_id, location_hash):

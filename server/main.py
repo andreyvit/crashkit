@@ -93,11 +93,11 @@ class BugListHandler(BaseHandler):
     
     hot_bugs = all_bugs
     
-    recently_opened_bugs = self.product.bugs.order('-created_at').fetch(20)
+    recently_opened_bugs = bugs_filter(self.product.bugs.order('-created_at').fetch(20))
     cutoff = today - timedelta(days=7*week_count)
     recently_opened_bugs = filter(lambda b: b.created_at.date() >= cutoff, recently_opened_bugs)
     
-    recently_occurred_bugs = self.product.bugs.order('-last_occurrence_on').filter('last_occurrence_on >=', cutoff).fetch(100)
+    recently_occurred_bugs = bugs_filter(self.product.bugs.order('-last_occurrence_on').filter('last_occurrence_on >=', cutoff).fetch(100))
 
     for bug in recently_occurred_bugs + recently_opened_bugs:
       bug.stats = per_bug_stats.get(bug.key())
@@ -120,7 +120,7 @@ class BugListHandler(BaseHandler):
     self.show_bug_list(self.bugs_filter)
 
   def bugs_filter(self, bugs):
-    return bugs
+    return filter(lambda b: b.state == BUG_OPEN, bugs)
 
 class ClosedBugListHandler(BugListHandler):
 
@@ -130,7 +130,17 @@ class ClosedBugListHandler(BugListHandler):
     self.show_bug_list(self.bugs_filter)
 
   def bugs_filter(self, bugs):
-    return filter(lambda b: b.ticket is None, bugs)
+    return filter(lambda b: b.state == BUG_CLOSED, bugs)
+
+class IgnoredBugListHandler(BugListHandler):
+
+  @prolog(fetch=['account', 'product'])
+  def get(self):
+    self.data.update(tabid = 'ignored-bugs-tab')
+    self.show_bug_list(self.bugs_filter)
+
+  def bugs_filter(self, bugs):
+    return filter(lambda b: b.state == BUG_IGNORED, bugs)
 
 class RecentCaseListHandler(BaseHandler):
 
@@ -257,6 +267,25 @@ class AssignTicketToBugHandler(BaseHandler):
     
     self.redirect_and_finish(".")
 
+class ChangeBugStateHandler(BaseHandler):
+  
+  @prolog(fetch=['account', 'product', 'bug'], check=['is_product_write_allowed'])
+  def post(self):
+    if self.request.get('open'):
+      new_state = BUG_OPEN
+    elif self.request.get('close'):
+      new_state = BUG_CLOSED
+    elif self.request.get('ignore'):
+      new_state = BUG_IGNORED
+      
+    def txn(bug_key=self.bug.key()):
+      b = Bug.get(bug_key)
+      b.state = new_state
+      b.put()
+    db.run_in_transaction(txn, self.bug.key())
+    
+    self.redirect_and_finish(".")
+
 class CompatPostBugReportHandler(BaseHandler):
 
   @prolog(fetch=['compat_account', 'product_nocheck', 'client', 'client_cookie'])
@@ -365,9 +394,11 @@ url_mapping = [
   ('/([a-zA-Z0-9._-]+)/products/(new)/', ProductSettingsHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/', BugListHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/closed', ClosedBugListHandler),
+  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/ignored', IgnoredBugListHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/settings', ProductSettingsHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/', BugHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/assign-ticket', AssignTicketToBugHandler),
+  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/change-state', ChangeBugStateHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/blob/([a-zA-Z0-9]+)/', ViewBlobHandler),
 ]
 
