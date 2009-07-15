@@ -4,6 +4,10 @@
 
 <div class="long-container">
   
+  <p>
+    New in CrashKit:&nbsp; Close and ignore bugs.&nbsp; Updated bug list format.&nbsp; <a href="mailto:support@yoursway.com">Feedback?</a>
+  </p>
+  
   {% for week, week_start, week_end, bugs in grouped_bugs %}
     <h2>{{ week_start|naturaldate }} – {{ week_end|naturaldate }}</h2>
     {% include 'buglist-list.html' %}
