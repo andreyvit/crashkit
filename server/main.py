@@ -91,9 +91,15 @@ class BugListHandler(BaseHandler):
       bug.stats = stats.get(bug.key())
     bugs = filter(lambda b: b.stats is not None, bugs)
     
+    def sort_bugs_of_a_week(week_start, week_end, bugs):
+      for bug in bugs:
+        bug.is_new_on_last_week = between(bug.created_at.date(), week_start, week_end)
+      return sorted(bugs, lambda a,b: -10*signum(a.is_new_on_last_week-b.is_new_on_last_week) -signum(a.stats.count-b.stats.count))
+    
     grouped_bugs = group(lambda bug: date_to_week(bug.last_occurrence_on), bugs).items()
     grouped_bugs = sorted(grouped_bugs, lambda a,b: -signum(a[0]-b[0]))
     grouped_bugs = [ (week, week_to_start_date(week), week_to_end_date(week), bugs ) for week, bugs in grouped_bugs ]
+    grouped_bugs = [ (week, week_start, week_end, sort_bugs_of_a_week(week_start, week_end, bugs)) for week, week_start, week_end, bugs in grouped_bugs ]
     
     self.data.update(grouped_bugs=grouped_bugs)
     self.render_and_finish('buglist.html')

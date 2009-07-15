@@ -23,7 +23,10 @@
 </tr>
 <tr class="r2 {% cycle 'odd' 'even' %}">
   <td class="bllast evencol">
-    {{ bug.occurrence_count }} total
+    {% if bug.is_new_on_last_week %}
+    {% else %}
+      {{ bug.occurrence_count }} total
+    {% endif %}
   </td>
   <td class="blskip">
     {{ bug.first_occurrence_on|daysold }}

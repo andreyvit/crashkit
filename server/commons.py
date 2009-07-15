@@ -65,6 +65,9 @@ def date_to_week(d):
   iso_year, iso_week, iso_weekday = d.isocalendar()
   return iso_year * 100 + iso_week
   
+def between(value, start, end):
+  return value >= start and value <= end
+  
 def week_to_start_date(w):
   return iso_year_week_day_to_date(int(w / 100), w % 100, 1)
   
