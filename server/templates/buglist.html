@@ -4,8 +4,8 @@
 
 <div class="long-container">
   
-  {% for week, bugs in grouped_bugs %}
-    <h2>{{ week }}</h2>
+  {% for week, week_start, week_end, bugs in grouped_bugs %}
+    <h2>{{ week_start|naturaldate }} – {{ week_end|naturaldate }}</h2>
     {% include 'buglist-list.html' %}
   {% endfor %}
   

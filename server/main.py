@@ -93,6 +93,7 @@ class BugListHandler(BaseHandler):
     
     grouped_bugs = group(lambda bug: date_to_week(bug.last_occurrence_on), bugs).items()
     grouped_bugs = sorted(grouped_bugs, lambda a,b: -signum(a[0]-b[0]))
+    grouped_bugs = [ (week, week_to_start_date(week), week_to_end_date(week), bugs ) for week, bugs in grouped_bugs ]
     
     self.data.update(grouped_bugs=grouped_bugs)
     self.render_and_finish('buglist.html')
