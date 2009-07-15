@@ -72,7 +72,8 @@ def process_incoming_occurrence(product, client, incoming_occurrence):
           max_severity=incoming_occurrence.severity, occurrence_count=incoming_occurrence.count,
           language=incoming_occurrence.language,
           first_occurrence_on=incoming_occurrence.date, last_occurrence_on=incoming_occurrence.date,
-          roles=[incoming_occurrence.role], role_count=1)
+          roles=[incoming_occurrence.role], role_count=1,
+          state=BUG_OPEN)
     else:
       bug.max_severity        = max(bug.max_severity, incoming_occurrence.severity)
       bug.occurrence_count   += incoming_occurrence.count
