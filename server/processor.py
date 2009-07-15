@@ -199,7 +199,7 @@ class ReportedOccurrence(object):
     self.count = int(data.get('count', 1))
     
     mm = [e.get('message', '') for e in data['exceptions']]
-    self.exception_messages = [db.Text(x) for x in mm if len(x) > 0]
+    self.exception_messages = [db.Text(x) for x in mm if x]
     
     self.severity = (2 if data.get('severity', 'normal') == 'major' else 1)
     
