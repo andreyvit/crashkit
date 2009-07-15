@@ -1,6 +1,8 @@
 <tr class="r1 {% cycle 'odd' 'even' %}">
   <td class="blcheck" rowspan="2"><input type="checkbox" /> </td>
-  <td class="blcount evencol" rowspan="2">{{ bug.last_occurrence_on|naturaldate}}</td>
+  <td class="blcount evencol">
+    {{bug.stats.count|scalenum|safe}}<span class="dim"><small>/mo</small></span>
+  </td>
   <td class="blname"><a href="bugs/{{ bug.key.name }}/">{{ bug.exception_name }}</a></td>
   <td class="blpackage evencol" rowspan="2" style="text-align: right;">{{ bug.exception_package }}</td>
   <td class="blmethod" rowspan="2">
@@ -17,15 +19,16 @@
       <small><span class="dim">{{ bug.exception_line }}</span></small>
     {% endif %}
   </td>
-  <td class="blcount evencol">
-    {{bug.stats.count|scalenum|safe}}<span class="dim"><small>/mo</small></span>
-  </td>
+  <td class="blcount evencol">{{ bug.last_occurrence_on|naturaldate}}</td>
 </tr>
 <tr class="r2 {% cycle 'odd' 'even' %}">
+  <td class="bllast evencol">
+    {{ bug.occurrence_count }} total
+  </td>
   <td class="blskip">
     {{ bug.first_occurrence_on|daysold }}
   </td>
   <td class="bllast evencol">
-    {{ bug.occurrence_count }} total
+    last occur.
   </td>
 </tr>
