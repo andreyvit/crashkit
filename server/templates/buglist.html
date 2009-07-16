@@ -12,14 +12,23 @@
     New in CrashKit:&nbsp; Close and ignore bugs.&nbsp; Updated bug list format.&nbsp; <a href="mailto:support@yoursway.com">Feedback?</a>
   </p>
 
-  {% include 'buglist-actionbar.html' %}
-  
-  {% for week, week_start, week_end, bugs in grouped_bugs %}
-    <h2>{{ week_start|naturaldate }} – {{ week_end|naturaldate }}</h2>
-    {% include 'buglist-list.html' %}
-  {% endfor %}
+  {% if grouped_bugs %}
+    {% include 'buglist-actionbar.html' %}
+    
+    {% for week, week_start, week_end, bugs in grouped_bugs %}
+      <h2>{{ week_start|naturaldate }} – {{ week_end|naturaldate }}</h2>
+      {% include 'buglist-list.html' %}
+    {% endfor %}
 
-  {% include 'buglist-actionbar.html' %}
+    {% include 'buglist-actionbar.html' %}
+  {% else %}
+    {% ifequal tabid 'bugs-tab' %}
+      <h2>Hooray, no open bugs</h2>
+      <p>Perhaps you want to read <a href="{{product_path}}/help/integration">integration instructions</a>?</p>
+    {% else %}
+      <h2>No bugs here at the moment</h2>
+    {% endifequal %}
+  {% endif %}
   
 </div>
 
