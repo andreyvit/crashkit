@@ -107,6 +107,7 @@ class BugListHandler(BaseHandler):
   @prolog(fetch=['account', 'product'])
   def get(self):
     self.data.update(tabid = 'bugs-tab')
+    self.data.update(mass_actions=dict(reopen=False, close=True, ignore=True))
     self.show_bug_list()
 
   def bugs_filter(self, bugs):
@@ -120,6 +121,7 @@ class ClosedBugListHandler(BugListHandler):
   @prolog(fetch=['account', 'product'])
   def get(self):
     self.data.update(tabid = 'closed-bugs-tab')
+    self.data.update(mass_actions=dict(reopen=True, close=False, ignore=False))
     self.show_bug_list()
 
   def bugs_filter(self, bugs):
@@ -133,6 +135,7 @@ class IgnoredBugListHandler(BugListHandler):
   @prolog(fetch=['account', 'product'])
   def get(self):
     self.data.update(tabid = 'ignored-bugs-tab')
+    self.data.update(mass_actions=dict(reopen=True, close=False, ignore=False))
     self.show_bug_list()
 
   def bugs_filter(self, bugs):
@@ -285,6 +288,38 @@ class ChangeBugStateHandler(BaseHandler):
     
     self.redirect_and_finish(".")
 
+class MassBugStateEditHandler(BaseHandler):
+  
+  @prolog(fetch=['account', 'product'], check=['is_product_write_allowed'])
+  def post(self):
+    action = self.request.get('action')
+    key_names = map(lambda s: s.strip(), self.request.get('bugs').strip().split("\n"))
+    
+    logging.info(repr(key_names))
+    
+    if action == 'reopen':
+      new_state = BUG_OPEN
+    elif action == 'close':
+      new_state = BUG_CLOSED
+    elif action == 'ignore':
+      new_state = BUG_IGNORED
+    else:
+      self.error(400)
+      self.response.out.write("Invalid action: '%s'" % action)
+      return
+
+    bugs = Bug.get_by_key_name(key_names)
+    bugs = filter(lambda b: b is not None, bugs)
+    for bug in bugs:
+      if bug._product != self.product.key():
+        self.error(400)
+        self.response.out.write("Invalid reference to a bug from another product: '%s'" % bug.key().name())
+        return
+      bug.state = new_state
+    db.put(bugs)
+    
+    self.redirect_and_finish(".")
+
 class CompatPostBugReportHandler(BaseHandler):
 
   @prolog(fetch=['compat_account', 'product_nocheck', 'client', 'client_cookie'])
@@ -395,6 +430,7 @@ url_mapping = [
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/closed', ClosedBugListHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/ignored', IgnoredBugListHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/settings', ProductSettingsHandler),
+  ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/mass-state-edit', MassBugStateEditHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/', BugHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/assign-ticket', AssignTicketToBugHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/bugs/([a-zA-Z0-9._-]+)/change-state', ChangeBugStateHandler),

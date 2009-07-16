@@ -1,0 +1,16 @@
+<div class="actionbar">
+  <div class="buttons">
+    {% if mass_actions.reopen %}
+      <button class="mass-reopen">Reopen</button>
+    {% endif %}
+    {% if mass_actions.close %}
+      <button class="mass-close">Close</button>
+    {% endif %}
+    {% if mass_actions.ignore %}
+      <button class="mass-ignore">Ignore</button>
+    {% endif %}
+  </div>
+  <div class="selection">
+    Select: <a href="#" class="select-all">All</a>, <a href="#" class="select-none">None</a>
+  </div>
+</div>

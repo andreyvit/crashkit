@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
 {% block title %}{{ product.friendly_name}} Bugs{% endblock %}
+{% block js %}
+  {{js.super}}
+  <script src="/static/javascript/buglist.js"></script>
+{% endblock %}
 {% block content %}
 
 <div class="long-container">
@@ -7,12 +11,21 @@
   <p>
     New in CrashKit:&nbsp; Close and ignore bugs.&nbsp; Updated bug list format.&nbsp; <a href="mailto:support@yoursway.com">Feedback?</a>
   </p>
+
+  {% include 'buglist-actionbar.html' %}
   
   {% for week, week_start, week_end, bugs in grouped_bugs %}
     <h2>{{ week_start|naturaldate }} – {{ week_end|naturaldate }}</h2>
     {% include 'buglist-list.html' %}
   {% endfor %}
+
+  {% include 'buglist-actionbar.html' %}
   
 </div>
+
+<form style="display: none" id="mass-edit-form" action="mass-state-edit" method="POST">
+  <input type="hidden" id="mass-edit-action" name="action" value="" />
+  <input type="hidden" id="mass-edit-bugs" name="bugs" value="" />
+</form>
 
 {% endblock %}

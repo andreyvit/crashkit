@@ -121,6 +121,15 @@ table.buglist { border-collapse: collapse; }
 .buglist tr.r1 td { line-height: 1; padding-top: 0.2em; padding-bottom: 0.2em; }
 .buglist tr.r2 td { line-height: 1; padding-bottom: 0.2em; }
 
+/* action bar */
+
+.actionbar { background: silver; -webkit-border-radius: 5px; -moz-border-radius: 5px; margin-left: -10px; padding-left: 10px; padding-top: 4px; padding-bottom: 4px; margin-top: 1em; }
+
+.actionbar .buttons { display: inline; }
+.actionbar button { width: 14ex; margin-right: 1ex; }
+.actionbar .selection { display: inline; margin-left: 3ex; font-size: 90%; padding-left: 3px; }
+
+table.buglist tr.selected td { background: #f9f9dd !important; }
 
 /* begin css tabs */
 

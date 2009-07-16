@@ -1,5 +1,5 @@
-<tr class="r1 {% cycle 'odd' 'even' %}">
-  <td class="blcheck" rowspan="2"><input type="checkbox" /> </td>
+<tr class="bug-row r1 {% cycle 'odd' 'even' %}">
+  <td class="blcheck" rowspan="2"><input type="checkbox" class="row-selector" /><input type="hidden" name="bug-key" class="bug-key" value="{{ bug.key.name }}" /> </td>
   <td class="blcount evencol">
     {{bug.stats.count|scalenum|safe}}<span class="dim"><small>/mo</small></span>
   </td>
