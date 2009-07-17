@@ -73,5 +73,11 @@ class ProductHelpHandler(BaseHandler):
 
   @prolog(fetch=['account', 'product'])
   def get(self):
+    product_name = self.product.unique_name
+    BAD_NAME_CHARS_RE = re.compile('[^a-zA-Z0-9]+')
+    override_file_name = '%s.role' % BAD_NAME_CHARS_RE.sub('', product_name).lower()
+    override_env_name = '%s_CRASHKIT_ROLE' % BAD_NAME_CHARS_RE.sub('_', product_name).upper()
+
     self.data.update(tabid = 'product-help-tab', client_admin_cookie=self.product.client_admin_password)
+    self.data.update(role_override_env_var=override_env_name, role_override_file=override_file_name)
     self.render_and_finish('product_integration_help.html')

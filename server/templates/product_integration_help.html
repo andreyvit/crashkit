@@ -63,8 +63,28 @@ CrashKit.bug(new IgnoringEmptyCommandException("Some command"));</pre>
     Have your testers do the same, and their bugs will be logged separately from
     real customer bugs.</p>
 
-  <h2>Integrating into Python/Django applications</h2>
-  <p><a href="http://download.yoursway.com/crashkit-python-1.0.9.zip">Download Python client 1.0.9</a> (includes crashkit.py and a sample application)</p>
+  <h2>Integrating into Google App Engine applications</h2>
+  <p><a href="http://download.yoursway.com/crashkit-python-1.2.0.22.zip">Download Python client 1.2.0.22</a> (includes crashkit.py)</p>
+  <p>Step 1. Drop “crashkit.py” into your project.</p>
+  <p>Step 2. Copy and paste the following text into your main Python file(s):</p>
+  <pre>
+from crashkit import initialize_crashkit, CrassKitGAE
+import os
+
+initialize_crashkit('{{account.permalink}}', '{{product.unique_name}}',
+    app_dirs=[os.path.dirname(__file__)],       # all other directories will be treated as external libs
+    #app_dir_exclusions=['django', 'coolstuff'] # some subdirs may contain libraries too
+)</pre>
+  <p>Step 3. Add <code>CrashKitGAE</code> as a base class to your handlers:</p>
+<pre>
+class HelloWorldHandler(CrassKitGAE, webapp.RequestHandler):
+    def get(self):
+        self.response.out.write("Hello, world!")
+</pre>
+  <p>Please note: exceptions occurring in the development server will <b>not</b> be sent to CrashKit servers.</p>
+
+  <h2>Integrating into Django applications</h2>
+  <p><a href="http://download.yoursway.com/crashkit-python-1.2.0.22.zip">Download Python client 1.2.0.22</a> (includes crashkit.py and a sample application)</p>
   <p>Step 1. Drop “crashkit.py” into your project.</p>
   <p>Step 2. Add CrashKitDjangoMiddleware to your settings file:</p>
 <pre>MIDDLEWARE_CLASSES = (
@@ -74,31 +94,46 @@ CrashKit.bug(new IgnoringEmptyCommandException("Some command"));</pre>
     <b>'crashkit.CrashKitDjangoMiddleware',</b>
 )</pre>
   <p>Step 3. Add the following to the bottom of your settings file:</p>
-<pre>CRASHKIT = {
+<pre>
+import os
+CRASHKIT = {
     'account_name': '{{account.permalink}}',
     'product_name': '{{product.unique_name}}',
-    'deactivate_when_debugging': True, # change to False to collect bugs even when DEBUG is True
+    'app_dirs': [os.path.dirname(__file__)],        # all other directories will be treated as external libs
+    #'app_dir_exclusions': ['django', 'coolstuff'], # some subdirs may contain libraries too
+    'role': ('disabled' if DEBUG else 'customer')   # disable CrashKit while debugging
+    # this role is the default one, but you can override it using:
+    #   environment variable:    {{ role_override_env_var }}
+    #   contents of file:        ~/{{ role_override_file }}  or  ~/.{{ role_override_file }}
+    # valid roles are 'disabled' and 'customer' ('tester' will be supported soon)
 }</pre>
-  <p>Please note the <code>deactivate_when_debugging</code> constant: when True (the default) and Django's <code>DEBUG</code> is also True (the default), exceptions will <b>not</b> be sent to CrashKit servers. If you want to test CrashKit in your development environment, you might want to flip that setting temporarily.</p>
+  <p>Please note: according to the above code, when Django's <code>DEBUG</code> is set to True (the default), exceptions will <b>not</b> be sent to CrashKit servers.</p>
   
   <h2>Integrating into Python applications</h2>
-  <p><a href="http://download.yoursway.com/crashkit-python-1.0.9.zip">Download Python client 1.0.9</a> (includes crashkit.py and a sample application)</p>
-  <p>(If you are using Django, see the Python/Django section above.)
+  <p><a href="http://download.yoursway.com/crashkit-python-1.2.0.22.zip">Download Python client 1.2.0.22</a> (includes crashkit.py and a sample application)</p>
+  <p>(If you are using Django or Google App Engine, please see the corresponding sections instead.)
   <p>Step 1. Drop “crashkit.py” into your project.</p>
   <p>Step 2. Copy and paste the following text into the beginning of your main Python file(s):</p>
   <pre>
 import crashkit
-crashkit.initialize_crashkit('{{account.permalink}}', '{{product.unique_name}}')</pre>
+import os
+DEBUG = False
+
+crashkit.initialize_crashkit('{{account.permalink}}', '{{product.unique_name}}',
+  app_dirs=[os.path.dirname(__file__)],        # all other directories will be treated as external libs
+  #app_dir_exclusions=['django', 'coolstuff'], # some subdirs may contain libraries too
+  role=('disabled' if DEBUG else 'customer')   # disable CrashKit while debugging
+  # this role is the default one, but you can override it using:
+  #   environment variable:    {{ role_override_env_var }}
+  #   contents of file:        ~/{{ role_override_file }}  or  ~/.{{ role_override_file }}
+  # valid roles are 'disabled' and 'customer' ('tester' will be supported soon)
+)</pre>
   <p>Step 3. Catch all exceptions and send them to CrashKit:</p>
   <pre>
 try:
   # do something here
 except:
   crashkit.send_exception()</pre>
-  <p>
-    If you are using Django, there's a piece of middleware contributed by our user wiz at 
-    <a href="http://www.djangosnippets.org/snippets/1483/">www.djangosnippets.org/snippets/1483/</a>.
-  </p>
   
   <h2>Integrating into HTML/JavaScript code</h2>
   <p>Step 1.Drop the following SCRIPT tag into your HTML page:</p>
