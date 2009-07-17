@@ -1,5 +1,12 @@
 {% extends 'base.html' %}
 {% block title %}{{ project.friendly_name}} Integration Help{% endblock %}
+{% block js %}
+  <script type="text/javascript" src="/static/javascript/highlight.pack.js"></script>
+  <script type="text/javascript"> hljs.initHighlightingOnLoad(); </script>
+{% endblock %}
+{% block css %}
+  <link rel="stylesheet" type="text/css" href="/static/stylesheets/highlight/default.css" />
+{% endblock %}
 {% block content %}
 <div class="long-container">
   <p>Note: it's okay to report e.g. Python and JavaScript errors into the same product.</p>
@@ -12,33 +19,30 @@
     It can be used as OSGi bundle.
   </p>
   <p>Step 2. Copy and paste the following code into a method that executes at startup:</p>
-  <pre>
-CrashKit crashKit = CrashKit.connectApplication(
+  <pre><code class="java">CrashKit crashKit = CrashKit.connectApplication(
   "{{product.friendly_name}}", "1.0.0", "{{account.permalink}}", "{{product.unique_name}}",
-  new String[] {"com.example.myproduct", "com.foo.anotherpackage"});</pre>
+  new String[] {"com.example.myproduct", "com.foo.anotherpackage"});</code></pre>
   <p>
     The last argument lists the packages that belong to your application; everything else will be considered a library.
     The second argument is your application's version number.
   </p>
   <p>Step 3. Catch all exceptions and send them to CrashKit:</p>
-  <pre>
-try {
+  <pre><code class="java">try {
   // run event loop, process request, whatever
 } catch (Throwable e) {
   CrashKit.bug(e);
-}</pre>
+}</code></pre>
   <p>Optional step 4. To report warnings and other custom messages, just define and create corresponding exception classes, e.g.:</p>
-  <pre>CrashKit.bug(new UnhandledEventLoopException(e));
-CrashKit.bug(new IgnoringEmptyCommandException("Some command"));</pre>
+  <pre><code class="java">CrashKit.bug(new UnhandledEventLoopException(e));
+CrashKit.bug(new IgnoringEmptyCommandException("Some command"));</code></pre>
   <p>If you derive your custom exceptions from <code>Failure</code>, you'll be able to pass additional information:</p>
-  <pre>CrashKit.bug(new UnhandledEventLoopException(e).add("some_additional_data", "42");</pre>
+  <pre><code class="java">CrashKit.bug(new UnhandledEventLoopException(e).add("some_additional_data", "42");</code></pre>
   
   <h2>Integrating into PHP applications</h2>
   <p><a href="http://download.yoursway.com/crashkit-php-{{client_versions.php}}.zip">Download PHP client {{client_versions.php}}</a> (includes crashkit.inc.php and a demo application)</p>
   <p>Step 1. Drop “crashkit.inc.php” into your project.</p>
   <p>Step 2. Copy and paste the following text into the beginning of your main PHP file(s):</p>
-  <pre>
-&lt;?php
+  <pre><code class="php">&lt;?php
   define('CRASHKIT_ACCOUNT_AND_PRODUCT', '{{account.permalink}}/{{product.unique_name}}');
   define('CRASHKIT_ADMIN_PASSWORD', '{{client_admin_cookie}}');
   define('CRASHKIT_DIE_MESSAGE',
@@ -50,7 +54,7 @@ CrashKit.bug(new IgnoringEmptyCommandException("Some command"));</pre>
     '&lt;p&gt;If you need help immediately, please e-mail &lt;a href="mailto:{{user.email}}"&gt;{{user.email}}&lt;/a&gt;.' .
     '&lt;/div&gt;');
   require_once 'crashkit.inc.php';
-?&gt;</pre>
+?&gt;</code></pre>
   <p>You can customize the error message if you don't like the default one.</p>
   <p>
     Optional Step 3. To prevent errors from being logged from your developer machine,
@@ -67,35 +71,31 @@ CrashKit.bug(new IgnoringEmptyCommandException("Some command"));</pre>
   <p><a href="http://download.yoursway.com/crashkit-python-{{client_versions.python}}.zip">Download Python client {{client_versions.python}}</a> (includes crashkit.py)</p>
   <p>Step 1. Drop “crashkit.py” into your project.</p>
   <p>Step 2. Copy and paste the following text into your main Python file(s):</p>
-  <pre>
-from crashkit import initialize_crashkit, CrassKitGAE
+  <pre><code class="python">from crashkit import initialize_crashkit, CrassKitGAE
 import os
 
 initialize_crashkit('{{account.permalink}}', '{{product.unique_name}}',
     app_dirs=[os.path.dirname(__file__)],       # all other directories will be treated as external libs
     #app_dir_exclusions=['django', 'coolstuff'] # some subdirs may contain libraries too
-)</pre>
+)</code></pre>
   <p>Step 3. Add <code>CrashKitGAE</code> as a base class to your handlers:</p>
-<pre>
-class HelloWorldHandler(CrassKitGAE, webapp.RequestHandler):
+<pre><code class="python">class HelloWorldHandler(CrassKitGAE, webapp.RequestHandler):
     def get(self):
-        self.response.out.write("Hello, world!")
-</pre>
+        self.response.out.write("Hello, world!")</code></pre>
   <p>Please note: exceptions occurring in the development server will <b>not</b> be sent to CrashKit servers.</p>
 
   <h2>Integrating into Django applications</h2>
   <p><a href="http://download.yoursway.com/crashkit-python-{{client_versions.python}}.zip">Download Python client {{client_versions.python}}</a> (includes crashkit.py and a sample application)</p>
   <p>Step 1. Drop “crashkit.py” into your project.</p>
   <p>Step 2. Add CrashKitDjangoMiddleware to your settings file:</p>
-<pre>MIDDLEWARE_CLASSES = (
+<pre><code class="python">MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     <b>'crashkit.CrashKitDjangoMiddleware',</b>
-)</pre>
+)</code></pre>
   <p>Step 3. Add the following to the bottom of your settings file:</p>
-<pre>
-import os
+<pre><code class="python">import os
 CRASHKIT = {
     'account_name': '{{account.permalink}}',
     'product_name': '{{product.unique_name}}',
@@ -105,8 +105,8 @@ CRASHKIT = {
     # this role is the default one, but you can override it using:
     #   environment variable:    {{ role_override_env_var }}
     #   contents of file:        ~/{{ role_override_file }}  or  ~/.{{ role_override_file }}
-    # valid roles are 'disabled' and 'customer' ('tester' will be supported soon)
-}</pre>
+    # valid roles are 'disabled' and 'customer' (the default one), 'tester' will be supported soon
+}</code></pre>
   <p>Please note: according to the above code, when Django's <code>DEBUG</code> is set to True (the default), exceptions will <b>not</b> be sent to CrashKit servers.</p>
   
   <h2>Integrating into Python applications</h2>
@@ -114,37 +114,34 @@ CRASHKIT = {
   <p>(If you are using Django or Google App Engine, please see the corresponding sections instead.)
   <p>Step 1. Drop “crashkit.py” into your project.</p>
   <p>Step 2. Copy and paste the following text into the beginning of your main Python file(s):</p>
-  <pre>
-import crashkit
+  <pre><code class="python">import crashkit
 import os
 DEBUG = False
 
 crashkit.initialize_crashkit('{{account.permalink}}', '{{product.unique_name}}',
-  app_dirs=[os.path.dirname(__file__)],        # all other directories will be treated as external libs
-  #app_dir_exclusions=['django', 'coolstuff'], # some subdirs may contain libraries too
-  role=('disabled' if DEBUG else 'customer')   # disable CrashKit while debugging
-  # this role is the default one, but you can override it using:
-  #   environment variable:    {{ role_override_env_var }}
-  #   contents of file:        ~/{{ role_override_file }}  or  ~/.{{ role_override_file }}
-  # valid roles are 'disabled' and 'customer' ('tester' will be supported soon)
-)</pre>
+    app_dirs=[os.path.dirname(__file__)],        # all other directories will be treated as external libs
+    #app_dir_exclusions=['django', 'coolstuff'], # some subdirs may contain libraries too
+    role=('disabled' if DEBUG else 'customer')   # disable CrashKit while debugging
+    # this role is the default one, but you can override it using:
+    #   environment variable:    {{ role_override_env_var }}
+    #   contents of file:        ~/{{ role_override_file }}  or  ~/.{{ role_override_file }}
+    # valid roles are 'disabled' and 'customer' (the default one), 'tester' will be supported soon
+)</code></pre>
   <p>Step 3. Catch all exceptions and send them to CrashKit:</p>
-  <pre>
-try:
+  <pre><code class="python">try:
   # do something here
 except:
-  crashkit.send_exception()</pre>
+  crashkit.send_exception()</code></pre>
   
   <h2>Integrating into HTML/JavaScript code</h2>
   <p>Step 1.Drop the following SCRIPT tag into your HTML page:</p>
-  <pre>
-&lt;script src="http://crashkitapp.appspot.com/static/javascript/crashkit-js-api.js?{{account.permalink}}/{{product.unique_name}}"
-        type="text/javascript" charset="utf-8"&gt;&lt;/script&gt;</pre>
+  <pre><code class="html">&lt;script src="http://crashkitapp.appspot.com/static/javascript/crashkit-js-api.js?{{account.permalink}}/{{product.unique_name}}"
+        type="text/javascript" charset="utf-8"&gt;&lt;/script&gt;</code></pre>
   
   <p>
     Step 2. Catch all exceptions and send them to CrashKit using <code>CrashKit.report(ex)</code> method:
   </p>
-  <pre><code>try { ...code here.. } catch(e) { CrashKit.report(e); }</code></pre>
+  <pre><code class="javascript">try { ...code here... } catch(e) { CrashKit.report(e); }</code></pre>
   
   <p>If you are using jQuery, CrashKit automatically wraps all your event handlers into try-catch blocks,
     so you only need to deal with top-level code.</p>
