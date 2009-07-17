@@ -17,12 +17,12 @@ from google.appengine.api import memcache
 from django.utils import simplejson as json
 from models import *
 from appengine_utilities.flash import Flash
-from crashkit import initialize_crashkit, send_exception
+from crashkit import initialize_crashkit, CrassKitGAE
 
 template_path = os.path.join(os.path.dirname(__file__), '..', 'templates')
 template.register_template_library('myfilters')
 
-initialize_crashkit('ys', 'crashkit')
+initialize_crashkit('ys', 'crashkit', app_dirs=[os.path.join(os.path.dirname(__file__), '..')])
 
 class FinishRequest(Exception):
   pass
@@ -60,7 +60,7 @@ class prolog(object):
     decoration.__doc__  = original_func.__doc__
     return decoration
 
-class BaseHandler(webapp.RequestHandler):
+class BaseHandler(CrassKitGAE, webapp.RequestHandler):
   def __init__(self):
     self.now = datetime.now()
     self.data = dict(now = self.now)
@@ -114,10 +114,6 @@ class BaseHandler(webapp.RequestHandler):
   def render_and_finish(self, *path_components):
     self.response.out.write(template.render(os.path.join(template_path, *path_components), self.data))
     raise FinishRequest
-    
-  def handle_exception(self, exception, debug_mode):
-    send_exception()
-    return webapp.RequestHandler.handle_exception(self, exception, debug_mode)
     
   def access_denied(self, message = "Sorry, you do not have access to this page.",
         attemp_login = True):

@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-__all__ = ['CRASHKIT_VERSION', 'initialize_crashkit', 'send_exception', 'CrashKitDjangoMiddleware']
+__all__ = ['CRASHKIT_VERSION', 'initialize_crashkit', 'send_exception', 'CrashKitDjangoMiddleware', 'CrassKitGAE']
 
 from traceback import extract_tb
 from types import ClassType
@@ -28,6 +28,30 @@ import sys
 import os
 
 CRASHKIT_VERSION = '{{ver}}'
+CRASHKIT_HOST = 'crashkitapp.appspot.com'
+CRASHKIT_HOST = '8.latest.crashkitapp.appspot.com'
+# CRASHKIT_HOST = 'localhost:5005'
+
+
+class CrassKitGAE(object):
+    
+  def handle_exception(self, exception, debug_mode):
+    from google.appengine.ext import webapp
+    
+    request = self.request
+    env = {}
+    data = {}
+    for key, value in request.environ.iteritems():
+      if key.startswith('HTTP_') or key.startswith('SERVER_') or key.startswith('REMOTE_') or key in ('PATH_INFO', 'QUERY_STRING'):
+        env[key] = value
+    for k,v in request.GET.iteritems():  data["G_"  + k] = v
+    for k,v in request.POST.iteritems(): data["P_" + k] = v
+    for k,v in request.cookies.iteritems(): data["C_" + k] = v
+    if hasattr(request, 'session'):
+      for k,v in request.session.iteritems(): data["S_" + k] = v
+    send_exception(data, env)
+    return webapp.RequestHandler.handle_exception(self, exception, debug_mode)
+  
 
 class CrashKitDjangoMiddleware(object):
   def __init__(self):
@@ -54,18 +78,37 @@ class CrashKitDjangoMiddleware(object):
     except Exception:
       raise
 
+def is_parent_dir(parent, child):
+  if parent == child:  return True
+  if os.path.dirname(child) == child:  return False
+  return is_parent_dir(parent, os.path.dirname(child))
+
 class CrashKit:
   
-  def __init__(self, account_name, product_name, debug_mode=False, deactivate_when_debugging=True):
+  def __init__(self, account_name, product_name, app_dirs=[], app_dir_exclusions=[], debug_mode=False, deactivate_when_debugging=True):
     self.account_name = account_name
     self.product_name = product_name
-    host = 'crashkitapp.appspot.com'
-    # host = 'localhost:5005'
+    self.app_dirs = [os.path.abspath(d) for d in app_dirs]
+    self.app_dir_exclusions = [os.path.abspath(d) for d in app_dir_exclusions]
     self.post_url = "http://%s/%s/products/%s/post-report/0/0" % (
-        host, self.account_name, self.product_name)
+        CRASHKIT_HOST, self.account_name, self.product_name)
     if os.environ.get('SERVER_SOFTWARE', '').startswith('Dev'):
       debug_mode = True  # Google App Engine development server
     self.active = not (debug_mode and deactivate_when_debugging)
+    
+    for excl_dir in self.app_dir_exclusions:
+      if not max([is_parent_dir(app_dir, excl_dir) for app_dir in self.app_dirs]):
+        raise ValueError, "Invalid arguments for CrashKit initialization:  Excluded directory '%s' is not (but must be) a parent of any of the application directories: %s." % (excl_dir, ", ".join(["'%s'" % app_dir for app_dir in self.app_dirs]))
+        
+  def is_app_dir(self, d):
+    d = os.path.abspath(d)
+    if not self.app_dirs:
+      return False
+    if not max([is_parent_dir(app_dir, d) for app_dir in self.app_dirs]):
+      return False
+    if self.app_dir_exclusions and max([is_parent_dir(excl_dir, d) for excl_dir in self.app_dir_exclusions]):
+      return False
+    return True
 
   def send_exception(self, data = {}, env = {}):
     if not self.active:
@@ -80,7 +123,7 @@ class CrashKit:
             {
                 "name": encode_exception_name(info[0]),
                 "message": info[1].message,
-                "locations": [encode_location(el) for el in traceback]
+                "locations": [encode_location(el, self.is_app_dir) for el in traceback]
             }
         ],
         "data": data,
@@ -145,10 +188,13 @@ def get_class_name(frame):
           pass
   return None
 
-def encode_location(traceback):
+def encode_location(traceback, is_app_dir):
   frame = traceback.tb_frame
   co = frame.f_code
   filename, lineno, name = co.co_filename, traceback.tb_lineno, co.co_name
+  
+  claimed = is_app_dir(filename)
+  
   shortest_package = None
   for folder in sys.path:
     if not folder.endswith('/'):
@@ -162,7 +208,7 @@ def encode_location(traceback):
       if shortest_package is None or len(package) < len(shortest_package):
         shortest_package = package
   
-  result = { "file": filename, "package": shortest_package, "method": name, "line": lineno }
+  result = { "file": filename, "package": shortest_package, "method": name, "line": lineno, "claimed": claimed }
   class_name = get_class_name(frame)
   if class_name:
     result['class'] = class_name
