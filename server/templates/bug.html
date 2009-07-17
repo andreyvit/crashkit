@@ -84,7 +84,7 @@
     <col width="230" />
     {% for exception in cover_case.exceptions_list %}
       {% for location in exception.locations %}
-        <tr class="{% cycle odd,even %}">
+        <tr class="{% cycle odd,even %} location-row {% if location.claimed %}app-loc{% endif %}">
           <td>{% if forloop.first %}<small>{{ exception.name }}</small>{% endif %}</td>
           <td class="evencol" style="text-align: right" {% if location.file %}title="{{ location.file }}"{% endif %}>{{ location.package }}</td>
           <td>

@@ -131,6 +131,11 @@ table.buglist { border-collapse: collapse; }
 
 table.buglist tr.selected td { background: #f9f9dd !important; }
 
+/* stack trace */
+
+.location-row.app-loc td { color: #007700; }
+.location-row.app-loc .dim { color: #449966; }
+
 /* begin css tabs */
 
 ul#tabnav { /* general settings */

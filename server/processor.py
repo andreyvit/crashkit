@@ -188,7 +188,10 @@ def parse_location(el):
   lineno = el.get('line', 0)
   if lineno is None:
     lineno = 0
-  return dict(package=p, file=f, klass=k, method=m, line=int(lineno))
+    
+  claimed = el.get('claimed', False)
+    
+  return dict(package=p, file=f, klass=k, method=m, line=int(lineno), claimed=claimed)
 
 class ReportedOccurrence(object):
   
@@ -239,6 +242,17 @@ class ReportedOccurrence(object):
     self.week = date_to_week(self.date)
    
   def _compute_definitive_location(self, product):
+    # check for claimed packages
+    index = 0
+    for exception in self.exceptions:
+      locations = exception['locations']
+      for location in locations:
+        package_name, class_name, method_name, line = location['package'], location['klass'], location['method'], location['line']
+        if location.get('claimed'):
+          return (index, exception['name'], package_name, class_name, method_name, line)
+      index += 1
+    
+    # if none, revert to the old behavior
     index = 0
     for exception in self.exceptions:
       locations = exception['locations']
