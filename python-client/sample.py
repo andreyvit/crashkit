@@ -3,8 +3,18 @@
 # import crashkit
 
 from crashkit_django import crashkit
+import os
 
-crashkit.initialize_crashkit('test', 'py')
+DEBUG = False
+crashkit.initialize_crashkit('test', 'py',
+  app_dirs=[os.path.dirname(__file__)],       # all other directories will be treated as external libs
+  app_dir_exclusions=['django', 'coolstuff'], # some subdirs contain libraries too
+  role=('disabled' if DEBUG else 'customer')  # disable CrashKit while debugging
+  # this role is the default one, but you can override it using:
+  #  environment variable:    PY_CRASHKIT_ROLE
+  #  contents of file:        ~/py.role  or  ~/.py.role
+  # valid roles are 'disabled' and 'customer' ('tester' will be supported soon)
+)
 
 import re
 
