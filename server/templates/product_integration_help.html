@@ -5,7 +5,7 @@
   <p>Note: it's okay to report e.g. Python and JavaScript errors into the same product.</p>
     
   <h2>Integrating into Java applications</h2>
-  <p><a href="http://download.yoursway.com/crashkit-java-1.0.3.zip">Download Java client 1.0.3</a></p>
+  <p><a href="http://download.yoursway.com/crashkit-java-{{client_versions.java}}.zip">Download Java client {{client_versions.java}}</a></p>
   <p>
     Step 1. Add “com.yoursway.crashkit.jar” into your classpath
     (or, if you prefer, you can simply add “com.yoursway.crashkit/src” as a source folder).
@@ -34,7 +34,7 @@ CrashKit.bug(new IgnoringEmptyCommandException("Some command"));</pre>
   <pre>CrashKit.bug(new UnhandledEventLoopException(e).add("some_additional_data", "42");</pre>
   
   <h2>Integrating into PHP applications</h2>
-  <p><a href="http://download.yoursway.com/crashkit-php-1.0.16.zip">Download PHP client 1.0.16</a> (includes crashkit.inc.php and a demo application)</p>
+  <p><a href="http://download.yoursway.com/crashkit-php-{{client_versions.php}}.zip">Download PHP client {{client_versions.php}}</a> (includes crashkit.inc.php and a demo application)</p>
   <p>Step 1. Drop “crashkit.inc.php” into your project.</p>
   <p>Step 2. Copy and paste the following text into the beginning of your main PHP file(s):</p>
   <pre>
@@ -64,7 +64,7 @@ CrashKit.bug(new IgnoringEmptyCommandException("Some command"));</pre>
     real customer bugs.</p>
 
   <h2>Integrating into Google App Engine applications</h2>
-  <p><a href="http://download.yoursway.com/crashkit-python-1.2.0.22.zip">Download Python client 1.2.0.22</a> (includes crashkit.py)</p>
+  <p><a href="http://download.yoursway.com/crashkit-python-{{client_versions.python}}.zip">Download Python client {{client_versions.python}}</a> (includes crashkit.py)</p>
   <p>Step 1. Drop “crashkit.py” into your project.</p>
   <p>Step 2. Copy and paste the following text into your main Python file(s):</p>
   <pre>
@@ -84,7 +84,7 @@ class HelloWorldHandler(CrassKitGAE, webapp.RequestHandler):
   <p>Please note: exceptions occurring in the development server will <b>not</b> be sent to CrashKit servers.</p>
 
   <h2>Integrating into Django applications</h2>
-  <p><a href="http://download.yoursway.com/crashkit-python-1.2.0.22.zip">Download Python client 1.2.0.22</a> (includes crashkit.py and a sample application)</p>
+  <p><a href="http://download.yoursway.com/crashkit-python-{{client_versions.python}}.zip">Download Python client {{client_versions.python}}</a> (includes crashkit.py and a sample application)</p>
   <p>Step 1. Drop “crashkit.py” into your project.</p>
   <p>Step 2. Add CrashKitDjangoMiddleware to your settings file:</p>
 <pre>MIDDLEWARE_CLASSES = (
@@ -110,7 +110,7 @@ CRASHKIT = {
   <p>Please note: according to the above code, when Django's <code>DEBUG</code> is set to True (the default), exceptions will <b>not</b> be sent to CrashKit servers.</p>
   
   <h2>Integrating into Python applications</h2>
-  <p><a href="http://download.yoursway.com/crashkit-python-1.2.0.22.zip">Download Python client 1.2.0.22</a> (includes crashkit.py and a sample application)</p>
+  <p><a href="http://download.yoursway.com/crashkit-python-{{client_versions.python}}.zip">Download Python client {{client_versions.python}}</a> (includes crashkit.py and a sample application)</p>
   <p>(If you are using Django or Google App Engine, please see the corresponding sections instead.)
   <p>Step 1. Drop “crashkit.py” into your project.</p>
   <p>Step 2. Copy and paste the following text into the beginning of your main Python file(s):</p>
