@@ -26,12 +26,14 @@ from types import ClassType
 from datetime import date
 import sys
 import os
+import re
 
 CRASHKIT_VERSION = '{{ver}}'
 CRASHKIT_HOST = 'crashkitapp.appspot.com'
-CRASHKIT_HOST = '8.latest.crashkitapp.appspot.com'
+# CRASHKIT_HOST = '8.latest.crashkitapp.appspot.com'
 # CRASHKIT_HOST = 'localhost:5005'
 
+BAD_NAME_CHARS_RE = re.compile('[^a-zA-Z0-9]+')
 
 class CrassKitGAE(object):
     
@@ -56,7 +58,6 @@ class CrassKitGAE(object):
 class CrashKitDjangoMiddleware(object):
   def __init__(self):
     from django.conf import settings
-    settings.CRASHKIT.setdefault('debug_mode', settings.DEBUG)
     initialize_crashkit(**settings.CRASHKIT)
     
   def process_exception(self, request, exception):
@@ -82,19 +83,39 @@ def is_parent_dir(parent, child):
   if parent == child:  return True
   if os.path.dirname(child) == child:  return False
   return is_parent_dir(parent, os.path.dirname(child))
+  
+def determine_role(account_name, product_name):
+  if os.environ.get('SERVER_SOFTWARE', '').startswith('Dev'):
+    return 'disabled'  # Google App Engine development server
+
+  override_file_name = '%s.role' % BAD_NAME_CHARS_RE.sub('', product_name).lower()
+  override_env_name = '%s_CRASHKIT_ROLE' % BAD_NAME_CHARS_RE.sub('_', product_name).upper()
+  
+  if os.getenv(override_env_name):
+    return os.getenv(override_env_name)
+    
+  try:
+    user_home = os.path.expanduser('~')
+    
+    if os.path.isfile(os.path.join(user_home, override_file_name)):
+      return open(os.path.join(user_home, override_file_name)).read().strip()
+    
+    if os.path.isfile(os.path.join(user_home, '.' + override_file_name)):
+      return open(os.path.join(user_home, '.' + override_file_name)).read().strip()
+  except ImportError:
+    pass  # no such thing as a user home dir (e.g. on Google App Engine)
 
 class CrashKit:
   
-  def __init__(self, account_name, product_name, app_dirs=[], app_dir_exclusions=[], debug_mode=False, deactivate_when_debugging=True):
+  def __init__(self, account_name, product_name, app_dirs=[], app_dir_exclusions=[], role='customer'):
     self.account_name = account_name
     self.product_name = product_name
-    self.app_dirs = [os.path.abspath(d) for d in app_dirs]
-    self.app_dir_exclusions = [os.path.abspath(d) for d in app_dir_exclusions]
     self.post_url = "http://%s/%s/products/%s/post-report/0/0" % (
         CRASHKIT_HOST, self.account_name, self.product_name)
-    if os.environ.get('SERVER_SOFTWARE', '').startswith('Dev'):
-      debug_mode = True  # Google App Engine development server
-    self.active = not (debug_mode and deactivate_when_debugging)
+    self.app_dirs = [os.path.abspath(d) for d in app_dirs]
+    self.app_dir_exclusions = [os.path.abspath(os.path.join(self.app_dirs[0], d)) for d in app_dir_exclusions]
+    
+    self.role = determine_role(account_name, product_name) or role
     
     for excl_dir in self.app_dir_exclusions:
       if not max([is_parent_dir(app_dir, excl_dir) for app_dir in self.app_dirs]):
@@ -111,7 +132,7 @@ class CrashKit:
     return True
 
   def send_exception(self, data = {}, env = {}):
-    if not self.active:
+    if self.role == 'disabled':
       return
 
     info = sys.exc_info()
@@ -128,6 +149,7 @@ class CrashKit:
         ],
         "data": data,
         "env": env,
+        "role": self.role,
         "language": "python",
         "client_version": CRASHKIT_VERSION
     }
@@ -136,7 +158,7 @@ class CrashKit:
     try:
       response = urlopen(Request(self.post_url, payload))
       the_page = response.read()
-      print unicode(the_page, 'utf-8')
+      # print unicode(the_page, 'utf-8')
     except UnicodeDecodeError:
       pass
     except HTTPError, e:
@@ -193,10 +215,12 @@ def encode_location(traceback, is_app_dir):
   co = frame.f_code
   filename, lineno, name = co.co_filename, traceback.tb_lineno, co.co_name
   
+  filename = os.path.abspath(filename)
   claimed = is_app_dir(filename)
   
   shortest_package = None
   for folder in sys.path:
+    folder = os.path.abspath(folder)
     if not folder.endswith('/'):
       folder += '/'
     if filename.startswith(folder):
