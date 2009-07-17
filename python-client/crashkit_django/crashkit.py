@@ -28,6 +28,9 @@ import sys
 import os
 
 CRASHKIT_VERSION = '{{ver}}'
+CRASHKIT_HOST = 'crashkitapp.appspot.com'
+# CRASHKIT_HOST = '8.latest.crashkitapp.appspot.com'
+# CRASHKIT_HOST = 'localhost:5005'
 
 
 class CrassKitGAE(object):
@@ -80,10 +83,8 @@ class CrashKit:
   def __init__(self, account_name, product_name, debug_mode=False, deactivate_when_debugging=True):
     self.account_name = account_name
     self.product_name = product_name
-    host = 'crashkitapp.appspot.com'
-    # host = 'localhost:5005'
     self.post_url = "http://%s/%s/products/%s/post-report/0/0" % (
-        host, self.account_name, self.product_name)
+        CRASHKIT_HOST, self.account_name, self.product_name)
     if os.environ.get('SERVER_SOFTWARE', '').startswith('Dev'):
       debug_mode = True  # Google App Engine development server
     self.active = not (debug_mode and deactivate_when_debugging)
