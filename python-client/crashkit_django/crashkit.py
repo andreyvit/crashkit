@@ -134,7 +134,7 @@ class CrashKit:
     try:
       response = urlopen(Request(self.post_url, payload))
       the_page = response.read()
-      print unicode(the_page, 'utf-8')
+      # print unicode(the_page, 'utf-8')
     except UnicodeDecodeError:
       pass
     except HTTPError, e:
