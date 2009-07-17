@@ -1,5 +1,25 @@
+# Copyright (c) 2009 Andrey Tarantsov, YourSway LLC (crashkit client)
+# Copyright (c) 2006 Bob Ippolito (simplejson)
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+# of the Software, and to permit persons to whom the Software is furnished to do
+# so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
-__all__ = ['CRASHKIT_VERSION', 'initialize_crashkit', 'send_exception']
+__all__ = ['CRASHKIT_VERSION', 'initialize_crashkit', 'send_exception', 'CrashKitDjangoMiddleware']
 
 from traceback import extract_tb
 from types import ClassType
@@ -7,30 +27,55 @@ from datetime import date
 import sys
 import os
 
-VERSION_BUILDSUBST = "{{ver}}"
-if VERSION_BUILDSUBST[-1] == '}':
-  CRASHKIT_VERSION = '1.0.dev'
-else:
-  CRASHKIT_VERSION = VERSION_BUILDSUBST
+CRASHKIT_VERSION = '{{ver}}'
+
+class CrashKitDjangoMiddleware(object):
+  def __init__(self):
+    from django.conf import settings
+    settings.CRASHKIT.setdefault('debug_mode', settings.DEBUG)
+    initialize_crashkit(**settings.CRASHKIT)
+    
+  def process_exception(self, request, exception):
+    """ Load exceptions into CrashKit """
+    try:
+      env = {}
+      data = {}
+      for key, value in request.META.iteritems():
+        if key.startswith('HTTP_') or key.startswith('SERVER_') or key.startswith('REMOTE_') or key in ('PATH_INFO', 'QUERY_STRING'):
+          env[key] = value
+        # else:
+        #   print key + " = " + unicode(value)
+      for k,v in request.GET.iteritems():  data["G_"  + k] = v
+      for k,v in request.POST.iteritems(): data["P_" + k] = v
+      for k,v in request.COOKIES.iteritems(): data["C_" + k] = v
+      if hasattr(request, 'session'):
+        for k,v in request.session.iteritems(): data["S_" + k] = v
+      crashkit.send_exception(data, env)
+    except Exception:
+      raise
 
 class CrashKit:
   
-  def __init__(self, account_name, product_name):
+  def __init__(self, account_name, product_name, debug_mode=False, deactivate_when_debugging=True):
     self.account_name = account_name
     self.product_name = product_name
-    self.post_url = "http://crashkitapp.appspot.com/%s/products/%s/post-report/0/0" % (
-        self.account_name, self.product_name)
+    host = 'crashkitapp.appspot.com'
+    # host = 'localhost:5005'
+    self.post_url = "http://%s/%s/products/%s/post-report/0/0" % (
+        host, self.account_name, self.product_name)
+    if os.environ.get('SERVER_SOFTWARE', '').startswith('Dev'):
+      debug_mode = True  # Google App Engine development server
+    self.active = not (debug_mode and deactivate_when_debugging)
 
   def send_exception(self, data = {}, env = {}):
-    if os.environ.get('SERVER_SOFTWARE', '').startswith('Dev'):
-      return # Google App Engine development server, do not report errors
-      
+    if not self.active:
+      return
+
     info = sys.exc_info()
     traceback = get_traceback(info[2])
     env = dict(**env)
     env.update(**collect_platform_info())
     message = {
-        "date": date.today().strftime("%Y-%m-%d"),
         "exceptions": [
             {
                 "name": encode_exception_name(info[0]),
@@ -41,9 +86,9 @@ class CrashKit:
         "data": data,
         "env": env,
         "language": "python",
-        "client_language": CRASHKIT_VERSION
+        "client_version": CRASHKIT_VERSION
     }
-    payload = JSONEncoder().encode([message])
+    payload = JSONDateEncoder().encode([message])
     from urllib2 import Request, urlopen, HTTPError, URLError
     try:
       response = urlopen(Request(self.post_url, payload))
@@ -62,9 +107,9 @@ class CrashKit:
  
 crashkit = None
 
-def initialize_crashkit(account_name, product_name):
+def initialize_crashkit(*args, **kw):
   global crashkit
-  crashkit = CrashKit(account_name, product_name)
+  crashkit = CrashKit(*args, **kw)
   
 def send_exception(data = {}, env = {}):
   crashkit.send_exception(data, env)
@@ -104,15 +149,20 @@ def encode_location(traceback):
   frame = traceback.tb_frame
   co = frame.f_code
   filename, lineno, name = co.co_filename, traceback.tb_lineno, co.co_name
+  shortest_package = None
   for folder in sys.path:
     if not folder.endswith('/'):
       folder += '/'
     if filename.startswith(folder):
-      filename = filename[len(folder):]
-      break
-  # if filename.endswith('.py'):
-  #   filename = filename[0:-3]
-  result = { "file": filename, "method": name, "line": lineno }
+      package = filename[len(folder):]
+      if package.endswith('.py'):  package = package[:-3]
+      if package.endswith('.pyc'): package = package[:-4]
+      package = package.replace('/', '.')
+      
+      if shortest_package is None or len(package) < len(shortest_package):
+        shortest_package = package
+  
+  result = { "file": filename, "package": shortest_package, "method": name, "line": lineno }
   class_name = get_class_name(frame)
   if class_name:
     result['class'] = class_name
@@ -570,3 +620,20 @@ def _make_iterencode(markers, _default, _encoder, _indent, _floatstr, _key_separ
                 del markers[markerid]
 
     return _iterencode
+
+#idea by https://mdp.cti.depaul.edu/web2py_wiki/default/wiki/JSONdatetime
+import datetime
+class JSONDateEncoder(JSONEncoder):
+   def default(self, obj):
+       if isinstance(obj, datetime.datetime):
+           return '**new Date(%i,%i,%i,%i,%i,%i)' % (obj.year,
+                                                     obj.month-1,
+                                                     obj.day,
+                                                     obj.hour,
+                                                     obj.minute,
+                                                     obj.second)
+       if isinstance(obj, datetime.date):
+           return '**new Date(%i,%i,%i)' % (obj.year,
+                                            obj.month-1,
+                                            obj.day)
+       return JSONEncoder.default(self, obj)
