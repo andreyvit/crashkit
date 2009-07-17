@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-__all__ = ['CRASHKIT_VERSION', 'initialize_crashkit', 'send_exception', 'CrashKitDjangoMiddleware']
+__all__ = ['CRASHKIT_VERSION', 'initialize_crashkit', 'send_exception', 'CrashKitDjangoMiddleware', 'CrassKitGAE']
 
 from traceback import extract_tb
 from types import ClassType
@@ -28,6 +28,27 @@ import sys
 import os
 
 CRASHKIT_VERSION = '{{ver}}'
+
+
+class CrassKitGAE(object):
+    
+  def handle_exception(self, exception, debug_mode):
+    from google.appengine.ext import webapp
+    
+    request = self.request
+    env = {}
+    data = {}
+    for key, value in request.environ.iteritems():
+      if key.startswith('HTTP_') or key.startswith('SERVER_') or key.startswith('REMOTE_') or key in ('PATH_INFO', 'QUERY_STRING'):
+        env[key] = value
+    for k,v in request.GET.iteritems():  data["G_"  + k] = v
+    for k,v in request.POST.iteritems(): data["P_" + k] = v
+    for k,v in request.cookies.iteritems(): data["C_" + k] = v
+    if hasattr(request, 'session'):
+      for k,v in request.session.iteritems(): data["S_" + k] = v
+    send_exception(data, env)
+    return webapp.RequestHandler.handle_exception(self, exception, debug_mode)
+  
 
 class CrashKitDjangoMiddleware(object):
   def __init__(self):
