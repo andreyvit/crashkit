@@ -178,6 +178,7 @@ class AdminFuckUpHandler(BaseHandler):
 
   @prolog(fetch=[], check=['is_server_management_allowed'])
   def get(self):
+    db.Key.from_path('Foo', '123')
     1 / 0
 
 class MigrateHandler(BaseHandler):

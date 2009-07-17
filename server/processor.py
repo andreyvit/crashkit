@@ -171,11 +171,13 @@ def process_report(report):
   report.put()
 
 def parse_location(el):
-  f = el.get('package', '')
-  if f == '' or f is None:
-    f = el.get('file', '')
-    if f is None:
-      f = ''
+  f = el.get('file', '')
+  if f is None: f = ''
+  
+  p = el.get('package', '')
+  if p == '' or p is None:
+    p = f
+  
   k = el.get('class', '')
   m = el.get('method', '')
   if m == '':
@@ -186,7 +188,7 @@ def parse_location(el):
   lineno = el.get('line', 0)
   if lineno is None:
     lineno = 0
-  return dict(package=f, klass=k, method=m, line=int(lineno))
+  return dict(package=p, file=f, klass=k, method=m, line=int(lineno))
 
 class ReportedOccurrence(object):
   

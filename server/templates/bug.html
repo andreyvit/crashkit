@@ -86,7 +86,7 @@
       {% for location in exception.locations %}
         <tr class="{% cycle odd,even %}">
           <td>{% if forloop.first %}<small>{{ exception.name }}</small>{% endif %}</td>
-          <td class="evencol" style="text-align: right">{{ location.package }}</td>
+          <td class="evencol" style="text-align: right" {% if location.file %}title="{{ location.file }}"{% endif %}>{{ location.package }}</td>
           <td>
             {% if location.klass and location.method %}
               {{ location.klass }}<span class="dim">.{{ location.method }} {{ location.line }}</span>

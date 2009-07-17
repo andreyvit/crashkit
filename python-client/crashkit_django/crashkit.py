@@ -149,15 +149,20 @@ def encode_location(traceback):
   frame = traceback.tb_frame
   co = frame.f_code
   filename, lineno, name = co.co_filename, traceback.tb_lineno, co.co_name
+  shortest_package = None
   for folder in sys.path:
     if not folder.endswith('/'):
       folder += '/'
     if filename.startswith(folder):
-      filename = filename[len(folder):]
-      break
-  # if filename.endswith('.py'):
-  #   filename = filename[0:-3]
-  result = { "file": filename, "method": name, "line": lineno }
+      package = filename[len(folder):]
+      if package.endswith('.py'):  package = package[:-3]
+      if package.endswith('.pyc'): package = package[:-4]
+      package = package.replace('/', '.')
+      
+      if shortest_package is None or len(package) < len(shortest_package):
+        shortest_package = package
+  
+  result = { "file": filename, "package": shortest_package, "method": name, "line": lineno }
   class_name = get_class_name(frame)
   if class_name:
     result['class'] = class_name
