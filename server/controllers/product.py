@@ -75,7 +75,7 @@ class ProductHelpHandler(BaseHandler):
   def get(self):
     product_name = self.product.unique_name
     BAD_NAME_CHARS_RE = re.compile('[^a-zA-Z0-9]+')
-    override_file_name = '%s.role' % BAD_NAME_CHARS_RE.sub('', product_name).lower()
+    override_file_name = 'crashkit.%s.role' % BAD_NAME_CHARS_RE.sub('', product_name).lower()
     override_env_name = '%s_CRASHKIT_ROLE' % BAD_NAME_CHARS_RE.sub('_', product_name).upper()
     
     client_versions = dict(java='1.0.3', python='1.2.0.22', php='1.0.16')

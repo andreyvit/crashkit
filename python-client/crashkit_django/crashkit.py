@@ -88,7 +88,7 @@ def determine_role(account_name, product_name):
   if os.environ.get('SERVER_SOFTWARE', '').startswith('Dev'):
     return 'disabled'  # Google App Engine development server
 
-  override_file_name = '%s.role' % BAD_NAME_CHARS_RE.sub('', product_name).lower()
+  override_file_name = 'crashkit.%s.role' % BAD_NAME_CHARS_RE.sub('', product_name).lower()
   override_env_name = '%s_CRASHKIT_ROLE' % BAD_NAME_CHARS_RE.sub('_', product_name).upper()
   
   if os.getenv(override_env_name):
