@@ -116,6 +116,13 @@ def shorten(value, l):
     return value
   
 @register.filter
+def rshorten(value, l):
+  if value is not None and len(value) > l:
+    return value[:l-1] + u"…"
+  else:
+    return value
+
+@register.filter
 def midshorten(value, l):
   if value is not None and len(value) > l:
     return value[:l-l/2] + u"…" + value[-(l/2):]
@@ -124,6 +131,10 @@ def midshorten(value, l):
   
 @register.filter
 def unshortened_tooltip(value, l):
+  return tooltip_if_shortened(value, l)
+
+@register.filter
+def tooltip_if_shortened(value, l):
   if value is not None and len(value) > l:
     return value
   else:

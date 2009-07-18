@@ -3,7 +3,7 @@
   <td class="blcount evencol">
     {{bug.stats.count|scalenum|safe}}<span class="dim"><small>/mo</small></span>
   </td>
-  <td class="blcount">
+  <td class="blcount evencol">
     {{bug.stats.daily|linechart}}
   </td>
   <td class="blname"><a href="bugs/{{ bug.key.name }}/">{{ bug.exception_name }}</a></td>
@@ -31,11 +31,13 @@
       {{ bug.occurrence_count }} total
     {% endif %}
   </td>
-  <td class="blskip">
+  <td class="blskip evencol">
     {{ bug.first_occurrence_on|daysold }}
   </td>
-  <td class="blskip">
-    Exception message goes here
+  <td class="blskip" title="{{ bug.exception_message|tooltip_if_shortened:40 }}">
+    {% if bug.exception_message %}
+    {{ bug.exception_message|rshorten:40 }}
+    {% endif %}
   </td>
   <td class="bllast evencol">
     last occur.

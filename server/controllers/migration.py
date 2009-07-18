@@ -35,6 +35,7 @@ class MigrateWorkerHandler(BaseHandler):
   def post(self):
     pass
     # self.add_daily_stats()
+    # self.add_exception_messages_to_bugs()
   
   def add_daily_stats(self):
     start = self.request.get('start')
@@ -72,6 +73,42 @@ class MigrateWorkerHandler(BaseHandler):
         for i in range(7):
           stat.daily[i] += data[i]
     db.put(stats.values())
+      
+    total_count += len(old)
+    logging.info("Migration running: processed %d rows" % total_count)
+
+    taskqueue.add(url='/admin/migrate/worker', params=dict(start=last_key, count=total_count))
+  
+  
+  def add_exception_messages_to_bugs(self):
+    start = self.request.get('start')
+    total_count = int(self.request.get('count') or 0)
+
+    query = Occurrence.all()
+    if start:
+      query.filter('__key__ >', db.Key(start))
+    old = query.fetch(100)
+    if not old:
+      logging.info('Migration done after processing %d rows.' % total_count)
+      return
+
+    last_key = old[-1].key()
+    new = []
+
+    bugs = index_by_key(Bug.get(list(set([o._bug for o in old if o._bug]))))
+    dirty_bugs = list()
+    for occurrence in old:
+      if occurrence._bug is None: continue
+      
+      bug = bugs[occurrence._bug]
+      if bug is not None:
+        for message in occurrence.exception_messages:
+          if message:
+            if bug.exception_message is None or len(message) < len(bug.exception_message):
+              bug.exception_message = message
+              dirty_bugs.append(bug)
+
+    db.put(list(set(dirty_bugs)))
       
     total_count += len(old)
     logging.info("Migration running: processed %d rows" % total_count)

@@ -184,6 +184,8 @@ class Bug(db.Model):
   exception_method  = db.StringProperty()
   exception_line    = db.IntegerProperty()
   
+  exception_message = db.TextProperty()
+  
   max_severity        = db.IntegerProperty(required=True)
   occurrence_count    = db.IntegerProperty(required=True)
   first_occurrence_on = db.DateProperty(required=True)
