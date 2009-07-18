@@ -81,6 +81,18 @@ def process_incoming_occurrence(product, client, incoming_occurrence):
       bug.last_occurrence_on  = max(bug.last_occurrence_on, incoming_occurrence.date)
       bug.roles               = list(set(bug.roles + [incoming_occurrence.role]))
       bug.role_count          = len(bug.roles)
+    
+    if incoming_occurrence.exception_messages:
+      for exception_message in incoming_occurrence.exception_messages:
+        if exception_message:
+          if bug.exception_message is None or len(exception_message) < len(bug.exception_message):
+            bug.exception_message = exception_message
+
+    request_uri = incoming_occurrence.env.get('PATH_INFO')
+    if request_uri:
+      if bug.request_uri is None or len(request_uri) < len(bug.request_uri):
+        bug.request_uri = request_uri
+
     bug.put()
     return bug
   bug = db.run_in_transaction(bug_txn, Bug.key_name_for(product.key().id_or_name(), location_hash))
