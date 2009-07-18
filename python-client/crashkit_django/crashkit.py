@@ -215,12 +215,12 @@ def encode_location(traceback, is_app_dir):
   co = frame.f_code
   filename, lineno, name = co.co_filename, traceback.tb_lineno, co.co_name
   
-  filename = os.path.abspath(filename)
+  filename = os.path.abspath(filename).replace('\\', '/')
   claimed = is_app_dir(filename)
   
   shortest_package = None
   for folder in sys.path:
-    folder = os.path.abspath(folder)
+    folder = os.path.abspath(folder).replace('\\', '/')
     if not folder.endswith('/'):
       folder += '/'
     if filename.startswith(folder):
