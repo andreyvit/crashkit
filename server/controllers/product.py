@@ -78,7 +78,7 @@ class ProductHelpHandler(BaseHandler):
     override_file_name = 'crashkit.%s.role' % BAD_NAME_CHARS_RE.sub('', product_name).lower()
     override_env_name = '%s_CRASHKIT_ROLE' % BAD_NAME_CHARS_RE.sub('_', product_name).upper()
     
-    client_versions = dict(java='1.0.3', python='1.2.0.22', php='1.0.16')
+    client_versions = dict(java='1.0.3', python='1.2.0.25', php='1.0.16')
     self.data.update(client_versions=client_versions)
 
     self.data.update(tabid = 'product-help-tab', client_admin_cookie=self.product.client_admin_password)
