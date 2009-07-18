@@ -101,15 +101,22 @@ def decode_key(key_str):
     pass
   return db.Key.from_path(kind, id_or_name)
   
+def decode_attr(key, value):
+  if isinstance(value, str):
+    value = unicode(value, 'utf-8')
+  if key in config.ref:
+    value = decode_key(value)
+  elif key in config.text:
+    value = db.Text(value)
+  return value
+  
 def decode_attrs(attrs):
   result = {}
   for key, value in attrs.iteritems():
-    if isinstance(value, str):
-      value = unicode(value, 'utf-8')
-    if key in config.ref:
-      value = decode_key(value)
-    elif key in config.text:
-      value = db.Text(value)
+    if isinstance(value, (tuple,list)):
+      value = [decode_attr(key, v) for v in value]
+    else:
+      value = decode_attr(key, value)
     result[key] = value
   return result
   
