@@ -187,27 +187,56 @@ def get_traceback(tb):
   traceback.reverse()
   return traceback
 
+def get_method_name_for_code_object(self, possible_func, code, depth = 0):
+  """Given an object and a value of an attribute of that object,
+    determines if the value is a bound method or a function implemented by the given code object,
+    possibly decorated with one or more decorators.
+    
+    If it is, returns a best guess on the name of the class the function is bound to.
+    Otherwise, returns None."""
+  
+  if depth > 5: return None
+  
+  try:
+    if code == possible_func.func_code:
+      if isinstance(self, ClassType) or isinstance(self, type):
+        return self.__name__
+      else:
+        return self.__class__.__name__
+  except AttributeError: pass
+  
+  try:
+    if code == possible_func.im_func.func_code:
+      if isinstance(self, ClassType) or isinstance(self, type):
+        return self.__name__
+      else:
+        return possible_func.im_class.__name__
+  except AttributeError: pass
+  
+  try:
+    if possible_func.func_closure is not None:
+      for cell in possible_func.func_closure:
+        try:
+          name = get_method_name_for_code_object(self, cell.cell_contents, code, depth + 1)
+          if name: return name
+        except AttributeError: pass
+  except AttributeError: pass
+
 def get_class_name(frame):
+  """Guesses a class name to show in a stack trace for the given frame,
+  based on the attributes of the first argument of the frame's function."""
+  
   code = frame.f_code
   fname = code.co_name
   if code.co_argcount > 0:
     first = code.co_varnames[0]
     self = frame.f_locals[first]
     for key in dir(self):
-      try:
-        attr = getattr(self, key, None)
-      except Exception:
-        attr = None
+      try:               attr = getattr(self, key, None)
+      except Exception:  attr = None
       if attr is not None:
-        try:
-          fc = attr.im_func.func_code
-          if fc == code:
-            if isinstance(self, ClassType) or isinstance(self, type):
-              return self.__name__
-            else:
-              return attr.im_class.__name__
-        except AttributeError:
-          pass
+        name = get_method_name_for_code_object(self, attr, code)
+        if name: return name
   return None
 
 def encode_location(traceback, is_app_dir):
@@ -215,22 +244,23 @@ def encode_location(traceback, is_app_dir):
   co = frame.f_code
   filename, lineno, name = co.co_filename, traceback.tb_lineno, co.co_name
   
-  filename = os.path.abspath(filename)
+  filename = os.path.abspath(filename).replace('\\', '/')
   claimed = is_app_dir(filename)
   
-  shortest_package = None
-  for folder in sys.path:
-    folder = os.path.abspath(folder)
-    if not folder.endswith('/'):
-      folder += '/'
-    if filename.startswith(folder):
-      package = filename[len(folder):]
-      if package.endswith('.py'):  package = package[:-3]
-      if package.endswith('.pyc'): package = package[:-4]
-      package = package.replace('/', '.')
-      
-      if shortest_package is None or len(package) < len(shortest_package):
-        shortest_package = package
+  shortest_package = frame.f_globals.get('__name__')
+  if shortest_package is None:  # afaik this only happens while importing a module
+    for folder in sys.path:
+      folder = os.path.abspath(folder).replace('\\', '/')
+      if not folder.endswith('/'):
+        folder += '/'
+      if filename.startswith(folder):
+        package = filename[len(folder):]
+        if package.endswith('.py'):  package = package[:-3]
+        if package.endswith('.pyc'): package = package[:-4]
+        package = package.replace('/', '.')
+    
+        if shortest_package is None or len(package) < len(shortest_package):
+          shortest_package = package
   
   result = { "file": filename, "package": shortest_package, "method": name, "line": lineno, "claimed": claimed }
   class_name = get_class_name(frame)
