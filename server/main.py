@@ -28,6 +28,7 @@ from controllers.invites import *
 from commons import *
 from controllers.user import *
 from controllers.admin import *
+from controllers.migration import *
 
 class HomeHandler(BaseHandler):
   
