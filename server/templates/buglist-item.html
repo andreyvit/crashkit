@@ -1,10 +1,11 @@
 <tr class="bug-row r1 {% cycle 'odd' 'even' %}">
   <td class="blcheck" rowspan="2"><input type="checkbox" class="row-selector" /><input type="hidden" name="bug-key" class="bug-key" value="{{ bug.key.name }}" /> </td>
   <td class="blcount evencol">
-    {{bug.stats.count|scalenum|safe}}<span class="dim"><small>/mo</small></span>
+    {{bug.stats.count|scalenum|safe}}<span class="dim"><small><small>/month</small></small></span>
   </td>
   <td class="blcount evencol">
-    {{bug.stats.daily|linechart}}
+    {% set chart_start week_to_start_date(previous_week(week, 3)) %}
+    <img src="{{bug.stats.daily|linechart:"60x20"}}" alt="" width="60" height="20" title="Showing {{ chart_start|naturaldate}} – {{ week_end|naturaldate }}" />
   </td>
   <td class="blname"><a href="bugs/{{ bug.key.name }}/">{{ bug.exception_name }}</a></td>
   <td class="blpackage evencol" style="text-align: right;">{{ bug.exception_package }}</td>
@@ -25,14 +26,11 @@
   <td class="blcount evencol">{{ bug.last_occurrence_on|naturaldate}}</td>
 </tr>
 <tr class="r2 {% cycle 'odd' 'even' %}">
-  <td class="bllast evencol">
+  <td class="bllast evencol" colspan="2">
     {% if bug.is_new_on_last_week %}
     {% else %}
-      {{ bug.occurrence_count }} total
+      {{ bug.occurrence_count }} total since {{ bug.first_occurrence_on|naturaldate }}
     {% endif %}
-  </td>
-  <td class="blskip evencol">
-    {{ bug.first_occurrence_on|daysold }}
   </td>
   <td class="blskip" title="{{ bug.request_uri_and_exception_message|format_request_uri_and_exception_message_tooltip }}">
     <div style="width: 100px; overflow: visible">

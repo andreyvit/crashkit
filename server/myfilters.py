@@ -239,11 +239,11 @@ def daysold(value):
     return '%d days old' % delta.days
 
 @register.filter
-def linechart(value):
+def linechart(value, size):
   data = ",".join(map(lambda v: unicode(v), value))
-  width, height = 80, 20
+  width, height = size.split('x')
   max_value = max(value)
-  return mark_safe('<img src="http://chart.apis.google.com/chart?chs=%dx%d&chd=t:%s&cht=ls&chds=0,%d&chf=bg,s,00000000&chco=555555" alt="" width="%d" height="%d" />' % (width, height, data, max_value, width, height))
+  return 'http://chart.apis.google.com/chart?chs=%sx%s&chd=t:%s&cht=ls&chds=0,%d&chf=bg,s,00000000&chco=555555' % (width, height, data, max_value)
 
 @register.filter
 def format_request_uri_and_exception_message_tooltip(data):
