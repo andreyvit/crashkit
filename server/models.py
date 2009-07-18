@@ -185,6 +185,7 @@ class Bug(db.Model):
   exception_line    = db.IntegerProperty()
   
   exception_message = db.TextProperty()
+  request_uri = db.TextProperty()
   
   max_severity        = db.IntegerProperty(required=True)
   occurrence_count    = db.IntegerProperty(required=True)
@@ -200,6 +201,9 @@ class Bug(db.Model):
     if (self.last_occurrence_on - self.last_email_on).days > 0:
       return True
     return False
+    
+  def request_uri_and_exception_message(self):
+    return (self.request_uri, self.exception_message)
     
   def describe_for_email(self, product_path):
     return u"""

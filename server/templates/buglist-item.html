@@ -7,8 +7,8 @@
     {{bug.stats.daily|linechart}}
   </td>
   <td class="blname"><a href="bugs/{{ bug.key.name }}/">{{ bug.exception_name }}</a></td>
-  <td class="blpackage evencol" rowspan="2" style="text-align: right;">{{ bug.exception_package }}</td>
-  <td class="blmethod" rowspan="2">
+  <td class="blpackage evencol" style="text-align: right;">{{ bug.exception_package }}</td>
+  <td class="blmethod">
     {% if bug.exception_klass and bug.exception_method %}
       {{ bug.exception_klass }}<small>.{{ bug.exception_method }} <span class="dim">{{ bug.exception_line }}</span></small>
     {% endif %}
@@ -34,11 +34,13 @@
   <td class="blskip evencol">
     {{ bug.first_occurrence_on|daysold }}
   </td>
-  <td class="blskip" title="{{ bug.exception_message|tooltip_if_shortened:40 }}">
-    {% if bug.exception_message %}
-    {{ bug.exception_message|rshorten:40 }}
-    {% endif %}
+  <td class="blskip" title="{{ bug.request_uri_and_exception_message|format_request_uri_and_exception_message_tooltip }}">
+    <div style="width: 100px; overflow: visible">
+      {{ bug.request_uri_and_exception_message|format_request_uri_and_exception_message:120 }}
+    </div>
   </td>
+  <td class="blskip evencol">&nbsp;</td>
+  <td class="blskip">&nbsp;</td>
   <td class="bllast evencol">
     last occur.
   </td>

@@ -107,6 +107,12 @@ class MigrateWorkerHandler(BaseHandler):
             if bug.exception_message is None or len(message) < len(bug.exception_message):
               bug.exception_message = message
               dirty_bugs.append(bug)
+        if hasattr(occurrence, 'env_PATH_INFO'):
+          request_uri = occurrence.env_PATH_INFO
+          if request_uri:
+            if bug.request_uri is None or len(request_uri) < len(bug.request_uri):
+              bug.request_uri = request_uri
+              dirty_bugs.append(bug)
 
     db.put(list(set(dirty_bugs)))
       

@@ -244,4 +244,33 @@ def linechart(value):
   width, height = 80, 20
   return mark_safe('<img src="http://chart.apis.google.com/chart?chs=%dx%d&chd=t:%s&cht=p3" alt="" width="%d" height="%d" />' % (width, height, data, width, height))
 
+@register.filter
+def format_request_uri_and_exception_message_tooltip(data):
+  request_uri, exception_message = data
+  if exception_message is None and request_uri is None: return ''
+  if exception_message is None:  return request_uri
+  if request_uri is None:        return exception_message
+  return mark_safe(u'%s&#13;&#13;%s' % (escape(request_uri), escape(exception_message)))
+  
+@register.filter
+def format_request_uri_and_exception_message(data, max_len):
+  request_uri, exception_message = data
+  if exception_message is None and request_uri is None: return ''
+  if exception_message is None:  return rshorten(request_uri, max_len)
+  if request_uri is None:        return rshorten(exception_message, max_len)
+  
+  if max_len and len(request_uri) + len(exception_message) > max_len:
+    max_request_uri_len = max_len / 2
+    max_exception_message_len = max_len - max_request_uri_len
+    
+    if len(request_uri) < max_request_uri_len:
+      max_exception_message_len = max_len - len(request_uri)
+    elif len(exception_message) < max_exception_message_len:
+      max_request_uri_len = max_len - len(exception_message)
+      
+    request_uri = rshorten(request_uri, max_request_uri_len)
+    exception_message = rshorten(exception_message, max_exception_message_len)
+    
+  return mark_safe(u"%s&nbsp;&nbsp;—&nbsp;&nbsp;%s" % (escape(request_uri), escape(exception_message)))
+
 # register.filter(time_delta_in_words)
