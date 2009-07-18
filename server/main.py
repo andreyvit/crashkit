@@ -80,13 +80,14 @@ class BugListHandler(BaseHandler):
     week_count = 4
     
     bugs = self.bugs_query_filter(self.product.bugs).order('-last_occurrence_on').fetch(1000)
+    bugs_by_key = index_by_key(bugs)
     
     interesting_stat_keys = []
     for bug in bugs:
       interesting_stat_keys += [BugWeekStat.key_name_for(bug.key(), date_to_week(bug.last_occurrence_on - timedelta(days=7*i))) for i in range(week_count)]
     stats = BugWeekStat.get_by_key_name(interesting_stat_keys)
-    stats = filter(lambda s: s is not None, stats)
-    stats = dict([ (b, BugWeekStat.sum(ss)) for b,ss in group(lambda s: s._bug, stats).items() ])
+    stats = group(lambda s: s._bug, filter(lambda s: s is not None, stats))
+    stats = dict([ (b, BugWeekStat.sum(ss, previous_week(date_to_week(bugs_by_key[b].last_occurrence_on), offset=week_count), date_to_week(bugs_by_key[b].last_occurrence_on))) for b,ss in stats.items() ])
     
     for bug in bugs:
       bug.stats = stats.get(bug.key())

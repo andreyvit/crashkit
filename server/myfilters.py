@@ -6,6 +6,7 @@ import logging
 from google.appengine.ext.webapp import template
 from django import template as templ
 from django.template.loader_tags import ExtendsNode
+from django.utils.safestring import mark_safe
 from commons import *
 
 register = template.create_template_register()
@@ -225,5 +226,11 @@ def daysold(value):
   else:
     delta = today - value
     return '%d days old' % delta.days
-  
+
+@register.filter
+def linechart(value):
+  data = ",".join(map(lambda v: unicode(v), value))
+  width, height = 80, 20
+  return mark_safe('<img src="http://chart.apis.google.com/chart?chs=%dx%d&chd=t:%s&cht=p3" alt="" width="%d" height="%d" />' % (width, height, data, width, height))
+
 # register.filter(time_delta_in_words)

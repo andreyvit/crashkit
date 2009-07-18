@@ -15,6 +15,9 @@ def require_admin(handler_method):
     else:
       myself.response.set_status(401)
   return decorate
+  
+def index_by_key(entities):
+  return index(lambda e: e.key(), entities)
 
 def decline(num, one, many, zero=None):
   if   zero and num == 0:  fmt = zero
@@ -73,6 +76,13 @@ def week_to_start_date(w):
   
 def week_to_end_date(w):
   return iso_year_week_day_to_date(int(w / 100), w % 100, 7)
+  
+def next_week(w, offset=1):
+  from datetime import timedelta
+  return date_to_week(week_to_start_date(w) + timedelta(days=7*offset))
+  
+def previous_week(w, offset=1):
+  return next_week(w, -offset)
   
 def iso_year_week_day_to_date(y, w, d):
   from datetime import date, timedelta

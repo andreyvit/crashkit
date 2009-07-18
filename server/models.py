@@ -278,15 +278,31 @@ class BugWeekStat(db.Model):
   count = db.IntegerProperty(required=True, default=0)
   first = db.DateProperty() # not marked as required because sometimes it's convenient to put None here (in memory)
   last  = db.DateProperty() # ditto
+  daily = db.ListProperty(int)
   
   @staticmethod
-  def sum(*stats):
+  def sum(stats, start_week, end_week):
+    assert start_week <= end_week
     stats = flatten(stats)
+    stats = filter(lambda s: s.week >= start_week and s.week <= end_week, stats)
+    stats_by_week = index(lambda s: s.week, stats)
+    
+    week = start_week
+    daily = []
+    while week <= end_week:
+      stat = stats_by_week.get(week)
+      if stat:
+        daily += stat.daily
+      else:
+        daily += [0, 0, 0, 0, 0, 0, 0]
+      week = next_week(week)
+    
     result = BugWeekStat(product=stats[0].product, bug=stats[0].bug,
       week =max(map(lambda s: s.week,  stats)),
       count=sum(map(lambda s: s.count, stats)),
       first=min(map(lambda s: s.first, stats)),
-      last =max(map(lambda s: s.last,  stats)))
+      last =max(map(lambda s: s.last,  stats)),
+      daily=daily)
     return result
   
   @staticmethod
