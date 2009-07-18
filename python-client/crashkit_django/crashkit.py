@@ -218,19 +218,20 @@ def encode_location(traceback, is_app_dir):
   filename = os.path.abspath(filename).replace('\\', '/')
   claimed = is_app_dir(filename)
   
-  shortest_package = None
-  for folder in sys.path:
-    folder = os.path.abspath(folder).replace('\\', '/')
-    if not folder.endswith('/'):
-      folder += '/'
-    if filename.startswith(folder):
-      package = filename[len(folder):]
-      if package.endswith('.py'):  package = package[:-3]
-      if package.endswith('.pyc'): package = package[:-4]
-      package = package.replace('/', '.')
-      
-      if shortest_package is None or len(package) < len(shortest_package):
-        shortest_package = package
+  shortest_package = frame.f_globals.get('__name__')
+  if shortest_package is None:  # afaik this only happens while importing a module
+    for folder in sys.path:
+      folder = os.path.abspath(folder).replace('\\', '/')
+      if not folder.endswith('/'):
+        folder += '/'
+      if filename.startswith(folder):
+        package = filename[len(folder):]
+        if package.endswith('.py'):  package = package[:-3]
+        if package.endswith('.pyc'): package = package[:-4]
+        package = package.replace('/', '.')
+    
+        if shortest_package is None or len(package) < len(shortest_package):
+          shortest_package = package
   
   result = { "file": filename, "package": shortest_package, "method": name, "line": lineno, "claimed": claimed }
   class_name = get_class_name(frame)
