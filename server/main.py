@@ -276,16 +276,16 @@ class ChangeBugStateHandler(BaseHandler):
   @prolog(fetch=['account', 'product', 'bug'], check=['is_product_write_allowed'])
   def post(self):
     if self.request.get('open'):
-      new_state = BUG_OPEN
+      new_state = 'reopen'
     elif self.request.get('close'):
-      new_state = BUG_CLOSED
+      new_state = 'close'
     elif self.request.get('ignore'):
-      new_state = BUG_IGNORED
+      new_state = 'ignore'
       
     def txn(bug_key=self.bug.key()):
       b = Bug.get(bug_key)
-      b.state = new_state
-      b.put()
+      if getattr(b, new_state)():
+        b.put()
     db.run_in_transaction(txn, self.bug.key())
     
     self.redirect_and_finish(".")
@@ -299,12 +299,8 @@ class MassBugStateEditHandler(BaseHandler):
     
     logging.info(repr(key_names))
     
-    if action == 'reopen':
-      new_state = BUG_OPEN
-    elif action == 'close':
-      new_state = BUG_CLOSED
-    elif action == 'ignore':
-      new_state = BUG_IGNORED
+    if action in ['reopen', 'close', 'ignore']:
+      new_state = action
     else:
       self.error(400)
       self.response.out.write("Invalid action: '%s'" % action)
@@ -312,13 +308,15 @@ class MassBugStateEditHandler(BaseHandler):
 
     bugs = Bug.get_by_key_name(key_names)
     bugs = filter(lambda b: b is not None, bugs)
+    dirty_bugs = []
     for bug in bugs:
       if bug._product != self.product.key():
         self.error(400)
         self.response.out.write("Invalid reference to a bug from another product: '%s'" % bug.key().name())
         return
-      bug.state = new_state
-    db.put(bugs)
+      if getattr(bug, new_state)():
+        dirty_bugs.append(bug)
+    db.put(dirty_bugs)
     
     self.redirect_and_finish(".")
 

@@ -39,8 +39,7 @@ class ProductSettingsHandler(BaseHandler):
     self.product.bug_tracker = self.valid_string('bug_tracker', required=False)
     self.product.bug_tracker_url = self.valid_string('bug_tracker_url', required=(self.product.bug_tracker != None))
     self.product.new_bug_notification_emails = self.valid_string('new_bug_notification_emails', required=False, use_none=False)
-    if self.product.is_saved():
-      self.product.uninteresting_packages = self.valid_string('uninteresting_packages')
+    self.product.reopening_mode = NAMES_TO_REOPENING_MODES[self.valid_string('reopening_mode')]
       
     if not re.match('^[a-zA-Z0-9-]*$', self.product.unique_name):
       self.invalid('unique_name', "Only letters, numbers and dashes, please.")

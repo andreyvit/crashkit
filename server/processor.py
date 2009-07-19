@@ -23,11 +23,17 @@ def send_email_notifications(bug, emails, account, product):
   product_path = 'http://crashkitapp.appspot.com/%s/products/%s' % (account.permalink, product.unique_name)
   subject_bug_descr = "%s in %s.%s.%s:%s" % (bug.exception_name, bug.exception_package,
       bug.exception_klass, bug.exception_method, bug.exception_line)
-  if bug.last_email_on is None:
+  if bug.just_reopened:
+    designator = 'REOPENED'
+    tagline = "The following closed bug occurred again and has been reopened:"
+  elif bug.last_email_on is None:
     designator = 'NEW'
     tagline = "The following bug has occurred for the first time:"
+  elif bug.state == BUG_CLOSED:
+    designator = 'recurring'
+    tagline = "The following bug is closed, but still occurs. (Due to product settings the bug has not been reopened.)"
   else:
-    designator = 'RECURRING'
+    designator = 'recurring'
     tagline = "Just a friendly reminder that the following bug is still occurring:"
   subject = "[CrK %s/%s] %s %s" % (account.permalink, product.unique_name, designator, subject_bug_descr)
   
@@ -92,6 +98,18 @@ def process_incoming_occurrence(product, client, incoming_occurrence):
     if request_uri:
       if bug.request_uri is None or len(request_uri) < len(bug.request_uri):
         bug.request_uri = request_uri
+        
+    if bug.state == BUG_CLOSED:
+      should_reopen = False
+      if product.reopening_mode == REOPENING_MODE_IMMEDIATE:
+        should_reopen = True
+      elif product.reopening_mode == REOPENING_MODE_8_HOURS:
+        should_reopen = bug.closed_at is None or (datetime.now() - bug.closed_at > timedelta(hours=8))
+      elif product.reopening_mode == REOPENING_MODE_NEW_VERSION:
+        # not implemented yet, so just give 30 minutes to build and deploy a new ver
+        should_reopen = bug.closed_at is None or (datetime.now() - bug.closed_at > timedelta(minutes=30))
+      if should_reopen:
+        bug.reopen()
 
     bug.put()
     return bug

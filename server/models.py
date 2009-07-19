@@ -48,6 +48,18 @@ BUG_TRACKERS_DICT = dict(BUG_TRACKERS)
 
 def match_package(pattern, item):
   return (item + '.').startswith(pattern + '.')
+  
+REOPENING_MODE_IMMEDIATE   = 0
+REOPENING_MODE_8_HOURS     = 1
+REOPENING_MODE_NEW_VERSION = 2
+
+REOPENING_MODES = (
+  ('immediate', REOPENING_MODE_IMMEDIATE),
+  ('in8hours', REOPENING_MODE_8_HOURS),
+  ('newversion', REOPENING_MODE_NEW_VERSION),
+)
+NAMES_TO_REOPENING_MODES = dict(REOPENING_MODES)
+REOPENING_MODES_TO_NAMES = dict((v,k) for k,v in REOPENING_MODES)
 
 class Product(db.Model):
   account = db.ReferenceProperty(Account, collection_name = 'products')
@@ -65,6 +77,11 @@ class Product(db.Model):
   public_access = db.BooleanProperty()
   
   uninteresting_packages = db.TextProperty(default="java,javax,sun,org.eclipse,com.yoursway.utils.bugs")
+  
+  reopening_mode = db.IntegerProperty(default=REOPENING_MODE_IMMEDIATE, choices=[REOPENING_MODE_IMMEDIATE, REOPENING_MODE_8_HOURS, REOPENING_MODE_NEW_VERSION])
+  
+  def reopening_mode_name(self):
+    return REOPENING_MODES_TO_NAMES[self.reopening_mode]
   
   def list_of_new_bug_notification_emails(self):
     e = (self.new_bug_notification_emails or '').strip()
@@ -177,6 +194,8 @@ class Bug(db.Model):
     return 'P%s-L%s' % (product_id, location_hash)
   
   created_at = db.DateTimeProperty(auto_now_add = True)
+  reopened_at = db.DateTimeProperty()
+  closed_at = db.DateTimeProperty()
 
   exception_name    = db.StringProperty()
   exception_package = db.StringProperty()
@@ -195,11 +214,31 @@ class Bug(db.Model):
   
   last_email_on = db.DateProperty(default=None)
   
+  just_reopened = False  # not a DB field, but still used privately
+  
+  def close(self):
+    if self.state == BUG_CLOSED: return False
+    self.state = BUG_CLOSED
+    self.closed_at = datetime.now()
+    return True
+  
+  def ignore(self):
+    if self.state == BUG_IGNORED: return False
+    self.state = BUG_IGNORED
+    return True
+  
+  def reopen(self):
+    if self.state == BUG_OPEN: return False
+    self.state = BUG_OPEN
+    self.reopened_at = datetime.now()
+    self.just_reopened = True  # this is not persisted, so only lasts one request
+    return True
+  
   def should_spam(self):
-    if self.last_email_on == None:
-      return True
-    if (self.last_occurrence_on - self.last_email_on).days > 0:
-      return True
+    if self.just_reopened:          return True
+    if self.state == BUG_IGNORED:   return False
+    if self.last_email_on is None:  return True
+    if (self.last_occurrence_on - self.last_email_on).days > 0:  return True
     return False
     
   def request_uri_and_exception_message(self):

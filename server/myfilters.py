@@ -83,14 +83,21 @@ def ifnone(value, subst = ''):
 @register.filter
 def selectedifeq(value, sample):
   if str(value) == str(sample):
-    return """ selected="selected" """
+    return mark_safe(""" selected="selected" """)
   else:
     return ""
 
 @register.filter
 def checkediftrue(value):
   if value:
-    return """ checked="checked" """
+    return mark_safe(""" checked="checked" """)
+  else:
+    return ""
+
+@register.filter
+def checkedifeq(value, sample):
+  if str(value) == str(sample):
+    return mark_safe(""" checked="checked" """)
   else:
     return ""
 

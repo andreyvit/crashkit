@@ -89,6 +89,28 @@
       </li>
     
     <li class="section">
+      <h3>Rules for automatic reopening of closed bugs</h3>
+    </li>
+
+    <li>
+      <label class="desc">
+        If a closed bug occurs again, reopen it…
+      </label>
+      <div class="column">
+        <input id="reopening_mode_immediate" type="radio" class="field checkbox" name="reopening_mode" value="immediate" {{product.reopening_mode_name|checkedifeq:"immediate"}} />
+        <label class="choice" for="reopening_mode_immediate">…immediately</label>
+      </div>
+      <div class="column">
+        <input id="reopening_mode_in8hours" type="radio" class="field checkbox" name="reopening_mode" value="in8hours" {{product.reopening_mode_name|checkedifeq:"in8hours"}} />
+        <label class="choice" for="reopening_mode_in8hours">…if 8 hours have passed since it has been closed</label>
+      </div>
+      <!-- <div class="column">
+        <input id="reopening_mode_newversion" type="radio" class="field checkbox" name="reopening_mode" value="newversion" {{product.reopening_mode_name|checkedifeq:"newversion"}} />
+        <label class="choice" for="reopening_mode_newversion">…if it occured in a previously unseen version of the product</label>
+      </div> -->
+    </li>
+    
+    <li class="section">
       <h3>Make this product public?</h3>
     </li>
     
