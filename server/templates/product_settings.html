@@ -88,29 +88,6 @@
         </p>
       </li>
     
-    {% if product.is_saved %}
-    
-      <li class="section">
-        <h3>Smart exception grouping</h3>
-        <div>
-          Java packages listed below will be ignored when grouping exception reports into bugs.
-          (Changes made to this setting will only affect new exception reports.)
-        </div>
-      </li>
-      
-      <li class="{% if uninteresting_packages_error %}error{% endif %}">
-        <label class="desc" for="uninteresting_packages">
-          Java packages to ignore
-        </label>
-        <div>
-          <input id="uninteresting_packages" name="uninteresting_packages" class="field text long" value="{{product.uninteresting_packages}}" size="60" />
-        </div>
-        <p class="error">
-          {{uninteresting_packages_error|errorspan}}
-        </p>
-      </li>
-    {% endif %}
-    
     <li class="section">
       <h3>Make this product public?</h3>
     </li>
