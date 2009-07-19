@@ -36,6 +36,33 @@ class MigrateWorkerHandler(BaseHandler):
     pass
     # self.add_daily_stats()
     # self.add_exception_messages_to_bugs()
+    # self.remove_daily_stats()
+
+  def remove_daily_stats(self):
+    start = self.request.get('start')
+    total_count = int(self.request.get('count') or 0)
+
+    query = BugWeekStat.all()
+    if start:
+      query.filter('__key__ >', db.Key(start))
+    old = query.fetch(100)
+    if not old:
+      logging.info('Migration done after processing %d rows.' % total_count)
+      return
+
+    last_key = old[-1].key()
+    new = []
+
+    per_week_data = {}
+    for stat in old:
+      stat.daily = []
+    db.put(old)
+      
+    total_count += len(old)
+    logging.info("Migration running: processed %d rows" % total_count)
+
+    taskqueue.add(url='/admin/migrate/worker', params=dict(start=last_key, count=total_count))
+
   
   def add_daily_stats(self):
     start = self.request.get('start')
@@ -60,7 +87,7 @@ class MigrateWorkerHandler(BaseHandler):
       k = (occurrence._bug, occurrence.week)
       day = occurrence.date.isocalendar()[2]
       per_week_data.setdefault(k, [0, 0, 0, 0, 0, 0, 0])
-      per_week_data[k][day-1] += 1
+      per_week_data[k][day-1] += occurrence.count
     
     stats = index(lambda s: (s._bug, s.week), [s for s in BugWeekStat.get_by_key_name([BugWeekStat.key_name_for(b, w) for b,w in per_week_data]) if s])
     for k, data in per_week_data.iteritems():

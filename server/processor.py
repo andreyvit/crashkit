@@ -160,6 +160,12 @@ def process_incoming_occurrence(product, client, incoming_occurrence):
       stat.count += incoming_occurrence.count
       stat.first  = min(stat.first, incoming_occurrence.date)
       stat.last   = max(stat.last, incoming_occurrence.date)
+    if not stat.daily:
+      stat.daily = [0, 0, 0, 0, 0, 0, 0]
+      
+    day = incoming_occurrence.date.isocalendar()[2]
+    stat.daily[day-1] += incoming_occurrence.count
+    
     stat.put()
   db.run_in_transaction(week_txn, BugWeekStat.key_name_for(bug.key(), incoming_occurrence.week))
   
