@@ -72,6 +72,14 @@ class ProductHelpHandler(BaseHandler):
 
   @prolog(fetch=['account', 'product'])
   def get(self):
+    if self.request.get('nohl'):
+      nohl = (self.request.get('nohl') == '1')
+      self.response.headers.add_header('Set-Cookie', 'nohl=%s; path=/; expires=Wed, 31-Dec-2020 23:59:59 GMT' % ('1' if nohl else '0'))
+      self.redirect_and_finish(u'%s/products/%s/help/integration' % (self.account_path, self.product.unique_name))
+    
+    nohl = self.request.cookies.get('nohl', '0')
+    nohl = (nohl == '1')
+      
     product_name = self.product.unique_name
     BAD_NAME_CHARS_RE = re.compile('[^a-zA-Z0-9]+')
     override_file_name = 'crashkit.%s.role' % BAD_NAME_CHARS_RE.sub('', product_name).lower()
@@ -82,4 +90,5 @@ class ProductHelpHandler(BaseHandler):
 
     self.data.update(tabid = 'product-help-tab', client_admin_cookie=self.product.client_admin_password)
     self.data.update(role_override_env_var=override_env_name, role_override_file=override_file_name)
+    self.data.update(nohl=nohl)
     self.render_and_finish('product_integration_help.html')

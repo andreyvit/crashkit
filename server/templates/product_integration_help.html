@@ -1,15 +1,23 @@
 {% extends 'base.html' %}
 {% block title %}{{ project.friendly_name}} Integration Help{% endblock %}
 {% block js %}
+  {% if not nohl %}
   <script type="text/javascript" src="/static/javascript/highlight.pack.js"></script>
   <script type="text/javascript"> hljs.initHighlightingOnLoad(); </script>
+  {% endif %}
 {% endblock %}
 {% block css %}
   <link rel="stylesheet" type="text/css" href="/static/stylesheets/highlight/default.css" />
 {% endblock %}
 {% block content %}
 <div class="long-container">
-  <p>Note: it's okay to report e.g. Python and JavaScript errors into the same product.</p>
+  <p>It is okay to report e.g. Python and JavaScript errors into the same product.</p>
+  
+  {% if nohl %}
+    <p><small><a class="nav" href="integration?nohl=0">Enable syntax highlighting</a>.</small></p>
+  {% else %}
+    <p><small><a class="nav" href="integration?nohl=1">Disable syntax highlighting</a> if you have problems seeing the code snippets.</small></p>
+  {% endif %}
     
   <h2>Integrating into Java applications</h2>
   <p><a href="http://download.yoursway.com/crashkit-java-{{client_versions.java}}.zip">Download Java client {{client_versions.java}}</a></p>

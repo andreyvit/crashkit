@@ -59,6 +59,8 @@ tr.even td.evencol { background: #ededed !important; }
 .date, .dim { color: #777; }
 span.date { padding-left: 1ex; }
 
+a.nav, a.nav:visited, a.nav:active { color: blue; }
+
 .table-scrolling-container { overflow: auto; padding-left: 10px; margin-left: -10px; }
 
 .long-container, .dev-message { width: 1000px; margin-left: auto; margin-right: auto; }
