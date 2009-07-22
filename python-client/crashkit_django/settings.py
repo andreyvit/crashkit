@@ -1,6 +1,6 @@
 # Django settings for crashkit_django project.
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -86,8 +86,8 @@ CRASHKIT = {
     'account_name': 'test',
     'product_name': 'django',
     'app_dirs': [os.path.dirname(__file__)],       # all other directories will be treated as external libs
-    'app_dir_exclusions': ['django', 'coolstuff'], # some subdirs contain libraries too
-    'role': ('disabled' if DEBUG else 'customer')  # disable CrashKit while debugging
+    'app_dir_exclusions': ['django', 'coolstuff'] # some subdirs contain libraries too
+    # 'role': ('disabled' if DEBUG else 'customer')# disable CrashKit while debugging
     # this role is the default one, but you can override it using:
     #   environment variable:    DJANGO_CRASHKIT_ROLE
     #   contents of file:        ~/django.role  or  ~/.django.role
