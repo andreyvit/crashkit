@@ -27,6 +27,7 @@ from datetime import date
 import sys
 import os
 import re
+import logging
 
 CRASHKIT_VERSION = '{{ver}}'
 CRASHKIT_HOST = 'crashkitapp.appspot.com'
@@ -139,10 +140,11 @@ class CrashKit:
     traceback = get_traceback(info[2])
     env = dict(**env)
     env.update(**collect_platform_info())
+    exception_name = encode_exception_name(info[0])
     message = {
         "exceptions": [
             {
-                "name": encode_exception_name(info[0]),
+                "name": exception_name,
                 "message": info[1].message,
                 "locations": [encode_location(el, self.is_app_dir) for el in traceback]
             }
@@ -158,17 +160,13 @@ class CrashKit:
     try:
       response = urlopen(Request(self.post_url, payload))
       the_page = response.read()
-      # print unicode(the_page, 'utf-8')
+      logging.info("CrashKit has successfully sent exception %s" % exception_name)
     except UnicodeDecodeError:
       pass
     except HTTPError, e:
-      print "Cannot send exception - HTTP error %s" % e.code
-      try:
-        print unicode(e.read(), 'utf-8')
-      except UnicodeDecodeError:
-        pass
+      logging.error("CrashKit failed to send exception %s: HTTP error %s" % (exception_name, e.code))
     except URLError, e:
-      print "Cannot send exception: %s" % e.reason
+      logging.error("CrashKit failed to send exception %s: %s" % (exception_name, e.reason))
  
 crashkit = None
 
