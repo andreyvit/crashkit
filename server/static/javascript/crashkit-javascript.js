@@ -64,8 +64,8 @@ CrashKit.report = (function() {
             } catch(inner) {
                 exception = inner;
             }
-        if (exception) throw exception;
-    }
+        if (exception) { throw exception; }
+    };
     
     var onerrorHandler = function(message, url, lineNo) {
         var stack = null;
@@ -76,23 +76,25 @@ CrashKit.report = (function() {
             lastException = null;
         } else {
             var location = {'url': url, 'line': lineNo};
-            location.func = guessFunctionName(location.url, location.line);
-            stack = {'mode': 'onerror', 'message': error, 'stack': location};
+            location.func = CrashKit.computeStackTrace.guessFunctionName(location.url, location.line);
+            location.context = CrashKit.computeStackTrace.gatherContext(location.url, location.line);
+            stack = {'mode': 'onerror', 'message': message, 'stack': [location]};
         }
         notifyHandlers(stack);
         return false;
     };
     
     var report = function(ex) {
-        if (lastExceptionStack)
-            if (lastException == ex)
+        if (lastExceptionStack) {
+            if (lastException == ex) {
                 return; // already caught by an inner catch block, ignore
-            else {
+            } else {
                 var s = lastExceptionStack;
                 lastExceptionStack = null;
                 lastException = null;
                 notifyHandlers(s);
             }
+        }
         
         var stack = CrashKit.computeStackTrace(ex, 1);
         lastExceptionStack = stack;
@@ -163,7 +165,7 @@ CrashKit.report = (function() {
 // * Beware: some func names may be guessed incorrectly and duplicate funcs may be mismatched.
 //
 // CrashKit.computeStackTrace should only be used for tracing purposes. Logging of unhandled exceptions
-// should be done with CrashKit.report, which builds on top of CrashKit.computeStackTrace but provides
+// should be done with CrashKit.report, which builds on top of CrashKit.computeStackTrace and provides
 // better IE support by utilizing window.onerror event.
 //
 // Note: In IE and Safari, no stack trace is recorded inside exception object, so computeStackTrace
@@ -195,11 +197,11 @@ CrashKit.computeStackTrace = (function() {
     
     if (typeof XMLHttpRequest == "undefined") {  // IE 5.x-6.x:
         XMLHttpRequest = function() {
-            try { return new ActiveXObject("Msxml2.XMLHTTP.6.0") } catch(e) {}
-            try { return new ActiveXObject("Msxml2.XMLHTTP.3.0") } catch(e) {}
-            try { return new ActiveXObject("Msxml2.XMLHTTP") } catch(e) {}
-            try { return new ActiveXObject("Microsoft.XMLHTTP") } catch(e) {}
-            throw new Error( "This browser does not support XMLHttpRequest." )
+            try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); } catch(e) {}
+            try { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); } catch(e) {}
+            try { return new ActiveXObject("Msxml2.XMLHTTP"); } catch(e) {}
+            try { return new ActiveXObject("Microsoft.XMLHTTP"); } catch(e) {}
+            throw new Error( "This browser does not support XMLHttpRequest." );
         };
     }
 
@@ -269,7 +271,7 @@ CrashKit.computeStackTrace = (function() {
             arguments.callee.sRE = new RegExp('(\\' + specials.join('|\\') + ')', 'g');
         }
         return text.replace(arguments.callee.sRE, '\\$1');
-    }
+    };
 
     var escapeCodeAsRegExpForMatchingInsideHTML = function(body) {
         return escapeRegExp(body).replace('<', '(?:<|&lt;)').replace('>', '(?:>|&gt;)')
@@ -306,8 +308,8 @@ CrashKit.computeStackTrace = (function() {
         }
         var code = ""+func;
 
-        var codeRE = /^function(?:\s+([\w$]+))?\s*\(([\w\s,]+)\)\s*{\s*(\S[\s\S]*\S)\s*}\s*$/;
-        var eventRE = /^function on([\w$]+)\s*\(event\)\s*{\s*(\S[\s\S]*\S)\s*}\s*$/;
+        var codeRE = /^function(?:\s+([\w$]+))?\s*\(([\w\s,]+)\)\s*\{\s*(\S[\s\S]*\S)\s*\}\s*$/;
+        var eventRE = /^function on([\w$]+)\s*\(event\)\s*\{\s*(\S[\s\S]*\S)\s*\}\s*$/;
         var re;
         var isOneLiner = false;
         if (!codeRE.test(code))
@@ -393,19 +395,18 @@ CrashKit.computeStackTrace = (function() {
         for(var i in lines) {
             var line = lines[i];
             if (lineRE.test(line)) {
-                atLeastOneLineMatched = true;
                 var element = {'url': RegExp.$2, 'func': RegExp.$1, 'line': RegExp.$3};
-                if (element.func == "" && element.line != 0)
+                if (!element.func && element.line)
                     element.func = guessFunctionName(element.url, element.line);
-                if (element.line != 0)
+                if (element.line)
                     element.context = gatherContext(element.url, element.line);
                 stack.push(element);
             }
         }
-        if (stack.length == 0)
+        if (!stack.length)
             return null; // ex.stack is defined, but cannot be parsed
         return {'mode': 'firefox', 'name': ex.name, 'message': ex.message, 'stack': stack};
-    }
+    };
     
     var computeStackTraceFromOperaMultiLineMessage = function(ex) {
         // Opera includes a stack trace into the exception message. An example is:
@@ -464,7 +465,7 @@ CrashKit.computeStackTrace = (function() {
                     item = {'url': url, 'line': source.line, 'func': ''};
             }
             if (item) {
-                if (item.func == '')
+                if (!item.func)
                     item.func = guessFunctionName(item.url, item.line);
                 var context = gatherContext(item.url, item.line);
                 var midline = (context ? context[Math.floor(context.length/2)] : null);
@@ -477,7 +478,7 @@ CrashKit.computeStackTrace = (function() {
                 stack.push(item);
             }
         }
-        if (stack.length == 0)
+        if (!stack.length)
             return null; // could not parse multiline exception message as Opera stack trace
 
         return {'mode': 'opera', 'name': ex.name, 'message': lines[0], 'stack': stack};
@@ -507,7 +508,7 @@ CrashKit.computeStackTrace = (function() {
         } else {
             stackInfo.incomplete = true;
         }
-    }
+    };
     
     var computeStackTraceByWalkingCallerChain = function(ex, depth) {
         var fnRE  = /function\s*([\w\-$]+)?\s*\(/i;
@@ -521,10 +522,10 @@ CrashKit.computeStackTrace = (function() {
             
             var source = findSourceByFunctionBody(curr);
             var url = null, line = null;
-            if (source != null) {
+            if (source) {
                 url  = source.url;
                 line = source.line;
-                if (fn == '')
+                if (!fn)
                     fn = guessFunctionName(url, source.startLine);
             }
 
@@ -574,6 +575,8 @@ CrashKit.computeStackTrace = (function() {
     };
     
     computeStackTrace.augmentStackTraceWithInitialElement = augmentStackTraceWithInitialElement;
+    computeStackTrace.guessFunctionName = guessFunctionName;
+    computeStackTrace.gatherContext = gatherContext;
     computeStackTrace.ofCaller = computeStackTraceOfCaller;
     
     return computeStackTrace;
@@ -697,7 +700,7 @@ CrashKit.computeStackTrace = (function() {
         if (!request.getResponseHeader("Date") || request.status != 200) {
             // oops
         }
-    }  
+    };
     
     var sendToCrashKit = function(stack) {
         if (webServiceUrl == null)
