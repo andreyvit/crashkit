@@ -8,6 +8,7 @@ import string
 import urllib
 import sets
 import hashlib
+from urlparse import urlsplit
 from random import Random
 from google.appengine.ext import db
 from google.appengine.api import memcache
@@ -232,6 +233,12 @@ def parse_location(el):
 class ReportedOccurrence(object):
   
   def __init__(self, data, product):
+    
+    self.language = data.get('language', 'unknown')
+    
+    func = 'preprocess_%s' % self.language
+    if hasattr(self, func):
+      getattr(self, func)(data)
 
     if 'date' in data:
       self.date = date(*(time.strptime(data['date'], '%Y-%m-%d')[0:3]))
@@ -258,8 +265,6 @@ class ReportedOccurrence(object):
     self.data = data.get('data', {})
     if isinstance(self.data, list):
       self.data = {} # fuck you again
-    
-    self.language = data.get('language', 'unknown')
     
     self.exceptions = [
       dict(name=e['name'],
@@ -298,3 +303,108 @@ class ReportedOccurrence(object):
           return (index, exception['name'], package_name, class_name, method_name, line)
       index += 1
     raise StandardError, "No exception info recorded for this case"
+    
+  def preprocess_javascript(self, json):
+    exception_json = json.get('exception')
+    if exception_json:
+      del json['exception']
+      mode    = exception_json.get('mode') or 'unknown'
+      name    = exception_json.get('name') or 'User Exception'
+      message = exception_json.get('message') or ''
+      stack   = exception_json.get('stack') or []
+      locations = []
+      for item in stack:
+        location = {}
+        url = item.get('url') or ''
+        url_comp = urlsplit(url, 'http')
+        location['package'] = url_comp.path
+        location['file'] = url
+        location['method'] = item.get('func') or ''
+        location['line'] = item.get('line') or 0
+        locations.append(location)
+        
+      json['exceptions'] = [dict(name=name, message=message, locations=locations)]
+      
+    env_json = json.get('env')
+    if env_json:
+      user_agent = env_json.get('user_agent') or ''
+      opera      = env_json.get('opera') or False
+      vendor     = env_json.get('vendor') or ''
+      platform   = env_json.get('platform') or ''
+      del env_json['opera']
+      
+      browser_name = 'unknown'
+      if 'Chrome' in user_agent:
+        browser_name   = 'Google Chrome'
+        version_prefix = 'Chrome'
+      elif 'OmniWeb' in user_agent:
+        browser_name   = 'OmniWeb'
+        version_prefix = 'OmniWeb/'
+      elif 'Apple' in vendor:
+        browser_name   = 'Safari'
+        version_prefix = 'Version'
+      elif opera:
+        browser_name   = 'Opera'
+        version_prefix = 'Opera'
+      elif 'iCab' in vendor:
+        browser_name   = 'iCab'
+        version_prefix = 'iCab'
+      elif 'KDE' in vendor:
+        browser_name   = 'Konqueror'
+        version_prefix = 'Konqueror'
+      elif 'Firefox' in vendor:
+        browser_name   = 'Firefox'
+        version_prefix = 'Firefox'
+      elif 'Camino' in vendor:
+        browser_name   = 'Camino'
+        version_prefix = 'Camino'
+      elif 'Netscape' in user_agent:
+        browser_name   = 'Netscape'
+        version_prefix = 'Netscape'
+      elif 'MSIE' in user_agent:
+        browser_name   = 'Internet Explorer'
+        version_prefix = 'MSIE'
+      elif 'Gecko' in user_agent:
+        browser_name   = 'Mozilla'
+        version_prefix = 'rv'
+      elif 'Mozilla' in user_agent: # older Netscapes (4-)
+        browser_name   = 'Netscape'
+        version_prefix = 'Mozilla'
+      else:
+        browser_name   = 'unknown'
+        version_prefix = 'unknown'
+        
+      def parse_version(string):
+        pos = user_agent.find(string)
+        if pos < 0:  return None
+        version_string = string[(pos+len(string)):]
+        version_string = version_string[:len(version_string)-len(version_string.lstrip(' 0123456789.'))]
+        try:                return float(version_string)
+        except ValueError:  return None
+        
+      browser_version = parse_version(user_agent) or parse_version(vendor) or None
+      browser_name_and_version = ('%s %s' % (browser_name, browser_version) if browser_version else browser_name)
+      
+      if 'Win' in platform:
+        os_name = 'Windows'
+      elif 'Mac' in platform:
+        os_name = 'Mac OS X'
+      elif 'iPhone' in user_agent:
+        os_name = 'iPhone/iPod'
+      elif 'Linux' in platform:
+        os_name = 'Linux'
+      else:
+        os_name = 'Unknown (%s)' % platform
+      
+      env_json['os_name'] = os_name
+      env_json['browser'] = browser_name_and_version
+      env_json['browser_name'] = browser_name
+      
+      
+    # if (/ is not defined$/.test(message))
+    #     exception = 'Undefined Variable';
+    # else if (/ is not a function$/.test(message))
+    #     exception = 'Invalid Call';
+    # else if (/ is null$/.test(message))
+    #     exception = 'Null Reference';
+    pass

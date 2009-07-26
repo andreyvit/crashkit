@@ -1,0 +1,76 @@
+<html>
+<script>
+
+function getStackTrace() {
+        var curr  = arguments.callee.caller,
+            FUNC  = 'function', ANON = "{anonymous}",
+            fnRE  = /function\s*([\w\-$]+)?\s*\(/i,
+            stack = [],j=0,
+            fn,args,i;
+
+        while (curr) {
+            
+            fn    = fnRE.test(curr.toString()) ? RegExp.$1 || ANON : ANON;
+            args  = stack.slice.call(curr.arguments);
+            i     = args.length;
+
+            while (i--) {
+                switch (typeof args[i]) {
+                    case 'string'  : args[i] = '"'+args[i].replace(/"/g,'\\"')+'"'; break;
+                    case 'function': args[i] = FUNC; break;
+                }
+            }
+
+            stack[j++] = fn + '(' + args.join() + ')';
+            curr = curr.caller;
+        }
+        
+	return stack;
+}
+
+
+function report(ex) {
+  var data = "";
+  for (var i in ex) {
+    data += "ex." + i + " = " + ex[i] + "\n";
+  }
+  var s = getStackTrace();
+  alert("EX:\n" + data + "\nSTACK:\n" + s.join("\n"));
+}
+
+window.onerror = function(a,b,c) {
+
+alert("onerror(" + a + ", " + b + ", " + c + ")");
+
+}
+
+</script>
+
+<script>
+function xxx(a) {
+  yyy(a,a+1);
+}
+
+yyy = function(b,c) {
+  zzz(c,b);
+};
+
+function zzz(d,e) {
+  qq(d);
+}
+
+function bbb() {
+  try {
+    xxx(42);
+  } catch(e) {
+    report(e);
+    throw e;
+  }
+}
+
+
+</script>
+<body>
+<a href="#" onclick="bbb()">Click me</a>
+</body>
+</html>

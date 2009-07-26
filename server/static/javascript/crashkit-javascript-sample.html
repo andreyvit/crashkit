@@ -1,0 +1,24 @@
+<html>
+<head>
+  <!-- <script src="http://crashkitapp.appspot.com/static/javascript/crashkit-javascript.js?test/js" type="text/javascript" charset="utf-8"></script> -->
+  <script src="http://localhost:5005/static/javascript/crashkit-javascript.js?test/js" type="text/javascript" charset="utf-8"></script>
+  <script src="crashkit-javascript-sample.js" type="text/javascript" charset="utf-8"></script>
+  <script type="text/javascript" charset="utf-8">
+    function xxx(a) {
+      yyy(a, a, a);
+    }
+    
+    yyy = function(x, y, z) {
+      ppp(x, y, z);
+    }
+  </script>
+  <script>
+    function ppp(x, y, z) {
+      zzz(x, y, z);
+    }
+  </script>
+</head>
+<body>
+<a href="#" onclick="try { if(1 &lt; 2) xxx('hi'); return false; } catch(e) { CrashKit.report(e); }">Link test</a>
+<input type="button" value="Button test!" onclick="try { foobarbozzzz(); } catch(e) { CrashKit.report(e); }">
+</html>
