@@ -9,6 +9,7 @@ import urllib
 import sets
 import hashlib
 from urlparse import urlsplit
+from cgi import parse_qs
 from random import Random
 from google.appengine.ext import db
 from google.appengine.api import memcache
@@ -332,6 +333,7 @@ class ReportedOccurrence(object):
       vendor     = env_json.get('vendor') or ''
       platform   = env_json.get('platform') or ''
       del env_json['opera']
+      del env_json['vendor']
       
       browser_name = 'unknown'
       if 'Chrome' in user_agent:
@@ -352,7 +354,7 @@ class ReportedOccurrence(object):
       elif 'KDE' in vendor:
         browser_name   = 'Konqueror'
         version_prefix = 'Konqueror'
-      elif 'Firefox' in vendor:
+      elif 'Firefox' in vendor or 'Firefox' in user_agent:
         browser_name   = 'Firefox'
         version_prefix = 'Firefox'
       elif 'Camino' in vendor:
@@ -375,12 +377,11 @@ class ReportedOccurrence(object):
         version_prefix = 'unknown'
         
       def parse_version(string):
-        pos = user_agent.find(string)
+        pos = string.find(version_prefix)
         if pos < 0:  return None
-        version_string = string[(pos+len(string)):]
-        version_string = version_string[:len(version_string)-len(version_string.lstrip(' 0123456789.'))]
-        try:                return float(version_string)
-        except ValueError:  return None
+        version_string = string[(pos+len(version_prefix)+1):]
+        version_string = version_string[:len(version_string)-len(version_string.lstrip(' 0123456789'))]
+        return version_string.strip()
         
       browser_version = parse_version(user_agent) or parse_version(vendor) or None
       browser_name_and_version = ('%s %s' % (browser_name, browser_version) if browser_version else browser_name)
@@ -398,8 +399,20 @@ class ReportedOccurrence(object):
       
       env_json['os_name'] = os_name
       env_json['browser'] = browser_name_and_version
-      env_json['browser_name'] = browser_name
+    
+    data_json = json.get('data')
+    if data_json:
+      url = data_json.get('url')
+      cookie = data_json.get('cookie')
+      del data_json['url']
+      del data_json['cookie']
       
+      components = urlsplit(url)
+      env_json['PATH_INFO'] = components.path
+      env_json['HTTP_HOST'] = components.hostname
+      if components.port:  env_json['SERVER_PORT'] = str(components.port)
+      for key, values in parse_qs(components.query).iteritems():
+        data_json['G_' + key] = (values[0] if len(values) == 1 else '[' + ", ".join(values) + ']')
       
     # if (/ is not defined$/.test(message))
     #     exception = 'Undefined Variable';
@@ -407,4 +420,3 @@ class ReportedOccurrence(object):
     #     exception = 'Invalid Call';
     # else if (/ is null$/.test(message))
     #     exception = 'Null Reference';
-    pass
