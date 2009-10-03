@@ -27,7 +27,9 @@ class AdminHandler(BaseHandler):
   def get(self):
     self.accounts = Account.all().order('-created_at').fetch(100)
     keys_to_accounts = index(lambda a: a.key(), self.accounts)
-    products = Product.all().filter('account IN', self.accounts).fetch(1000)
+    products = []
+    for accounts_slice in slice(20, self.accounts):
+        products += Product.all().filter('account IN', accounts_slice).fetch(1000)
     for k, l in group(lambda p: p._account, products).iteritems():
       keys_to_accounts[k].all_products = l
       

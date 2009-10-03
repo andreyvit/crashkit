@@ -42,6 +42,14 @@ def group(func, iterable):
     for i in iterable:
         result.setdefault(func(i), []).append(i) 
     return result
+
+def slice(count, iterable):
+    result = []
+    for i in iterable:
+        if len(result) == 0 or len(result[-1]) == count:
+            result.append([])
+        result[-1].append(i)
+    return result
     
 def index(func, iterable):
     result = {}
