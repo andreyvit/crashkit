@@ -97,7 +97,8 @@ def iso_year_week_day_to_date(y, w, d):
   
   jan4 = date(y, 1, 4)
   jan4_monday_offset = jan4.weekday()
-  if jan4_monday_offset == 0: jan4_monday_offset = 7
+  # bug fix -- dunno why this is wrong (or why I thought this was right)
+  # if jan4_monday_offset == 0: jan4_monday_offset = 7
   
   result = jan4 + timedelta(days=(-jan4_monday_offset + 7*(w-1) + (d-1)))
   assert result.isocalendar() == (y, w, d)
