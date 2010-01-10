@@ -25,6 +25,7 @@ from controllers.base import *
 from controllers.product import *
 from controllers.account import *
 from controllers.invites import *
+from controllers.status import *
 from commons import *
 from controllers.user import *
 from controllers.admin import *
@@ -400,6 +401,7 @@ class ViewBlobHandler(BaseHandler):
 
 url_mapping = [
   ('/', HomeHandler),
+  ('/status/', StatusHandler),
   ('/signup/([a-zA-Z0-9]*)', SignupHandler),
   ('/betasignup/', SignUpForLimitedBetaHandler),
   ('/admin/', AdminHandler),
