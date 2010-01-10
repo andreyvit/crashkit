@@ -7,7 +7,7 @@
     {% set chart_start week_to_start_date(previous_week(week, 3)) %}
     <img src="{{bug.stats.daily|linechart:"60x20"}}" alt="" width="60" height="20" title="Showing {{ chart_start|naturaldate}} – {{ week_end|naturaldate }}" />
   </td>
-  <td class="blname"><a href="bugs/{{ bug.key.name }}/">{{ bug.exception_name }}</a></td>
+  <td class="blname"><a href="bugs/{{ bug.key.name }}/">{% if bug.exception_name %}{{ bug.exception_name }}{% else %}Error{% endif %}</a></td>
   <td class="blpackage evencol" style="text-align: right;">{{ bug.exception_package }}</td>
   <td class="blmethod">
     {% if bug.exception_klass and bug.exception_method %}
