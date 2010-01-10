@@ -221,6 +221,7 @@ def get_method_name_for_code_object(self, possible_func, code, depth = 0):
           if name: return name
         except AttributeError: pass
   except AttributeError: pass
+  except TypeError: pass
 
 def get_class_name(frame):
   """Guesses a class name to show in a stack trace for the given frame,

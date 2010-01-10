@@ -258,6 +258,8 @@ class ReportedOccurrence(object):
       self.context_name = 'unknown'
     
     self.role = data.get('role', 'customer')
+    if not isinstance(self.role, basestring):
+      self.role = 'customer'
     
     self.env = data.get('env', {})
     if isinstance(self.env, list):
