@@ -39,5 +39,29 @@
   <div id="footer">
     © 2009 — <a href="mailto:support@yoursway.com">e-mail support</a>, <a href="http://yoursway.campfirenow.com/988fc">live chat</a>, <a href="http://yoursway.lighthouseapp.com/projects/27411-crashkit/">public bug tracker</a>
   </div>
+<script type="text/javascript">
+var uservoiceOptions = {
+  /* required */
+  key: 'crashkit',
+  host: 'crashkit.uservoice.com', 
+  forum: '38110',
+  showTab: true,  
+  /* optional */
+  alignment: 'left',
+  background_color:'#f00', 
+  text_color: 'white',
+  hover_color: '#06C',
+  lang: 'en'
+};
+
+function _loadUserVoice() {
+  var s = document.createElement('script');
+  s.setAttribute('type', 'text/javascript');
+  s.setAttribute('src', ("https:" == document.location.protocol ? "https://" : "http://") + "cdn.uservoice.com/javascripts/widgets/tab.js");
+  document.getElementsByTagName('head')[0].appendChild(s);
+}
+_loadSuper = window.onload;
+window.onload = (typeof window.onload != 'function') ? _loadUserVoice : function() { _loadSuper(); _loadUserVoice(); };
+</script>
 </body>
 </html>
