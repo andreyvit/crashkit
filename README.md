@@ -25,4 +25,4 @@ Create a “test” account and add the following products if they don't already
 Run the tests:
 
     cd crashkit/tests
-    python runtests.py
+    ./runtests.py
