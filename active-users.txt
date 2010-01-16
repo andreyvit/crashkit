@@ -1,0 +1,105 @@
+burchik@gmail.com
+bryon@x10hosting.com, AFNeDrEn@gmail.com, corey@x10hosting.com
+ben@rawjam.co.uk
+robert.munteanu@gmail.com
+RefugeNetworks damian@learnabouttheweb.co.uk
+aenor.realm@gmail.com
+
+Vote for features -- help us with CrK roadmap for 2010!
+
+Dear email,
+
+Thanks for actively using CrashKit, and happy new year!
+
+Please help us define the roadmap for 2010. You can now share
+your ideas and vote for features at our new UserVoice community:
+
+  http://crashkit.uservoice.com/
+  
+We have already added a few ideas like:
+  * Add Ruby support
+  * Show source code snippets in the stack trace
+  * Track affected users/accounts, group bugs by user/account
+  * Add RSS feeds
+  
+We hope that you can step in and say what's most important
+for you in this new year.
+
+--
+Yours,
+Andrey Tarantsov,
+a.k.a. the CrashKit development team. :-)
+
+
+smswebmoney/smswebmoney 201002 --  ianamoor17@gmail.com
+buriy/blog 201002 -- burchik@gmail.com
+bryonelston/jackmunch-bin 201002 -- AFNeDrEn@gmail.com corey@x10hosting.com
+worldnews/stats 201001 -- burchik@gmail.com
+rawjam/briefd 201001 -- ben@rawjam.co.uk
+ys/discounter 201001 -- andreyvit@gmail.com
+lmnro/casaretro 201001 -- robert.munteanu@gmail.com
+lmnro/travelsfactory 201001 -- robert.munteanu@gmail.com
+test/js 200951 -- burchik@gmail.com
+RefugeNetworks/keyDist 200946 -- webmaster@learnabouttheweb.co.uk
+adtel/gnusmus 200942 -- aenor.realm@gmail.com
+RefugeNetworks/ScriptSet 200940 -- webmaster@learnabouttheweb.co.uk
+RefugeNetworks/EWManager 200940 -- webmaster@learnabouttheweb.co.uk
+test/py 200939 -- andreyvit@gmail.com
+worldnews/leads 200939 -- burchik@gmail.com
+jonasundderwolf/volksentscheid 200934 -- google@vonposer.de
+
+
+localstorm@gmail.com
+mikhail.kalugin@gmail.com
+maksim.ananjev@gmail.com
+quarkz@mail.ru
+mikhail.kalugin@gmail.com
+chadnov@gmail.com
+dottedmag@dottedmag.net
+aenor.realm@gmail.com
+self@splyer.com
+andreyvit@gmail.com
+andreyvit@gmail.com
+tal.giat@hoorray.com
+adnans@gmail.com
+alexspurling@gmail.com
+daz@ivaluenet.com
+patrick.lauber@divio.ch
+andreyvit@gmail.com
+hans@vormeland.no
+nizam@anzentech.com
+briant@5qcommunications.com
+ben.fordnz@gmail.com
+dana@betterprojects.com
+odelseth@gmail.com
+mark.hellewell@gmail.com
+z_e_m_e@pisem.net
+peter@fry-it.com
+crashkitapp@vonposer.de
+tobias.hasselrot@gmail.com
+van.omsk@gmail.com
+ben@rawjam.co.uk
+alfredo@lateral.net
+drbob@dokterbob.net
+anatoliy.larin@gmail.com
+Travis.cline@gmail.com
+webmaster@sportsdeta.com
+kamedov@gmail.com
+andreyvit@gmail.com
+andreyvit@gmail.com
+patrycjusz.szydlo@gmail.com
+bryon@x10hosting.com
+atr@mrcoffee.org
+spb.romeo@gmail.com
+robert.munteanu@gmail.com
+damian@learnabouttheweb.co.uk
+damian@damianzaremba.co.uk
+hedin.pr@gmail.com
+atr@mrcoffee.org
+f.golinski@gmail.com
+erlendfh@gmail.com
+sven.vandenbroek@lugos.be
+damian@damianzaremba.co.uk
+b826633@uggsrock.com
+andrey@xored.com
+Adriaan_Peeters@peopleware.be
