@@ -362,7 +362,20 @@ class PostBugReportHandler(BaseHandler):
 
   def handle_exception(self, exception, debug_mode):
     return webapp.RequestHandler.handle_exception(self, exception, debug_mode)
-    
+
+class ObtainLastReportHandler(BaseHandler):
+
+  @prolog(fetch=['account_nocheck', 'product_nocheck'])
+  def get(self):
+    report = Report.all().filter('product', self.product).order('-created_at').get()
+    if report is None:
+      self.response.out.write('[]')
+    else:
+      self.response.out.write(report.data)
+
+  def handle_exception(self, exception, debug_mode):
+    return webapp.RequestHandler.handle_exception(self, exception, debug_mode)
+       
 class ProcessReportHandler(BaseHandler):
   def post(self):
     report = Report.get_by_id(int(self.request.get('key')))
@@ -426,6 +439,7 @@ url_mapping = [
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/help/integration', ProductHelpHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/post-report/([0-9]+)/([a-zA-Z0-9]+)', PostBugReportHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/post-blob/([0-9]+)/([a-zA-Z0-9]+)/([a-zA-Z0-9]+)', PostBlobHandler),
+  ('/(test)/products/([a-zA-Z0-9._-]+)/last-posted-report', ObtainLastReportHandler),
   # per-project (users)
   ('/([a-zA-Z0-9._-]+)/products/(new)/', ProductSettingsHandler),
   ('/([a-zA-Z0-9._-]+)/products/([a-zA-Z0-9._-]+)/', BugListHandler),

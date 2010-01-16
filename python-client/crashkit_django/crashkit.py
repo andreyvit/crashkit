@@ -30,9 +30,7 @@ import re
 import logging
 
 CRASHKIT_VERSION = '{{ver}}'
-CRASHKIT_HOST = 'crashkitapp.appspot.com'
-# CRASHKIT_HOST = '8.latest.crashkitapp.appspot.com'
-# CRASHKIT_HOST = 'localhost:5005'
+CRASHKIT_HOST = os.environ.get('CRASHKIT_HOST', 'crashkitapp.appspot.com')
 
 BAD_NAME_CHARS_RE = re.compile('[^a-zA-Z0-9]+')
 

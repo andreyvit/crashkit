@@ -26,7 +26,7 @@ def poo(a, b):
   
 class Boo:
   
-  def moo(self, a):
+  def ku(self, a):
     a.match("#$%^&*([[[[[[)", "a")
     
   @staticmethod
@@ -48,7 +48,7 @@ def mpoo(a, b):
 class Moo(object):
   
   def moo(self, a):
-    Boo.cmoo(Boo().moo, a)
+    Boo.cmoo(Boo().ku, a)
     
   @staticmethod
   def smoo(a, b):
