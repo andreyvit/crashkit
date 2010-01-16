@@ -242,7 +242,8 @@ function crashkit_send_errors() {
   $account_name = CRASHKIT_ACCOUNT;
   $product_name = CRASHKIT_PRODUCT;
   $host = "crashkitapp.appspot.com";
-  // $host = "localhost:5005";
+  if (isset($_ENV['CRASHKIT_HOST']))
+    $host = $_ENV['CRASHKIT_HOST'];
   
   $ch = curl_init();
   curl_setopt($ch, CURLOPT_URL, "http://$host/$account_name/products/$product_name/post-report/0/0");
