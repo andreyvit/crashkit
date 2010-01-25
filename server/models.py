@@ -17,9 +17,9 @@ from commons import *
 # models
 
 class ServerConfig(db.Model):
-    signup_email_text        = db.TextProperty()
-    signup_email_subject     = db.TextProperty()
-    signup_email_unused_text = db.TextProperty()
+    signup_email_text        = db.TextProperty(default='')
+    signup_email_subject     = db.TextProperty(default='')
+    signup_email_unused_text = db.TextProperty(default='')
 
 def transaction(method):
   def decorate(*args, **kwds):
@@ -34,8 +34,8 @@ class LimitedBetaCandidate(db.Model):
   created_at      = db.DateTimeProperty(auto_now_add = True)
 
 class Account(db.Model):
-  name = db.TextProperty(default=None)
-  permalink = db.StringProperty(default=None)
+  name = db.TextProperty(default='')
+  permalink = db.StringProperty(default='')
   host = db.StringProperty()
   created_at = db.DateTimeProperty(auto_now_add = True)
     

@@ -1,0 +1,5 @@
+[nosyd]
+monitor=*.py **/*.py **/*.html
+
+[nose]
+options=--with-gae -e 'console|jinja' --without-sandbox

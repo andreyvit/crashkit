@@ -53,3 +53,7 @@ class ProfileHandler(BaseHandler):
   #     self.product_access.put()
   #     self.redirect_and_finish(u'%s/products/%s/all' % (self.account_path, self.product.unique_name),
   #       flash = u"“%s” has been created." % self.product.friendly_name)
+
+url_mapping = (
+  ('/profile/', ProfileHandler),
+)

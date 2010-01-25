@@ -1,28 +1,21 @@
-CrashKit
-========
 
 Running Tests
 -------------
 
-You need pexpect (http://www.noah.org/wiki/Pexpect, http://pexpect.sourceforge.net/pexpect.html):
+You need nose and nose-gae:
 
-    wget http://pexpect.sourceforge.net/pexpect-2.3.tar.gz
-    tar xzf pexpect-2.3.tar.gz
-    cd pexpect-2.3
-    sudo python ./setup.py install
+    sudo easy_install nose
+    sudo easy_install nosegae
+    sudo easy_install webtest
+    sudo easy_install BeautifulSoup
+    sudo easy_install gaetestbed
+    sudo easy_install 'fixture[decorators]'
 
-Run CrashKit development server on port 5005:
+To run tests continuously during development, download nosyd.
 
-    dev_appserver.py -p 5005 crashkit/server
-    
-Create a “test” account and add the following products if they don't already exists:
-* py
-* django
-* php
-* java
-* js
+Download Growl SDK from http://growl.info/downloads_developers.php; click the file to mount it. Then:
 
-Run the tests:
+    $ cp -r '/Volumes/Growl 1.2 SDK/Bindings/python/' /tmp/py-Growl
+    $ cd /tmp/py-Growl/
+    $ sudo python setup.py install
 
-    cd crashkit/tests
-    ./runtests.py

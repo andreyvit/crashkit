@@ -39,9 +39,9 @@
         {% if account_access.is_managing_people_allowed %}
         	<li class="people-tab"><a href="{{account_path}}/people/">People & Permissions</a></li>
         {% endif %}
-        {% ifequal tabid "product-tab" %}
+        {% if tabid == "product-tab" %}
         	<li class="product-tab"><a href="{{account_path}}/products/new">Add Product</a></li>
-        {% endifequal %}
+        {% endif %}
       {% else %}
         {% if not account_authorizations %}
         	<li class="account-settings-tab"><a href="/signup/">Sign up for CrashKit</a></li>

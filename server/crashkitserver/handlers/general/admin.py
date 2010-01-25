@@ -182,3 +182,9 @@ class AdminFuckUpHandler(BaseHandler):
   def get(self):
     db.Key.from_path('Foo', '123')
     1 / 0
+
+url_mapping = (
+  ('/admin/', AdminHandler),
+  ('/admin/fuckup/', AdminFuckUpHandler),
+  ('/iterate', Temp),
+)

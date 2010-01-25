@@ -10,7 +10,7 @@
       <tr>
         <td>{{ candidate.email }}</td>
         <td>{{ candidate.tech }}</td>
-        <td>{{ candidate.created_at|timesince}} ago
+        <td>{{ candidate.created_at|reltime}}
         <td>
           <a href="/admin/beta/accept?key={{candidate.key}}">Accept this gentleman</a> |
           <a href="/admin/beta/reject?key={{candidate.key}}">Reject</a>
@@ -29,9 +29,9 @@
           <span class="req">*</span>
         </label>
         <div>
-          <input id="signup_email_subject" name="signup_email_subject" class="field text large" value="{{server_config.signup_email_subject|ifnone}}" />
+          <input id="signup_email_subject" name="signup_email_subject" class="field text large" value="{{server_config.signup_email_subject}}" />
         </div>
-        <p class="error">{{signup_email_subject_error|errorspan}}</p>
+        <p class="error">{{errorspan(signup_email_subject_error)}}</p>
       </li>
       <li class="{% if signup_email_text_error %}error{% endif %}">
         <label class="desc" for="signup_email_text">
@@ -39,18 +39,18 @@
           <span class="req">*</span>
         </label>
         <div>
-          <textarea id="signup_email_text" name="signup_email_text" class="field text large" rows="8" cols="80">{{server_config.signup_email_text|ifnone}}</textarea>
+          <textarea id="signup_email_text" name="signup_email_text" class="field text large" rows="8" cols="80">{{server_config.signup_email_text}}</textarea>
         </div>
-        <p class="error">{{signup_email_text_error|errorspan}}</p>
+        <p class="error">{{errorspan(signup_email_text_error)}}</p>
       </li>
       <li class="{% if signup_email_unused_text_error %}error{% endif %}">
         <label class="desc" for="signup_email_unused_text">
           Unused (you can keep alternate body variations here)
         </label>
         <div>
-          <textarea id="signup_email_unused_text" name="signup_email_unused_text" class="field text large" rows="8" cols="80">{{server_config.signup_email_unused_text|ifnone}}</textarea>
+          <textarea id="signup_email_unused_text" name="signup_email_unused_text" class="field text large" rows="8" cols="80">{{server_config.signup_email_unused_text|d}}</textarea>
         </div>
-        <p class="error">{{signup_email_unused_text_error|errorspan}}</p>
+        <p class="error">{{errorspan(signup_email_unused_text_error)}}</p>
       </li>
     </ul>
     

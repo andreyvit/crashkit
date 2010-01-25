@@ -1,25 +1,18 @@
 # -*- coding: utf-8
-from datetime import datetime, timedelta
-import time
-import logging
-import wsgiref.handlers
-import os
-import string
-import urllib
-import sets
-from random import Random
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp import template
-from google.appengine.api import users
+from google.appengine.api import users, memcache, mail
 from google.appengine.ext import db
-from google.appengine.api import memcache
-from django.utils import simplejson as json
-from models import *
-from commons import *
 
-from controllers.base import *
+from crashkitserver.handlers.common import WebHandler
+from crashkitserver.handlers.accesschecks import requires_account_admin, requires_signup_priv
+from crashkitserver.handlers.fetchers import with_account, with_new_account
 
-# Show: New | All      Most Recent | Most Occurring
+from models import Account, Person, AccountAccess, ProductAccess, LimitedBetaCandidate
+from yoursway.utils.stringutil import random_string
+from wtforms import Form, TextField, validators
+
+class AccountForm(Form):
+  permalink = TextField('Permalink', [validators.Length(min=4, max=100), validators.Regexp('^[a-zA-Z0-9-]*$', message="Only letters, numbers and dashes, please."), validators.Regexp('^[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]$', message="Must start with a letter, cannot end with a dash.")])
+  name      = TextField('Name', [validators.Length(min=1)])
 
 def create_person_txn(email):
   key = Person.key_for(email)
@@ -44,14 +37,16 @@ def update_person_product_access_txn(person_key, product_key, level):
   a.level = level
   a.put()
   
-class AccountPeopleHandler(BaseHandler):
+class AccountPeopleHandler(WebHandler):
 
-  @prolog(fetch=['account'], check = ['is_managing_people_allowed'])
+  @with_account
+  @requires_account_admin
   def get(self):
     self.fetch()
     self.render_screen_and_finish()
 
-  @prolog(fetch=['account'], check = ['is_managing_people_allowed'])
+  @with_account
+  @requires_account_admin
   def post(self):
     self.fetch()
     
@@ -82,7 +77,7 @@ class AccountPeopleHandler(BaseHandler):
             db.run_in_transaction(*txn)
           self.redirect_and_finish(u'%s/people/' % self.account_path, flash = u"%s has been created." % new_person_email)
         else:
-          self.data.update(new_person_email=new_person_email)
+          self.new_person_email = new_person_email
           self.render_screen_and_finish()
     else:      
       txns = []
@@ -122,29 +117,22 @@ class AccountPeopleHandler(BaseHandler):
             person=person, product=product, level=(ACCESS_READ if product.public_access else ACCESS_NONE))
     
   def render_screen_and_finish(self):
-    self.data.update(tabid = 'people-tab', people=self.people, products=self.products)
+    self.tabid = 'people-tab'
     self.render_and_finish('account_people.html')
 
-def validate_account(self):
-  if not re.match('^[a-zA-Z0-9-]*$', self.account.permalink):
-    self.invalid('permalink', "Only letters, numbers and dashes, please.")
-  if len(self.account.permalink) < 4 and not users.is_current_user_admin():
-    self.invalid('permalink', "Please enter at least 4 characters.")
-  if not re.match('^[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]$', self.account.permalink):
-    self.invalid('permalink', "Must start with a letter, cannot end with a dash.")
+class AccountSettingsHandler(WebHandler):
 
-
-class AccountSettingsHandler(BaseHandler):
-
-  @prolog(fetch=['account'], check=['is_account_admin_allowed'])
+  @with_account
+  @requires_account_admin
   def get(self):
     self.render_screen_and_finish()
     
   def render_screen_and_finish(self):
-    self.data.update(tabid = 'account-settings-tab')
+    self.tabid = 'account-settings-tab'
     self.render_and_finish('account_settings.html')
 
-  @prolog(fetch=['account'], check=['is_account_admin_allowed'])
+  @with_account
+  @requires_account_admin
   def post(self):
     self.account.permalink = self.valid_string('permalink')
     self.account.name = self.valid_string('name')
@@ -161,11 +149,12 @@ class AccountSettingsHandler(BaseHandler):
       flash = u"“%s” settings have been saved." % self.account.name)
 
 
-class SignupHandler(BaseHandler):
+class SignupHandler(WebHandler):
 
-  @prolog(fetch=['new_account'])
+  @with_new_account
   def get(self, invitation_code):
-    self.data.update(invitation_code=invitation_code, tabid='account-settings-tab')
+    self.invitation_code = invitation_code
+    self.tabid = 'account-settings-tab'
     if not users.is_current_user_admin():
       if invitation_code == None or len(invitation_code.strip()) == 0:
         self.render_and_finish('account_signup_nocode.html')
@@ -174,42 +163,43 @@ class SignupHandler(BaseHandler):
         self.render_and_finish('account_signup_badcode.html')
     if not self.user:
       self.render_and_finish('account_signup_googlenotice.html')
+
+    self.account_form = AccountForm()
     self.render_screen_and_finish()
     
   def render_screen_and_finish(self):
-    self.data.update(tabid = 'account-settings-tab')
+    self.tabid = 'account-settings-tab'
     self.render_and_finish('account_settings.html')
 
-  @prolog(fetch=['new_account'], check=['is_signup_allowed'])
+  @with_new_account
+  @requires_signup_priv
   def post(self, invitation_code):
     if not users.is_current_user_admin():
       candidate = LimitedBetaCandidate.all().filter('invitation_code', invitation_code).get()
       if candidate == None:
         self.redirect_and_finish('/signup/%s' % invitation_code)
-    
-    self.account.permalink = self.valid_string('permalink')
-    self.account.name = self.valid_string('name')
-    
-    validate_account(self)
-    existing_account = Account.all().filter('permalink', self.account.permalink).get()
-    if existing_account:
-      self.invalid('permalink', "This name is already taken.")
+        
+    self.account_form = AccountForm(self.request.POST)
+    if self.account_form.validate():
+      existing_account = Account.all().filter('permalink', self.account.permalink).get()
+      if existing_account:
+        self.account_form.permalink.errors.append("This name is already taken.")
+      else:
+        self.account_form.populate_obj(self.account)
+        self.account.put()
+        if not self.person.is_saved():
+          self.person.put()
+        self.account_access = AccountAccess(key_name=AccountAccess.key_for(self.person.key(), self.account.key()).name(),
+            person=self.person, account=self.account, admin=True)
+        self.account_access.put()
+        self.redirect_and_finish(u'/%s/products/new/' % self.account.permalink,
+          flash = u"Your account has been created. You can add your first product now.")
       
-    if not self.is_valid():
-      self.render_screen_and_finish()
-    self.account.put()
-    if not self.person.is_saved():
-      self.person.put()
-    self.account_access = AccountAccess(key_name=AccountAccess.key_for(self.person.key(), self.account.key()).name(),
-        person=self.person, account=self.account, admin=True)
-    self.account_access.put()
-    self.redirect_and_finish(u'/%s/products/new/' % self.account.permalink,
-      flash = u"Your account has been created. You can add your first product now.")
-    # else:
-    #   if not self.person.is_saved():
-    #     self.person.put()
-    #   self.product_access = ProductAccess(key_name=ProductAccess.key_for(self.person.key(), self.product.key()).name(),
-    #       product=self.product, person=self.person, level=ACCESS_ADMIN)
-    #   self.product_access.put()
-    #   self.redirect_and_finish(u'/%s/%s/all' % (self.account_path, self.product.permalink),
-    #     flash = u"“%s” has been created." % self.product.name)
+    self.render_screen_and_finish()
+
+
+url_mapping = (
+  ('/signup/([a-zA-Z0-9]*)', SignupHandler),
+  ('/([a-zA-Z0-9._-]+)/people/', AccountPeopleHandler),
+  ('/([a-zA-Z0-9._-]+)/settings/', AccountSettingsHandler),
+)

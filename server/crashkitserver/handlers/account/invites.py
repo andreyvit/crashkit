@@ -1,23 +1,11 @@
 # -*- coding: utf-8
-from datetime import datetime, timedelta
-import time
-import logging
-import wsgiref.handlers
-import os
-import string
-import urllib
-import sets
-from random import Random
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp import template
-from google.appengine.api import users
+from google.appengine.api import users, memcache, mail
 from google.appengine.ext import db
-from google.appengine.api import memcache
-from google.appengine.api import mail
-from django.utils import simplejson as json
-from models import *
 
-from controllers.base import *
+from crashkitserver.handlers.common import WebHandler
+from models import ServerConfig, LimitedBetaCandidate
+from yoursway.utils.stringutil import random_string
+from yoursway.gae.utils import requires_admin
 
 def server_config():
     config = ServerConfig.get_by_key_name('TheConfig')
@@ -41,9 +29,8 @@ just reply this e-mail. Any feedback is greatly appreciated.
 """
     return config
 
-class SignUpForLimitedBetaHandler(BaseHandler):
+class SignUpForLimitedBetaHandler(WebHandler):
   
-  @prolog()
   def post(self):
     email = self.request.get('email')
     tech  = self.request.get('tech')
@@ -66,18 +53,18 @@ Please visit http://%(host)s/admin/beta/ to invite this user.
     
     self.response.out.write("Thanks a lot! We'll e-mail you an invitation code soon.")
 
-class LimitedBetaCandidateListHandler(BaseHandler):
-  @prolog(check = ['is_server_management_allowed'])
+class LimitedBetaCandidateListHandler(WebHandler):
+  
+  @requires_admin
   def get(self):
     self.server_config = server_config()
     self.render_editor_and_finish()
     
   def render_editor_and_finish(self):
-    candidates = LimitedBetaCandidate.all().filter('invitation_code', None).filter('rejected', False).order('created_at').fetch(100)
-    self.data.update(candidates=candidates, server_config=self.server_config)
+    self.candidates = LimitedBetaCandidate.all().filter('invitation_code', None).filter('rejected', False).order('created_at').fetch(100)
     self.render_and_finish('beta_candidates.html')
 
-  @prolog(check = ['is_server_management_allowed'])
+  @requires_admin
   def post(self):
     self.server_config = server_config()
     
@@ -91,8 +78,9 @@ class LimitedBetaCandidateListHandler(BaseHandler):
     self.server_config.put()
     self.redirect_and_finish('/admin/beta/', flash = "E-mail settings saved.")
 
-class LimitedBetaAcceptCandidateHandler(BaseHandler):
-  @prolog(check = ['is_server_management_allowed'])
+class LimitedBetaAcceptCandidateHandler(WebHandler):
+  
+  @requires_admin
   def get(self):
     self.server_config = server_config()
     if self.server_config.signup_email_text is None or len(self.server_config.signup_email_text) == 0:
@@ -111,11 +99,19 @@ class LimitedBetaAcceptCandidateHandler(BaseHandler):
     
     self.redirect_and_finish('/admin/beta/', flash = "Accepted %s, his invite code is %s." % (candidate.email, candidate.invitation_code))
 
-class LimitedBetaRejectCandidateHandler(BaseHandler):
-  @prolog(check = ['is_server_management_allowed'])
+class LimitedBetaRejectCandidateHandler(WebHandler):
+  
+  @requires_admin
   def get(self):
     key = self.request.get('key')
     candidate = LimitedBetaCandidate.get(key)
     candidate.rejected = True
     candidate.put()
     self.redirect_and_finish('/admin/beta/', flash = "Rejected %s." % candidate.email)
+
+url_mapping = (
+  ('/betasignup/', SignUpForLimitedBetaHandler),
+  ('/admin/beta/', LimitedBetaCandidateListHandler),
+  ('/admin/beta/accept', LimitedBetaAcceptCandidateHandler),
+  ('/admin/beta/reject', LimitedBetaRejectCandidateHandler),
+)

@@ -1,5 +1,3 @@
-import string
-from random import Random
 
 import os
 from google.appengine.api import users
@@ -24,9 +22,6 @@ def decline(num, one, many, zero=None):
   elif one  and num == 1:  fmt = one
   else:                    fmt = many
   return fmt.replace('#', unicode(num))
-
-def random_string(len = 12, chars = string.letters+string.digits):
-  return ''.join(Random().sample(chars, 12))
 
 def escape(html):
     """Returns the given HTML with ampersands, quotes and carets encoded."""

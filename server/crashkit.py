@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-__all__ = ['CRASHKIT_VERSION', 'initialize_crashkit', 'send_exception', 'CrashKitDjangoMiddleware', 'CrassKitGAE']
+__all__ = ['CRASHKIT_VERSION', 'initialize_crashkit', 'send_exception', 'CrashKitDjangoMiddleware', 'CrashKitGAE', 'CrassKitGAE']
 
 from traceback import extract_tb
 from types import ClassType
@@ -27,15 +27,14 @@ from datetime import date
 import sys
 import os
 import re
+import logging
 
 CRASHKIT_VERSION = '{{ver}}'
-CRASHKIT_HOST = 'crashkitapp.appspot.com'
-# CRASHKIT_HOST = '8.latest.crashkitapp.appspot.com'
-# CRASHKIT_HOST = 'localhost:5005'
+CRASHKIT_HOST = os.environ.get('CRASHKIT_HOST', 'crashkitapp.appspot.com')
 
 BAD_NAME_CHARS_RE = re.compile('[^a-zA-Z0-9]+')
 
-class CrassKitGAE(object):
+class CrashKitGAE(object):
     
   def handle_exception(self, exception, debug_mode):
     from google.appengine.ext import webapp
@@ -52,8 +51,8 @@ class CrassKitGAE(object):
     if hasattr(request, 'session'):
       for k,v in request.session.iteritems(): data["S_" + k] = v
     send_exception(data, env)
-    return webapp.RequestHandler.handle_exception(self, exception, debug_mode)
-  
+    return super(self, CrashKitGAE).handle_exception(self, exception, debug_mode)
+CrassKitGAE = CrashKitGAE  # deprecated -- typo in prev version
 
 class CrashKitDjangoMiddleware(object):
   def __init__(self):
@@ -139,10 +138,11 @@ class CrashKit:
     traceback = get_traceback(info[2])
     env = dict(**env)
     env.update(**collect_platform_info())
+    exception_name = encode_exception_name(info[0])
     message = {
         "exceptions": [
             {
-                "name": encode_exception_name(info[0]),
+                "name": exception_name,
                 "message": info[1].message,
                 "locations": [encode_location(el, self.is_app_dir) for el in traceback]
             }
@@ -158,17 +158,13 @@ class CrashKit:
     try:
       response = urlopen(Request(self.post_url, payload))
       the_page = response.read()
-      # print unicode(the_page, 'utf-8')
+      logging.info("CrashKit has successfully sent exception %s" % exception_name)
     except UnicodeDecodeError:
       pass
     except HTTPError, e:
-      print "Cannot send exception - HTTP error %s" % e.code
-      try:
-        print unicode(e.read(), 'utf-8')
-      except UnicodeDecodeError:
-        pass
+      logging.error("CrashKit failed to send exception %s: HTTP error %s" % (exception_name, e.code))
     except URLError, e:
-      print "Cannot send exception: %s" % e.reason
+      logging.error("CrashKit failed to send exception %s: %s" % (exception_name, e.reason))
  
 crashkit = None
 
@@ -221,7 +217,6 @@ def get_method_name_for_code_object(self, possible_func, code, depth = 0):
           if name: return name
         except AttributeError: pass
   except AttributeError: pass
-  except TypeError: pass
 
 def get_class_name(frame):
   """Guesses a class name to show in a stack trace for the given frame,

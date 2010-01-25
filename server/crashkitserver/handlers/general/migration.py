@@ -229,3 +229,8 @@ class MigrateWorkerHandler(BaseHandler):
     logging.info("Migration running: processed %d rows" % total_count)
 
     taskqueue.add(url='/admin/migrate/worker', params=dict(start=last_key, count=total_count))
+
+url_mapping = (
+  ('/admin/migrate/', MigrateHandler),
+  ('/admin/migrate/worker', MigrateWorkerHandler),
+)
