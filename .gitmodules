@@ -1,0 +1,3 @@
+[submodule "server/yoursway"]
+	path = server/yoursway
+	url = git://github.com/andreyvit/yoursway-python-commons.git
